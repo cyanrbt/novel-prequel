@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+
+# Local tools, references, backups, and recoverable runtime data
+.mimocode/
+.local-backups/
+.local-reference/
+novel/work/
+novel/state/current.json.bak
+shenmifushu.txt

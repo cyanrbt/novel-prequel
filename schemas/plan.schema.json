@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "plan.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "hook", "prohibited_elements"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "title": {"type": "string"},
+    "event_id": {"type": "string"},
+    "phase": {"type": "string"},
+    "chapter_purpose": {"type": "string"},
+    "scenes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["location", "characters", "goal", "conflict", "irreversible_change"],
+        "properties": {
+          "location": {"type": "string"},
+          "characters": {"type": "array", "items": {"type": "string"}},
+          "goal": {"type": "string"},
+          "conflict": {"type": "string"},
+          "irreversible_change": {"type": "string"}
+        }
+      }
+    },
+    "new_information": {"type": "array", "items": {"type": "string"}},
+    "state_changes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["protagonist_known_info_add", "protagonist_inventory_add", "protagonist_inventory_remove", "protagonist_location", "protagonist_body_updates", "ability_updates", "timeline_year", "timeline_elapsed_days", "character_updates", "world_confirmed_add", "world_hypotheses_add"],
+      "properties": {
+        "protagonist_known_info_add": {"type": "array", "items": {"type": "string"}},
+        "protagonist_inventory_add": {"type": "array", "items": {"type": "string"}},
+        "protagonist_inventory_remove": {"type": "array", "items": {"type": "string"}},
+        "protagonist_location": {"anyOf": [{"type": "string"}, {"type": "null"}]},
+        "protagonist_body_updates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["key", "value"],
+            "properties": {"key": {"type": "string"}, "value": {"type": "string"}}
+          }
+        },
+        "ability_updates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "status"],
+            "properties": {"name": {"type": "string"}, "status": {"type": "string"}}
+          }
+        },
+        "timeline_year": {"type": "integer", "minimum": 1890, "maximum": 1950},
+        "timeline_elapsed_days": {"type": "integer", "minimum": 0},
+        "character_updates": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "status", "note"],
+            "properties": {"name": {"type": "string"}, "status": {"type": "string"}, "note": {"type": "string"}}
+          }
+        },
+        "world_confirmed_add": {"type": "array", "items": {"type": "string"}},
+        "world_hypotheses_add": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "rule_hypotheses": {"type": "array", "items": {"type": "string"}},
+    "canon_evidence_ids": {"type": "array", "minItems": 1, "items": {"type": "string"}},
+    "foreshadow_operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["plant", "recover"],
+      "properties": {
+        "plant": {"type": "array", "items": {"type": "string"}},
+        "recover": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "hook": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "content"],
+      "properties": {"type": {"type": "string"}, "content": {"type": "string"}}
+    },
+    "prohibited_elements": {"type": "array", "items": {"type": "string"}}
+  }
+}

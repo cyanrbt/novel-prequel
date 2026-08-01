@@ -1,0 +1,65 @@
+# 运行时权威风格源：描述高层叙事特征，不提供可复制原文句式。
+schema: novel-prequel-style
+
+narrative:
+  person: 第三人称限知
+  pov: 张洞单一视角
+  tone: [冷静, 克制, 具体, 不完整认知]
+  information_order: [异常事实, 人物假说, 行动试错, 现实后果, 临时结论]
+  forbidden_shortcuts:
+    - 上帝视角和远处切镜
+    - 叙述者直接宣布规则答案
+    - 用总结段替代场景因果
+
+horror:
+  source:
+    - 日常物件或空间出现可核对偏差
+    - 数量、距离、声音次序或人员关系不再成立
+    - 错误规则带来现实代价
+    - 原本安全的选择被逐步取消
+  description:
+    - 每场选择两三项最有效证据，不套固定感官顺序
+    - 高潮用短而清楚的事实定格
+    - 未知部分保留空白，不靠形容词宣布恐怖
+
+character:
+  zhang_dong_early: 十八岁的谨慎普通人；冷静与决断逐步形成
+  motivation: 行动落到亲缘、旧债、共同风险、交换、自保或被迫选择
+  emotion: 通过物件、距离、称呼、饭食、账目和决定的变化显现
+  dialogue: 每人有不同句长、现实关切和回避方式
+
+anti_ai:
+  hard:
+    - 不复制原著或近期章节的完整段落、标志性句子和开场结构
+    - 不使用现代组织、技术和网络语汇
+    - 不让未解锁能力以直觉或气势变相出现
+  warnings:
+    - 连续同构短句和整齐列举
+    - 频繁使用“不是……而是……”
+    - 破折号代替正常句法
+    - 段尾总结人物已经做出的动作
+    - 抽象情绪标签
+    - 固定身体反应和固定离场动作
+    - 所有人物都说半句话或故作沉默
+    - 每章使用相同钩子构型
+  stock_phrases:
+    - 深吸一口气
+    - 紧握拳头
+    - 眼中闪过
+    - 嘴角上扬
+    - 空气仿佛凝固
+    - 命运的齿轮
+    - 这意味着
+    - 值得注意的是
+
+pacing:
+  chapter_chars: {safe_min: 1800, target_min: 3500, target_max: 5000, safe_max: 8000}
+  scenes: "1-3个必要场景；每场必须留下不可逆变化"
+  exposition: "连续解释尽量少于200字，并由动作、争执或新证据打断"
+  ending: "钩子来自已发生的因果，不凭空投放新威胁"
+
+repetition:
+  compare_recent_chapters: 5
+  exact_paragraph: P1
+  identical_long_sentence_total_3: P1
+  repeated_action_or_hook: P2；明显结构复刻升级为P1

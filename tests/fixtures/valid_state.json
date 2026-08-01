@@ -1,0 +1,30 @@
+{
+  "schema": "novel-prequel-state",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 0,
+    "next_chapter": 1,
+    "current_volume": 1,
+    "current_volume_name": "大汉市",
+    "current_event": "event_1",
+    "current_event_name": "大汉市疑棺",
+    "current_phase": "征兆"
+  },
+  "timeline": {"current_year": 1908, "era": "清末", "elapsed_days": 0},
+  "protagonist": {
+    "name": "张洞",
+    "age": 18,
+    "location": "大汉市·双桥镇",
+    "erosion": 0,
+    "abilities": {},
+    "known_info": [],
+    "body": {"状态": "正常"},
+    "inventory": []
+  },
+  "characters": {"active": {}, "pending": {}, "deceased": []},
+  "world_lore": {"reveal_layer": 1, "confirmed": [], "hypotheses": []},
+  "active_foreshadows": {},
+  "revealed_rules": [],
+  "recent_hooks": [],
+  "chapter_summaries": {"compression_level": 0, "summaries": {}}
+}

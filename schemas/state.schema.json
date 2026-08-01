@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state.schema.json",
+  "title": "Novel prequel state",
+  "type": "object",
+  "required": [
+    "schema",
+    "machine_state",
+    "chapter",
+    "timeline",
+    "protagonist",
+    "characters",
+    "world_lore",
+    "active_foreshadows",
+    "revealed_rules",
+    "recent_hooks",
+    "chapter_summaries"
+  ],
+  "properties": {
+    "schema": {"const": "novel-prequel-state"},
+    "machine_state": {
+      "enum": ["IDLE", "INIT", "OUTLINE", "WRITE", "REVIEW", "RECOVERY", "ERROR", "WAITING_USER"]
+    },
+    "chapter": {
+      "type": "object",
+      "required": ["last_chapter", "next_chapter", "current_volume", "current_volume_name", "current_event", "current_event_name", "current_phase"]
+    },
+    "timeline": {"type": "object"},
+    "protagonist": {"type": "object"},
+    "characters": {"type": "object"},
+    "world_lore": {"type": "object"},
+    "active_foreshadows": {"type": "object"},
+    "revealed_rules": {"type": "array"},
+    "recent_hooks": {"type": "array"},
+    "chapter_summaries": {"type": "object"}
+  },
+  "additionalProperties": true
+}

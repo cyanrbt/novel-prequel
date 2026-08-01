@@ -1,0 +1,180 @@
+{
+  "schema": "novel-prequel-state",
+  "last_updated": "2026-07-30T20:06:44",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 2,
+    "next_chapter": 3,
+    "current_volume": 1,
+    "current_volume_name": "大汉市",
+    "current_event": "event_1",
+    "current_event_name": "大汉市疑棺",
+    "current_phase": "征兆",
+    "last_title": "铁门栓"
+  },
+  "timeline": {
+    "current_year": 1908,
+    "era": "清末",
+    "year_label": "清末（辛亥革命前三年）",
+    "elapsed_days": 2
+  },
+  "protagonist": {
+    "name": "张洞",
+    "age": 18,
+    "location": "大汉市·双桥镇",
+    "erosion": 0,
+    "abilities": {
+      "灵异感知": {
+        "status": "未觉醒",
+        "unlock_chapter": 15
+      },
+      "规则洞察": {
+        "status": "未形成",
+        "unlock_chapter": 30
+      },
+      "抹除灵异": {
+        "status": "未觉醒",
+        "unlock_chapter": 81
+      },
+      "威势压制": {
+        "status": "未形成",
+        "unlock_chapter": 161
+      }
+    },
+    "known_info": [
+      "张洞确认白日纸灰的发现位置是盖着的蒸笼内部，笼盖上没有灰。",
+      "张洞确认夜间纸灰的发现位置是米缸底，并将其与白日样本分开保存。",
+      "现有位置记录不足以判断纸灰的来源。",
+      "张洞确认叔公曾暗中订制铁门栓。",
+      "张洞亲眼看见三副旧木栓由内向外崩裂，但还不能据此判断损坏原因。",
+      "张洞知道母亲已用他的离镇船费支付铁门栓工钱，自己暂时无法按原计划离镇找工。",
+      "张洞听见新栓落下后的三下敲门声，并确认院内看门狗当时没有叫。"
+    ],
+    "body": {
+      "状态": "正常"
+    },
+    "inventory": []
+  },
+  "characters": {
+    "active": {
+      "张洞母亲": {
+        "status": "已用预留船费支付铁门栓工钱",
+        "note": "她为尽快完成眼前防备，牺牲了张洞原定离镇找工的盘缠。"
+      },
+      "张洞父亲": {
+        "status": "反对暗订铁栓并拒绝承担这笔费用",
+        "note": "他继续要求叔公给出亲眼所见的依据，但未能阻止母亲动用船费装栓。"
+      },
+      "张家叔公": {
+        "status": "暗中订制铁门栓一事已经公开",
+        "note": "他仍拒绝完整解释订栓原因，只以旧木栓的损坏痕迹催促安装。"
+      },
+      "木匠老李": {
+        "status": "已收取工钱并为张家装好铁门栓",
+        "note": "他只证明三副旧木栓的崩裂方向，不声称知道损坏原因或门外事物。"
+      }
+    },
+    "pending": {
+      "罗文松": {
+        "first_appearance": 85,
+        "status": "未出场"
+      },
+      "李庆之": {
+        "first_appearance": 164,
+        "status": "未出场"
+      },
+      "孟小董": {
+        "first_appearance": 210,
+        "status": "未出场"
+      },
+      "张幼红": {
+        "first_appearance": 245,
+        "status": "未出场"
+      },
+      "罗千": {
+        "first_appearance": 275,
+        "status": "未出场"
+      },
+      "张伯华": {
+        "first_appearance": 301,
+        "status": "未出场"
+      },
+      "秦老": {
+        "birth_year_range": [
+          1905,
+          1915
+        ],
+        "first_appearance": 310,
+        "status": "尚未出场"
+      }
+    },
+    "deceased": []
+  },
+  "world_lore": {
+    "reveal_layer": 1,
+    "confirmed": [
+      "白日灰与夜间灰分别发现于蒸笼内部和米缸底；这是两次分开记录的位置事实。",
+      "张家院门已由旧木栓换装为铁门栓。",
+      "三副来自不同住户的旧木栓都有由内向外崩裂的可见痕迹。",
+      "张家新栓落下后的当夜，门外响起三下敲击，院内看门狗没有叫。"
+    ],
+    "hypotheses": [
+      "铁门栓可能比旧木栓更难被破坏，从而挡住门外的未知事物，但尚无实际结果验证。",
+      "旧木栓由内向外崩裂可能意味着损坏并非由门外直接撞击造成，但现有三副样本不足以确定原因。"
+    ],
+    "gold_known": false,
+    "post_office_status": "不存在",
+    "ancient_house_status": "不存在"
+  },
+  "active_foreshadows": {
+    "F-A01": {
+      "status": "已播种",
+      "plant_chapter": 1
+    }
+  },
+  "revealed_rules": [],
+  "recent_hooks": [
+    {
+      "chapter": 1,
+      "type": "未解问题",
+      "content": "夜间纸灰取出后，白日灰仍在原留样碗，夜间灰另置第二只碗，沾灰米已盛入门边空盆；张洞在账上只写“发现于缸底”，而母亲把祠堂钥匙收进贴身暗袋。"
+    },
+    {
+      "chapter": 2,
+      "type": "新威胁",
+      "content": "新铁栓刚落下，院门外便响起间隔分明的三下敲击，看门狗全程没有叫；张家尚不知道铁栓能否挡住什么，而张洞的离镇船费已经花掉。"
+    }
+  ],
+  "chapter_summaries": {
+    "compression_level": 0,
+    "summaries": {
+      "1": {
+        "title": "灶间的纸灰",
+        "core": "以两处封闭容器内的纸灰位置建立首份可核对记录，并迫使母亲将祠堂钥匙撤离墙钉、最终改为贴身保管。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "timeline_elapsed_days",
+          "character_updates",
+          "world_confirmed_add"
+        ]
+      },
+      "2": {
+        "title": "铁门栓",
+        "core": "母亲用张洞离镇找工的船费支付并安装铁门栓，使张家为尚未证实的危险付出无法撤回的经济代价，张洞因此失去原定离镇盘缠。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "timeline_elapsed_days",
+          "character_updates",
+          "world_confirmed_add",
+          "world_hypotheses_add"
+        ]
+      }
+    }
+  },
+  "last_review": {
+    "chapter": 2,
+    "grade": "B",
+    "verdict": "PASS",
+    "timestamp": "2026-07-30T20:06:44"
+  }
+}

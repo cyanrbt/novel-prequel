@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "review.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "verdict", "grade", "p1_failures", "p2_warnings", "evidence", "character_assessment", "canon_assessment", "style_assessment", "revision_instructions"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "verdict": {"type": "string", "enum": ["PASS", "REVISE", "REPLAN"]},
+    "grade": {"type": "string", "enum": ["A", "B", "C", "D"]},
+    "p1_failures": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "quote", "explanation"],
+        "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}
+      }
+    },
+    "p2_warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "quote", "explanation"],
+        "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["quote", "finding"],
+        "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}
+      }
+    },
+    "character_assessment": {"type": "string"},
+    "canon_assessment": {"type": "string"},
+    "style_assessment": {"type": "string"},
+    "revision_instructions": {"type": "array", "items": {"type": "string"}}
+  }
+}

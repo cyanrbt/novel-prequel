@@ -1,0 +1,56 @@
+{
+  "schema": "novel-prequel-canon",
+  "confidence_levels": {
+    "A": "原著明确事实；不得修改，使用时必须保留证据来源",
+    "B": "原著强暗示或多处线索支持；允许推演，不得写成全知定论",
+    "C": "前传原创；不得反向冒充原著事实"
+  },
+  "facts": [
+    {
+      "id": "CANON-RULE-001",
+      "level": "A",
+      "claim": "鬼无法被杀死，只能被限制、关押或转移",
+      "allowed_use": "作为全部灵异事件的底层约束",
+      "forbidden_overclaim": "不得写成任何人物在早期已完整掌握该理论"
+    },
+    {
+      "id": "CANON-RULE-002",
+      "level": "A",
+      "claim": "能对付鬼的只有鬼",
+      "allowed_use": "通过遭遇和试错逐步发现",
+      "forbidden_overclaim": "不得由陌生导师一次性讲授完整体系"
+    },
+    {
+      "id": "CANON-QIN-001",
+      "level": "A",
+      "claim": "秦老是天生异类，现代时间线已是百岁老人",
+      "allowed_use": "将出生年份控制在1905至1915年的模糊区间",
+      "forbidden_overclaim": "不得写死未经原著明确的精确出生年"
+    },
+    {
+      "id": "CANON-SEVEN-001",
+      "level": "B",
+      "claim": "民国时期存在以张洞等人为核心的一代顶尖驭鬼者",
+      "allowed_use": "作为人物最终汇合的方向",
+      "forbidden_overclaim": "不得提前断言所有成员关系、领袖名分和设施分工均为原著明示"
+    },
+    {
+      "id": "PREQUEL-EVENT-001",
+      "level": "C",
+      "claim": "张洞青年时期在双桥镇经历疑棺事件",
+      "allowed_use": "作为本前传第一事件",
+      "forbidden_overclaim": "不得声称该家族经历由原著明确记载"
+    }
+  ],
+  "era_bans": {
+    "1890-1950": {
+      "characters": ["周正", "杨间", "叶真", "柳三", "王小明", "赵建国"],
+      "terms": ["负责人", "总部", "队长计划", "灵异论坛", "朋友圈", "卫星定位"],
+      "reason": "正传现代人物或尚未建立的组织概念"
+    }
+  },
+  "unresolved": [
+    {"id": "OPEN-SEVEN-ROSTER", "question": "民国七人关系、名分和精确分工中哪些属于原著明示", "rule": "在逐条核证前按B级处理"},
+    {"id": "OPEN-ZHANG-ABILITY", "question": "张洞各能力名称、边界和形成时间", "rule": "能力闸门属于项目约束，不冒充原著术语"}
+  ]
+}
