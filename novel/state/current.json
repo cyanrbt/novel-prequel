@@ -1,22 +1,22 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-02T01:00:00",
+  "last_updated": "2026-08-02T17:58:35",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 2,
-    "next_chapter": 3,
+    "last_chapter": 3,
+    "next_chapter": 4,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
     "current_phase": "试探",
-    "last_title": "铁门栓"
+    "last_title": "少一只鞋"
   },
   "timeline": {
     "current_year": 1908,
     "era": "清末",
     "year_label": "清末（辛亥革命前三年）",
-    "elapsed_days": 2
+    "elapsed_days": 3
   },
   "protagonist": {
     "name": "张洞",
@@ -24,61 +24,181 @@
     "location": "大汉市·双桥镇·张家院落",
     "erosion": 0,
     "abilities": {
-      "灵异感知": {"status": "未形成", "unlock_after": ["M1-DUAL-EXPOSURE"]},
-      "规则洞察": {"status": "未形成", "unlock_after": ["M1B-PATH-RECORD"]},
-      "抹除灵异": {"status": "未觉醒", "unlock_after": ["M2-ACTIVE-PRICE"]},
-      "威势压制": {"status": "未形成", "unlock_after": ["M3-SEVEN-FORMED"]}
+      "灵异感知": {
+        "status": "未形成",
+        "unlock_after": [
+          "M1-DUAL-EXPOSURE"
+        ]
+      },
+      "规则洞察": {
+        "status": "未形成",
+        "unlock_after": [
+          "M1B-PATH-RECORD"
+        ]
+      },
+      "抹除灵异": {
+        "status": "未觉醒",
+        "unlock_after": [
+          "M2-ACTIVE-PRICE"
+        ]
+      },
+      "威势压制": {
+        "status": "未形成",
+        "unlock_after": [
+          "M3-SEVEN-FORMED"
+        ]
+      }
     },
     "known_info": [
       "白日，纸灰出现在盖着的空蒸屉内部；当日傍晚，原样本消失，米缸底出现另一撮纸灰。",
       "叔公对祠堂钥匙与纸灰反应异常，收走钥匙并禁止张洞出门。",
       "完整铁门栓只能增加开门的难度；东巷一户曾装铁扣，仍因住户主动开门而出事。",
-      "张家门框十年前的补木内也藏有发白纸灰。"
+      "张家门框十年前的补木内也藏有发白纸灰。",
+      "镇上已有住户在听见与下葬者生前相同的三下敲门后死在门后，门无明显破损。",
+      "门槛外一只鞋与死者脚边另一只鞋同时存在，鞋的摆放尚不能说明作用。",
+      "李二家也听过与张家昨夜相同的敲门节奏。",
+      "李二已将自家遭遇只告诉张洞，两人暂不向长辈坦白。"
     ],
-    "body": {"状态": "正常"},
+    "body": {
+      "状态": "正常"
+    },
     "inventory": []
   },
   "characters": {
     "active": {
-      "张洞父亲": {"status": "在家中记账", "note": "想结束家里用沉默处理旧事的习惯。"},
-      "张洞母亲": {"status": "动用船钱装上铁门栓", "note": "她用张洞离镇的盘缠换取一夜的门后安全。"},
-      "张家叔公": {"status": "暂管祠堂旧物", "note": "相信少说、锁好、补好能让家里活下去。"},
-      "李二": {"status": "染坊学徒", "note": "张洞同辈，嘴硬但对自家危险极敏感。"},
-      "木匠老李": {"status": "经营木匠铺", "note": "只相信自己看见的损坏痕迹。"}
+      "张洞父亲": {
+        "status": "在家中记账",
+        "note": "想结束家里用沉默处理旧事的习惯。"
+      },
+      "张洞母亲": {
+        "status": "动用船钱装上铁门栓",
+        "note": "她用张洞离镇的盘缠换取一夜的门后安全。"
+      },
+      "张家叔公": {
+        "status": "暂管祠堂旧物",
+        "note": "相信少说、锁好、补好能让家里活下去。"
+      },
+      "李二": {
+        "status": "与张洞共同隐瞒自家异响",
+        "note": "承认家中听过同样三下敲门，因害怕家人反应而未告知长辈。"
+      },
+      "木匠老李": {
+        "status": "经营木匠铺",
+        "note": "只相信自己看见的损坏痕迹。"
+      },
+      "张洞": {
+        "status": "获得镇上外部对照",
+        "note": "不再只把昨夜敲门视为张家孤例，开始记录声音、门与鞋的事实。"
+      }
     },
     "pending": {
-      "罗文松": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "秦老": {"birth_year_range": [1905, 1915], "appearance_after": "M3-CORE-MEMBERS-MET", "status": "尚未出场"}
+      "罗文松": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "李庆之": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "孟小董": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张幼红": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "罗千": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张伯华": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "秦老": {
+        "birth_year_range": [
+          1905,
+          1915
+        ],
+        "appearance_after": "M3-CORE-MEMBERS-MET",
+        "status": "尚未出场"
+      }
     },
     "deceased": []
   },
   "world_lore": {
     "reveal_layer": 1,
     "confirmed": [],
-    "hypotheses": [],
+    "hypotheses": [
+      "门外的三下敲门可能与死者生前的节奏有关，但尚不能确定来者是否就是尸体。",
+      "门槛外留鞋可能与事件有关，但没有证据证明它能保护住户。"
+    ],
     "gold_known": false,
     "post_office_status": "不存在线索",
     "ancient_house_status": "不存在线索"
   },
   "active_foreshadows": {
-    "F-A01": {"status": "已播种", "plant_chapter": 1, "note": "纸灰以不合常理的路径进入张家；根源未明。"}
+    "F-A01": {
+      "status": "已播种",
+      "plant_chapter": 1,
+      "note": "纸灰以不合常理的路径进入张家；根源未明。"
+    }
   },
   "completed_milestones": [],
   "revealed_rules": [],
   "recent_hooks": [
-    {"chapter": 1, "type": "安全区崩坏", "content": "纸灰从蒸屉消失，出现在未被打开的米缸底。"},
-    {"chapter": 2, "type": "新威胁", "content": "新铁栓装好当夜，院门外响起三下敲门，狗没有叫。"}
+    {
+      "chapter": 1,
+      "type": "安全区崩坏",
+      "content": "纸灰从蒸屉消失，出现在未被打开的米缸底。"
+    },
+    {
+      "chapter": 2,
+      "type": "新威胁",
+      "content": "新铁栓装好当夜，院门外响起三下敲门，狗没有叫。"
+    },
+    {
+      "chapter": 3,
+      "type": "未解问题",
+      "content": "李二所述的敲门节奏与张家新铁栓装好当夜听见的三下完全相同，张洞必须判断铁栓究竟挡住了什么、又没挡住什么。"
+    }
   ],
   "chapter_summaries": {
     "compression_level": 0,
     "summaries": {
-      "1": {"title": "灶间的纸灰", "core": "纸灰两次出现在不可能的位置，张家第一次因查明还是躲开而公开冲突。", "irreversible_changes": ["protagonist_known_info_add", "character_updates"]},
-      "2": {"title": "铁门栓", "core": "母亲动用船钱安装铁门栓；它只能拖延人的选择，门外的三下敲门仍在夜里响起。", "irreversible_changes": ["protagonist_known_info_add", "character_updates"]}
+      "1": {
+        "title": "灶间的纸灰",
+        "core": "纸灰两次出现在不可能的位置，张家第一次因查明还是躲开而公开冲突。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "character_updates"
+        ]
+      },
+      "2": {
+        "title": "铁门栓",
+        "core": "母亲动用船钱安装铁门栓；它只能拖延人的选择，门外的三下敲门仍在夜里响起。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "character_updates"
+        ]
+      },
+      "3": {
+        "title": "少一只鞋",
+        "core": "将张家的夜间异响转化为可核对的镇上死亡事件，并使张洞与李二因共同隐瞒而绑定。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "timeline_elapsed_days",
+          "character_updates",
+          "world_hypotheses_add"
+        ]
+      }
     }
+  },
+  "last_review": {
+    "chapter": 3,
+    "grade": "A",
+    "verdict": "PASS",
+    "timestamp": "2026-08-02T17:58:35"
   }
 }

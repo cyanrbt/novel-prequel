@@ -25,7 +25,7 @@ ALLOWED_ARTIFACTS = {
 }
 
 NESTED_PATTERNS = (
-    re.compile(r"^candidates/candidate_\d{2}/(?:draft\.txt|generation\.json|static_review\.json|scorecard\.json|integrated_review\.json)$"),
+    re.compile(r"^candidates/candidate_\d{2}/(?:draft\.txt|generation\.json|static_review\.json|scorecard\.json|integrated_review\.json|manual_review\.json)$"),
     re.compile(r"^candidates/candidate_\d{2}/reviews/(?:continuity|character|craft|anti_slop)\.json$"),
     re.compile(
         r"^candidates/candidate_\d{2}/diagnostics/"

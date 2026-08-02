@@ -421,31 +421,46 @@ def accept_dry_run(
         floors = load_config(project_root).get("quality_evolution", {}).get(
             "candidate_floors"
         )
-        if not isinstance(card, dict) or not eligible(card, floors):
-            raise QualityGateError(f"{identifier}未通过全部候选硬门禁，不能人工接受")
         prefix = f"candidates/{identifier}"
         draft = workspace.read_text(f"{prefix}/draft.txt")
         static = workspace.read_json(f"{prefix}/static_review.json")
-        reviews: dict[str, dict[str, Any]] = {}
-        integrated_path = f"{prefix}/integrated_review.json"
-        if workspace.exists(integrated_path):
-            reviews["integrated"] = workspace.read_json(integrated_path)
-        for dimension in DIMENSIONS:
-            review_path = f"{prefix}/reviews/{dimension}.json"
-            if workspace.exists(review_path):
-                reviews[dimension] = workspace.read_json(review_path)
-        selected_result = EvolutionResult(
-            status="WAITING_USER",
-            selected_id=identifier,
-            draft=draft,
-            static_review=static,
-            reviews=reviews,
-            scorecard=card,
-            decision=decision,
-        )
-        semantic_review = WritingPipeline._semantic_from_evolution(
-            number, selected_result
-        )
+        if isinstance(card, dict) and eligible(card, floors):
+            reviews: dict[str, dict[str, Any]] = {}
+            integrated_path = f"{prefix}/integrated_review.json"
+            if workspace.exists(integrated_path):
+                reviews["integrated"] = workspace.read_json(integrated_path)
+            for dimension in DIMENSIONS:
+                review_path = f"{prefix}/reviews/{dimension}.json"
+                if workspace.exists(review_path):
+                    reviews[dimension] = workspace.read_json(review_path)
+            selected_result = EvolutionResult(
+                status="WAITING_USER",
+                selected_id=identifier,
+                draft=draft,
+                static_review=static,
+                reviews=reviews,
+                scorecard=card,
+                decision=decision,
+            )
+            semantic_review = WritingPipeline._semantic_from_evolution(
+                number, selected_result
+            )
+        else:
+            manual_path = f"{prefix}/manual_review.json"
+            if not workspace.exists(manual_path):
+                raise QualityGateError(
+                    f"{identifier}未通过自动候选门禁；需提供逐字可验证的 {manual_path} 才能人工接受"
+                )
+            semantic_review = workspace.read_json(manual_path)
+            require_no_p1(
+                validate_review(
+                    semantic_review,
+                    static,
+                    expected_chapter=number,
+                    draft=draft,
+                ),
+                "人工复核",
+            )
         workspace.write_text("draft.txt", draft)
         workspace.write_json("static_review.json", static)
         workspace.write_json("semantic_review.json", semantic_review)
@@ -566,7 +581,7 @@ def promote_atomically(
         findings: list[dict[str, Any]] = []
         if workspace.exists("decision.json"):
             decision = workspace.read_json("decision.json")
-            selected = decision.get("selected_id", "")
+            selected = decision.get("selected_id") or ""
             prefix = (
                 f"candidates/{selected}"
                 if selected.startswith("candidate_")
