@@ -313,12 +313,16 @@ def _write_temp(target: Path, content: bytes) -> Path:
 
 
 def merge_formal_chapters(project_root: Path) -> tuple[Path, int]:
-    """Build the reading copy from the exact contiguous formal chapter set."""
+    """Build a continuous reading copy from the exact contiguous formal chapter set."""
     run_preflight(project_root)
     paths = formal_chapter_paths(project_root)
     target = project_root / "novel/full_novel.txt"
-    content = "\n\n".join(
-        path.read_text(encoding="utf-8").rstrip() for path in paths
+    # Formal chapter sources retain blank lines for convenient editing. The public
+    # TXT is a continuous reading copy, so it intentionally contains no empty
+    # paragraph lines, including at chapter boundaries.
+    content = "\n".join(
+        "\n".join(line for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+        for path in paths
     )
     if content:
         content += "\n"

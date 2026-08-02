@@ -339,8 +339,16 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(count, 1)
             self.assertEqual(
                 target.read_text(encoding="utf-8"),
-                (root / "novel/chapters/vol_01/chapter_001.txt").read_text(encoding="utf-8"),
+                "\n".join(
+                    line
+                    for line in (root / "novel/chapters/vol_01/chapter_001.txt")
+                    .read_text(encoding="utf-8")
+                    .splitlines()
+                    if line.strip()
+                )
+                + "\n",
             )
+            self.assertNotIn("\n\n", target.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":

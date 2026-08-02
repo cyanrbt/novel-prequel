@@ -4,7 +4,7 @@ schema: novel-prequel-style
 narrative:
   person: 第三人称限知
   pov: 张洞单一视角
-  tone: [冷静, 克制, 具体, 不完整认知]
+  tone: [直接, 有连载感, 具体, 不完整认知, 适度现代口语]
   information_order: [异常事实, 人物假说, 行动试错, 现实后果, 临时结论]
   forbidden_shortcuts:
     - 上帝视角和远处切镜
@@ -23,10 +23,10 @@ horror:
     - 未知部分保留空白，不靠形容词宣布恐怖
 
 character:
-  zhang_dong_early: 十八岁的谨慎普通人；冷静与决断逐步形成
+  zhang_dong_early: 十八岁的谨慎普通人；会怕、会怨、会嘴硬，也会在现实压力下逐步形成冷静与决断
   motivation: 行动落到亲缘、旧债、共同风险、交换、自保或被迫选择
   emotion: 通过物件、距离、称呼、饭食、账目和决定的变化显现
-  dialogue: 每人有不同句长、现实关切和回避方式
+  dialogue: 每人有不同句长、现实关切和回避方式；允许服务当下读者的口语、吐槽和可传播短句，但不能抹平人物差异
 
 anti_ai:
   hard:
@@ -55,7 +55,7 @@ anti_ai:
 pacing:
   chapter_chars: {safe_min: 1800, target_min: 3500, target_max: 5000, safe_max: 8000}
   scenes: "1-3个必要场景；每场必须留下不可逆变化"
-  exposition: "连续解释尽量少于200字，并由动作、争执或新证据打断"
+  exposition: "连续解释尽量少于200字，并由动作、争执、人物欲望或新证据打断"
   ending: "钩子来自已发生的因果，不凭空投放新威胁"
 
 repetition:
