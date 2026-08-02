@@ -26,19 +26,19 @@
     "abilities": {
       "灵异感知": {
         "status": "被动形成",
-        "unlock_chapter": 15
+        "unlock_after": ["M1-DUAL-EXPOSURE"]
       },
       "规则洞察": {
         "status": "初步形成",
-        "unlock_chapter": 30
+        "unlock_after": ["M1B-PATH-RECORD"]
       },
       "抹除灵异": {
         "status": "未觉醒",
-        "unlock_chapter": 81
+        "unlock_after": ["M2-ACTIVE-PRICE"]
       },
       "威势压制": {
         "status": "未形成",
-        "unlock_chapter": 161
+        "unlock_after": ["M3-SEVEN-FORMED"]
       }
     },
     "known_info": [
@@ -78,13 +78,13 @@
       }
     },
     "pending": {
-      "罗文松": {"first_appearance": 85, "status": "未出场"},
-      "李庆之": {"first_appearance": 164, "status": "未出场"},
-      "孟小董": {"first_appearance": 210, "status": "未出场"},
-      "张幼红": {"first_appearance": 245, "status": "未出场"},
-      "罗千": {"first_appearance": 275, "status": "未出场"},
-      "张伯华": {"first_appearance": 301, "status": "未出场"},
-      "秦老": {"birth_year_range": [1905, 1915], "first_appearance": 310, "status": "尚未出场"}
+      "罗文松": {"appearance_after": "M2-ACTIVE-PRICE", "status": "未出场"},
+      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "秦老": {"birth_year_range": [1905, 1915], "appearance_after": "M3-CORE-MEMBERS-MET", "status": "尚未出场"}
     },
     "deceased": ["张家叔公", "张洞父亲"]
   },
@@ -109,6 +109,7 @@
     "F-A03": {"status": "延续", "plant_chapter": 7, "note": "四个空钉位只显示更深结构，未解释来源。"},
     "F-B16": {"status": "已播种", "plant_chapter": 25, "note": "张洞离镇时被人察觉身上带着异样冷气。"}
   },
+  "completed_milestones": ["M1-DUAL-EXPOSURE", "M1B-PATH-RECORD"],
   "revealed_rules": [
     "门外客依赖人主动打开边界；不应声和留鞋均不能保证安全。",
     "双桥镇旧棺结构只能制造两层异常的临时牵制。",

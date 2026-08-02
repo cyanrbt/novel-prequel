@@ -30,6 +30,7 @@ def _valid_plan():
         "rule_hypotheses": ["纸灰会移动"],
         "canon_evidence_ids": ["CANON-RULE-001"],
         "foreshadow_operations": {"plant": [], "recover": []},
+        "milestone_operations": {"complete": []},
         "hook": {"type": "安全区崩坏", "content": "灰在门内"},
         "prohibited_elements": [],
     }
@@ -61,6 +62,23 @@ class QualityGateTests(unittest.TestCase):
         plan["canon_evidence_ids"] = ["MADE-UP-FACT"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("UNKNOWN_CANON_EVIDENCE", {item.code for item in issues})
+
+    def test_plan_rejects_unregistered_design_identifiers(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["foreshadow_operations"]["plant"] = ["F-A99"]
+        plan["milestone_operations"]["complete"] = ["M9-NOT-REAL"]
+        issues = validate_plan(
+            plan,
+            state,
+            {"CANON-RULE-001"},
+            {"F-A01"},
+            {"M1-TEST"},
+        )
+        self.assertEqual(
+            {"UNKNOWN_FORESHADOW", "UNKNOWN_MILESTONE"},
+            {item.code for item in issues if item.code.startswith("UNKNOWN_")} - {"UNKNOWN_CANON_EVIDENCE"},
+        )
 
     def test_review_evidence_must_exist_in_draft(self):
         review = _valid_review()

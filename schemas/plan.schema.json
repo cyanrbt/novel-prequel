@@ -3,7 +3,7 @@
   "$id": "plan.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "hook", "prohibited_elements"],
+  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
     "title": {"type": "string"},
@@ -81,6 +81,12 @@
         "plant": {"type": "array", "items": {"type": "string"}},
         "recover": {"type": "array", "items": {"type": "string"}}
       }
+    },
+    "milestone_operations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complete"],
+      "properties": {"complete": {"type": "array", "items": {"type": "string"}}}
     },
     "hook": {
       "type": "object",

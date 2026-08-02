@@ -107,6 +107,8 @@ def validate_state(state: dict[str, Any]) -> list[str]:
     for key in ("revealed_rules", "recent_hooks"):
         if key in state and not isinstance(state[key], list):
             errors.append(f"{key} 必须是 array")
+    if "completed_milestones" in state and not isinstance(state["completed_milestones"], list):
+        errors.append("completed_milestones 必须是 array")
 
     summaries = state.get("chapter_summaries", {})
     if isinstance(summaries, dict):

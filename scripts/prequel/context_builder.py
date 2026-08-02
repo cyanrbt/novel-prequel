@@ -65,6 +65,16 @@ def build_planner_context(
         for fact in registry.get("facts", [])
         if fact.get("id") in {"CANON-RULE-001", "CANON-RULE-002", "PREQUEL-EVENT-001"}
     ]
+    architecture_path = project_root / "novel/plots/series_architecture.md"
+    registry_path = project_root / "novel/knowledge/arc_registry.json"
+    foreshadow_registry_path = project_root / "novel/knowledge/foreshadow_registry.json"
+    architecture = architecture_path.read_text(encoding="utf-8") if architecture_path.exists() else ""
+    arc_registry = _read_json(registry_path) if registry_path.exists() else {"milestones": {}}
+    foreshadow_registry = (
+        _read_json(foreshadow_registry_path)
+        if foreshadow_registry_path.exists()
+        else {"entries": {}}
+    )
     result = {
         "chapter": state["chapter"],
         "timeline": state["timeline"],
@@ -75,6 +85,10 @@ def build_planner_context(
         "recent_hooks": state["recent_hooks"][-5:],
         "recent_summaries": dict(list(state["chapter_summaries"]["summaries"].items())[-5:]),
         "event_outline": event_path.read_text(encoding="utf-8"),
+        "series_architecture": architecture,
+        "arc_registry": arc_registry,
+        "foreshadow_registry": foreshadow_registry,
+        "completed_milestones": state.get("completed_milestones", []),
         "canon_facts": facts,
         "era_bans": {
             "characters": era_bans.get("characters", []),
@@ -178,6 +192,8 @@ def build_chapter_context_pack(
         "active_characters": state["characters"].get("active", {}),
         "world_lore": state["world_lore"],
         "active_foreshadows": state["active_foreshadows"],
+        "foreshadow_registry": planner_context.get("foreshadow_registry", {"entries": {}}),
+        "completed_milestones": planner_context.get("completed_milestones", []),
         "canon_facts": planner_context.get("canon_facts", []),
         "era_bans": planner_context.get("era_bans", {}),
         "event_outline": planner_context.get("event_outline", ""),

@@ -1,0 +1,74 @@
+{
+  "schema": "novel-foreshadow-registry",
+  "authority": "series_architecture.md",
+  "rules": {
+    "identity": "ID 的含义不得复用；状态、事件卡和本表必须一致。",
+    "scheduling": "登记阶段与前置条件，不以章节号或固定密度排期。",
+    "recovery": "回收必须消费已播种的具体证据；未登记项目不得以终局解释补种。"
+  },
+  "entries": {
+    "F-A01": {
+      "class": "A",
+      "status": "active",
+      "plant": "双桥镇开局：不该出现的纸灰",
+      "recover_by": "M1-CITY-EXIT",
+      "meaning": "纸灰指向封存泄漏的路径；根源保持未定。"
+    },
+    "F-A02": {
+      "class": "A",
+      "status": "active",
+      "plant": "双桥镇中段：被涂黑的四个名字、补砖与守位记录",
+      "recover_by": "M1-CITY-EXIT",
+      "meaning": "四个守位与更深结构有关；不得提前指定其完整身份或血缘。"
+    },
+    "F-A03": {
+      "class": "A",
+      "status": "active",
+      "plant": "双桥镇中段：七棺十一钉的四个空钉位",
+      "recover_by": "M2-COOPERATION-ANCHOR",
+      "meaning": "更深结构存在，但第一卷只允许确认其未被解决。"
+    },
+    "F-B16": {
+      "class": "B",
+      "status": "active",
+      "plant": "张洞离开双桥镇后，旁人察觉其携带异常冷意",
+      "recover_by": "M2-ACTIVE-PRICE",
+      "meaning": "早期侵蚀会影响张洞的处境与他人判断，不等于新能力。"
+    },
+    "F-B01": {
+      "class": "B",
+      "status": "planned",
+      "plant_after": ["M1-CITY-EXIT"],
+      "recover_by": "M2-COOPERATION-ANCHOR",
+      "meaning": "与罗文松有关的地点或记录标记，只能在其个人事件中赋义。"
+    },
+    "F-B02": {
+      "class": "B",
+      "status": "planned",
+      "plant_after": ["M2-COOPERATION-ANCHOR"],
+      "recover_by": "M3-SEVEN-FORMED",
+      "meaning": "灵异建筑对姓名、地址或记录的异常处理，不能提前推出完整体系。"
+    },
+    "F-C01": {
+      "class": "C",
+      "status": "planned",
+      "plant_after": ["M3-CORE-MEMBERS-MET"],
+      "recover_by": "M5-FINAL-SEAL",
+      "meaning": "各处封存设施之间的共通原理；允许长期留白，不指定单一根源。"
+    },
+    "F-C02": {
+      "class": "C",
+      "status": "planned",
+      "plant_after": ["M3-CORE-MEMBERS-MET"],
+      "recover_by": "M5-FINAL-SEAL",
+      "meaning": "成员身份、记忆与灵异媒介之间的代价关系；不得承诺复活或洗白结局。"
+    },
+    "F-D02": {
+      "class": "D",
+      "status": "planned",
+      "plant_after": ["M3-SEVEN-FORMED"],
+      "recover_by": "M5-FINAL-SEAL",
+      "meaning": "封存设施之间存在视觉或空间对应；终局只解释其服务于限制，而非万能解决。"
+    }
+  }
+}

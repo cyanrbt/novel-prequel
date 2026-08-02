@@ -1,0 +1,15 @@
+{
+  "schema": "novel-arc-registry",
+  "authority": "series_architecture.md",
+  "milestones": {
+    "M1-DUAL-EXPOSURE": {"volume": 1, "meaning": "张洞直面双桥镇封存泄漏并形成被动异常辨认"},
+    "M1B-PATH-RECORD": {"volume": 1, "after": ["M1-DUAL-EXPOSURE"], "meaning": "张洞通过多个样本记录异常逼人行动的顺序"},
+    "M1-CITY-EXIT": {"volume": 1, "after": ["M1B-PATH-RECORD"], "meaning": "张洞主动离开大汉市寻找案例"},
+    "M2-ACTIVE-PRICE": {"volume": 2, "after": ["M1-CITY-EXIT"], "meaning": "张洞第一次主动使用灵异并承受不可逆代价"},
+    "M2-COOPERATION-ANCHOR": {"volume": 2, "after": ["M2-ACTIVE-PRICE"], "meaning": "张洞与罗文松形成长期合作锚点"},
+    "M3-CORE-MEMBERS-MET": {"volume": 3, "after": ["M2-COOPERATION-ANCHOR"], "meaning": "核心成员均先以独立人物身份出现"},
+    "M3-SEVEN-FORMED": {"volume": 3, "after": ["M3-CORE-MEMBERS-MET"], "meaning": "核心成员第一次共同限制异常并暴露体系缺口"},
+    "M4-SYSTEM-FAILURE": {"volume": 4, "after": ["M3-SEVEN-FORMED"], "meaning": "既有体系在高危事件中失败，路线被迫改变"},
+    "M5-FINAL-SEAL": {"volume": 5, "after": ["M4-SYSTEM-FAILURE"], "meaning": "张洞完成面向后世的封印布局"}
+  }
+}

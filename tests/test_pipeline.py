@@ -59,6 +59,7 @@ def valid_plan_json() -> str:
             "rule_hypotheses": ["纸灰可能标记被敲门者"],
             "canon_evidence_ids": ["CANON-RULE-001", "PREQUEL-EVENT-001"],
             "foreshadow_operations": {"plant": ["F-A01"], "recover": []},
+            "milestone_operations": {"complete": []},
             "hook": {"type": "安全区崩坏", "content": "纸灰出现在门内"},
             "prohibited_elements": ["周正", "负责人"],
         },
@@ -118,6 +119,15 @@ def make_project_fixture(root: Path) -> Path:
     }
     (root / "novel/knowledge/canon_registry.json").write_text(json.dumps(registry, ensure_ascii=False), encoding="utf-8")
     (root / "novel/plots/event_1.md").write_text("# event_1\n\nCh01 纸灰。", encoding="utf-8")
+    (root / "novel/plots/series_architecture.md").write_text("# test architecture\n", encoding="utf-8")
+    (root / "novel/knowledge/arc_registry.json").write_text(
+        json.dumps({"schema": "novel-arc-registry", "milestones": {"M1-TEST": {}}}, ensure_ascii=False),
+        encoding="utf-8",
+    )
+    (root / "novel/knowledge/foreshadow_registry.json").write_text(
+        json.dumps({"schema": "novel-foreshadow-registry", "entries": {"F-A01": {}}}, ensure_ascii=False),
+        encoding="utf-8",
+    )
     config = {
         "provider": {
             "type": "codex_cli",

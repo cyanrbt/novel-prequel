@@ -1,6 +1,6 @@
 # 创作规则全书（权威规则源）
 
-本文件是创作约束的唯一权威来源。事实依据以 `novel/knowledge/canon_registry.json` 为准，运行状态以 `novel/state/current.json` 为准，风格参数以 `novel/style/compact_style.yaml` 为准，示例锚点以 `novel/style/style_anchors.txt` 为准。
+本文件负责正文行为与发布门禁；全书卷结构、里程碑和可伸缩长度以 `novel/plots/series_architecture.md` 为最高设计约束。事实依据以 `novel/knowledge/canon_registry.json` 为准，运行状态以 `novel/state/current.json` 为准，里程碑以 `novel/knowledge/arc_registry.json` 为准，伏笔 ID 与回收边界以 `novel/knowledge/foreshadow_registry.json` 为准；风格参数以 `novel/style/compact_style.yaml` 为准，示例锚点以 `novel/style/style_anchors.txt` 为准。`novel/foreshadow_tracker.md` 是归档草案，不得作为创作指令。
 
 ## 1. 原著一致性（P1）
 
@@ -24,7 +24,7 @@
 ## 3. 连续性与能力闸门（P1）
 
 - 章号连续，时间、地点、在场人物、身体、物品、已知信息与上一章状态相接。
-- `unlock_chapter` 之前，能力不能以技能、直觉、威势或变相效果出现。
+- 能力的 `unlock_after` 里程碑未完成前，能力不能以技能、直觉、威势或变相效果出现；旧的 `unlock_chapter` 仅用于读取旧状态时的兼容，不得新增。
 - 每章至少发生一次不可逆的戏剧转折，改变选择、关系、资源、规则假说、身体状态或危险位置中的一项。
 - 场景应承担准备、冲突、升级、关系显影或余波中的明确功能；并非每场都要产生不可逆状态变化。只有气氛、走路和复述、且没有改变人物压力的场景应删除。
 - 伏笔播种与回收必须登记。回收不能靠当天新补的解释完成。

@@ -179,6 +179,34 @@ def run_preflight(
         raise QualityGateError("canon registry缺少A/B/C三级")
     checks.append("canon registry and era bans loaded")
 
+    architecture_path = project_root / "novel/plots/series_architecture.md"
+    arc_registry_path = project_root / "novel/knowledge/arc_registry.json"
+    foreshadow_registry_path = project_root / "novel/knowledge/foreshadow_registry.json"
+    if not architecture_path.exists():
+        raise QualityGateError("总架构文件不存在: novel/plots/series_architecture.md")
+    try:
+        arc_registry = json.loads(arc_registry_path.read_text(encoding="utf-8"))
+        foreshadow_registry = json.loads(foreshadow_registry_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise QualityGateError(f"里程碑或伏笔登记无效: {exc}") from exc
+    if not isinstance(arc_registry, dict) or arc_registry.get("schema") != "novel-arc-registry":
+        raise QualityGateError("里程碑登记格式无效")
+    milestones = arc_registry.get("milestones")
+    if not isinstance(milestones, dict) or not milestones:
+        raise QualityGateError("里程碑登记缺少 milestones")
+    if not isinstance(foreshadow_registry, dict) or foreshadow_registry.get("schema") != "novel-foreshadow-registry":
+        raise QualityGateError("伏笔登记格式无效")
+    foreshadows = foreshadow_registry.get("entries")
+    if not isinstance(foreshadows, dict):
+        raise QualityGateError("伏笔登记缺少 entries")
+    unknown_completed = set(state.get("completed_milestones", [])) - set(milestones)
+    if unknown_completed:
+        raise QualityGateError(f"状态包含未登记里程碑: {sorted(unknown_completed)}")
+    unknown_active = set(state.get("active_foreshadows", {})) - set(foreshadows)
+    if unknown_active:
+        raise QualityGateError(f"状态包含未登记伏笔: {sorted(unknown_active)}")
+    checks.append("milestone and foreshadow registries validated")
+
     event_path = project_root / "novel/plots" / f"{state['chapter']['current_event']}.md"
     if not event_path.exists():
         raise QualityGateError(f"当前事件大纲不存在: {event_path}")
@@ -271,6 +299,10 @@ def _new_state_after_chapter(
         item_id = _foreshadow_id(item)
         if item_id in updated["active_foreshadows"]:
             updated["active_foreshadows"][item_id].update({"status": "已回收", "recover_chapter": number})
+    completed = updated.setdefault("completed_milestones", [])
+    for item in plan.get("milestone_operations", {}).get("complete", []):
+        if item not in completed:
+            completed.append(item)
     updated["last_review"] = {
         "chapter": number,
         "grade": review["grade"],
@@ -423,7 +455,12 @@ def accept_dry_run(
         raise ArtifactValidationError(f"无法读取待接受正文: {exc}") from exc
     planner_context = build_planner_context(project_root, state)
     allowed_canon_ids = {fact["id"] for fact in planner_context["canon_facts"]}
-    require_no_p1(validate_plan(plan, state, allowed_canon_ids), "待接受规划")
+    allowed_foreshadow_ids = set(planner_context.get("foreshadow_registry", {}).get("entries", {}))
+    allowed_milestone_ids = set(planner_context.get("arc_registry", {}).get("milestones", {}))
+    require_no_p1(
+        validate_plan(plan, state, allowed_canon_ids, allowed_foreshadow_ids, allowed_milestone_ids),
+        "待接受规划",
+    )
     recent_limit = load_config(project_root).get("quality_gates", {}).get(
         "recent_chapters_for_repetition", 5
     )
@@ -743,6 +780,8 @@ class WritingPipeline:
             self.project_root, state, memory.context_for_state(state)
         )
         allowed_canon_ids = {fact["id"] for fact in base_context["canon_facts"]}
+        allowed_foreshadow_ids = set(base_context.get("foreshadow_registry", {}).get("entries", {}))
+        allowed_milestone_ids = set(base_context.get("arc_registry", {}).get("milestones", {}))
         workspace = ChapterWorkspace.create(
             self.project_root / "novel/work", number, attempt
         )
@@ -816,7 +855,10 @@ class WritingPipeline:
                     ),
                     "plan",
                 )
-                require_no_p1(validate_plan(plan, state, allowed_canon_ids), "规划")
+                require_no_p1(
+                    validate_plan(plan, state, allowed_canon_ids, allowed_foreshadow_ids, allowed_milestone_ids),
+                    "规划",
+                )
                 workspace.write_json("plan.json", plan)
                 manifest.complete(
                     "plan",
@@ -934,6 +976,8 @@ class WritingPipeline:
         recent = recent_chapters(self.project_root, state, recent_limit)
         base_context = build_planner_context(self.project_root, state)
         allowed_canon_ids = {fact["id"] for fact in base_context["canon_facts"]}
+        allowed_foreshadow_ids = set(base_context.get("foreshadow_registry", {}).get("entries", {}))
+        allowed_milestone_ids = set(base_context.get("arc_registry", {}).get("milestones", {}))
         failures: list[str] = []
         saved_plan: dict[str, Any] | None = None
         revision_context: dict[str, Any] | None = None
@@ -962,7 +1006,7 @@ class WritingPipeline:
                         "plan",
                     )
                     require_no_p1(
-                        validate_plan(plan, state, allowed_canon_ids), "规划"
+                        validate_plan(plan, state, allowed_canon_ids, allowed_foreshadow_ids, allowed_milestone_ids), "规划"
                     )
                     saved_plan = copy.deepcopy(plan)
                 else:

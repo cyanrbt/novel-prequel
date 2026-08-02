@@ -17,7 +17,7 @@ class Issue:
 PLAN_REQUIRED = {
     "chapter_number", "title", "event_id", "phase", "chapter_purpose", "scenes",
     "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids",
-    "foreshadow_operations", "hook", "prohibited_elements",
+    "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements",
 }
 
 REVIEW_REQUIRED = {
@@ -62,6 +62,8 @@ def validate_plan(
     plan: dict[str, Any],
     state: dict[str, Any],
     allowed_canon_ids: set[str] | None = None,
+    allowed_foreshadow_ids: set[str] | None = None,
+    allowed_milestone_ids: set[str] | None = None,
 ) -> list[Issue]:
     issues: list[Issue] = []
     if not isinstance(plan, dict):
@@ -126,13 +128,32 @@ def validate_plan(
             for value in values:
                 if not isinstance(value, str) or not re.match(r"^F-[A-Z]-?\d+", value.strip()):
                     issues.append(Issue("BAD_FORESHADOW_ID", "P1", "伏笔必须以稳定ID开头，如F-A01", repr(value)))
+                    continue
+                matched = re.match(r"^(F-[A-Z]-?\d+)", value.strip())
+                if matched and allowed_foreshadow_ids is not None and matched.group(1) not in allowed_foreshadow_ids:
+                    issues.append(Issue("UNKNOWN_FORESHADOW", "P1", "伏笔未在登记表中定义", matched.group(1)))
+    milestones = plan.get("milestone_operations")
+    if not isinstance(milestones, dict) or not isinstance(milestones.get("complete"), list):
+        issues.append(Issue("BAD_MILESTONE_OPS", "P1", "里程碑操作必须包含complete数组", repr(milestones)))
+        planned_milestones: set[str] = set()
+    else:
+        planned_milestones = {item for item in milestones["complete"] if isinstance(item, str)}
+        if allowed_milestone_ids is not None:
+            for item in sorted(planned_milestones - allowed_milestone_ids):
+                issues.append(Issue("UNKNOWN_MILESTONE", "P1", "里程碑未在登记表中定义", item))
     abilities = state.get("protagonist", {}).get("abilities", {})
     rendered = repr({
         key: plan.get(key)
         for key in ("scenes", "new_information", "state_changes", "rule_hypotheses")
     })
+    completed_milestones = set(state.get("completed_milestones", [])) | planned_milestones
     for name, ability in abilities.items():
-        if expected and expected < ability.get("unlock_chapter", 0) and name in rendered:
+        unlock_after = ability.get("unlock_after")
+        if isinstance(unlock_after, list) and name in rendered:
+            missing = [item for item in unlock_after if item not in completed_milestones]
+            if missing:
+                issues.append(Issue("ABILITY_GATE", "P1", f"能力前置里程碑未完成: {name}", ", ".join(missing)))
+        elif expected and expected < ability.get("unlock_chapter", 0) and name in rendered:
             issues.append(Issue("ABILITY_GATE", "P1", f"能力提前出现: {name}", name))
     return issues
 

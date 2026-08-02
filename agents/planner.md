@@ -64,6 +64,7 @@
   "rule_hypotheses": ["本章人物可提出但不可越证据定论的假说"],
   "canon_evidence_ids": ["已注册依据ID"],
   "foreshadow_operations": {"plant": [], "recover": []},
+  "milestone_operations": {"complete": []},
   "hook": {"type": "新威胁|安全区崩坏|未解问题|隐藏规则发现|代价展示", "content": "由本章因果产生的具体钩子"},
   "prohibited_elements": ["本章禁入元素"]
 }
@@ -72,3 +73,5 @@
 `state_changes` 的全部固定字段都必须输出；无变化的数组填 `[]`，地点不变填 `null`，时间字段填写本章结束后的值。所有字段合起来必须至少包含一项真实变化，不得只复述写前状态，也不得虚构模型已经完成审查。
 
 `foreshadow_operations` 只填写大纲已经定义的稳定 ID（例如 `F-A01`），不要把伏笔说明或中文冒号附在 ID 后面。
+
+`milestone_operations.complete` 只在本章真正完成总架构中的前置条件时填写。章节编号不是能力或人物登场的通行证；未完成前置里程碑不得借“到章数了”提前解锁。
