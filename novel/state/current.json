@@ -1,334 +1,145 @@
 {
-    "schema": "novel-prequel-state",
-    "last_updated": "2026-08-02T12:30:00",
-    "machine_state": "IDLE",
-    "chapter": {
-        "last_chapter": 20,
-        "next_chapter": 21,
-        "current_volume": 1,
-        "current_volume_name": "\u5927\u6c49\u5e02",
-        "current_event": "event_1",
-        "current_event_name": "\u5927\u6c49\u5e02\u7591\u68fa",
-        "current_phase": "\u5f81\u5146",
-        "last_title": "\u4e00\u591c\u4e24\u95e8"
+  "schema": "novel-prequel-state",
+  "last_updated": "2026-08-02T13:20:00",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 30,
+    "next_chapter": 31,
+    "current_volume": 1,
+    "current_volume_name": "大汉市",
+    "current_event": "event_1",
+    "current_event_name": "渡口雾影",
+    "current_phase": "试探",
+    "last_title": "不该走的路"
+  },
+  "timeline": {
+    "current_year": 1908,
+    "era": "清末",
+    "year_label": "清末（辛亥革命前三年）",
+    "elapsed_days": 36
+  },
+  "protagonist": {
+    "name": "张洞",
+    "age": 18,
+    "location": "大汉市·江边渡口",
+    "erosion": 0,
+    "abilities": {
+      "灵异感知": {
+        "status": "被动形成",
+        "unlock_chapter": 15
+      },
+      "规则洞察": {
+        "status": "初步形成",
+        "unlock_chapter": 30
+      },
+      "抹除灵异": {
+        "status": "未觉醒",
+        "unlock_chapter": 81
+      },
+      "威势压制": {
+        "status": "未形成",
+        "unlock_chapter": 161
+      }
     },
-    "timeline": {
-        "current_year": 1908,
-        "era": "\u6e05\u672b",
-        "year_label": "\u6e05\u672b\uff08\u8f9b\u4ea5\u9769\u547d\u524d\u4e09\u5e74\uff09",
-        "elapsed_days": 20
-    },
-    "protagonist": {
-        "name": "\u5f20\u6d1e",
-        "age": 18,
-        "location": "\u5927\u6c49\u5e02\u00b7\u53cc\u6865\u9547",
-        "erosion": 0,
-        "abilities": {
-            "\u7075\u5f02\u611f\u77e5": {
-                "status": "\u88ab\u52a8\u5f62\u6210",
-                "unlock_chapter": 15
-            },
-            "\u89c4\u5219\u6d1e\u5bdf": {
-                "status": "\u672a\u5f62\u6210",
-                "unlock_chapter": 30
-            },
-            "\u62b9\u9664\u7075\u5f02": {
-                "status": "\u672a\u89c9\u9192",
-                "unlock_chapter": 81
-            },
-            "\u5a01\u52bf\u538b\u5236": {
-                "status": "\u672a\u5f62\u6210",
-                "unlock_chapter": 161
-            }
-        },
-        "known_info": [
-            "\u5f20\u6d1e\u786e\u8ba4\u767d\u65e5\u7eb8\u7070\u7684\u53d1\u73b0\u4f4d\u7f6e\u662f\u76d6\u7740\u7684\u84b8\u7b3c\u5185\u90e8\uff0c\u7b3c\u76d6\u4e0a\u6ca1\u6709\u7070\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u591c\u95f4\u7eb8\u7070\u7684\u53d1\u73b0\u4f4d\u7f6e\u662f\u7c73\u7f38\u5e95\uff0c\u5e76\u5c06\u5176\u4e0e\u767d\u65e5\u6837\u672c\u5206\u5f00\u4fdd\u5b58\u3002",
-            "\u73b0\u6709\u4f4d\u7f6e\u8bb0\u5f55\u4e0d\u8db3\u4ee5\u5224\u65ad\u7eb8\u7070\u7684\u6765\u6e90\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u53d4\u516c\u66fe\u6697\u4e2d\u8ba2\u5236\u94c1\u95e8\u6813\u3002",
-            "\u5f20\u6d1e\u4eb2\u773c\u770b\u89c1\u4e09\u526f\u65e7\u6728\u6813\u7531\u5185\u5411\u5916\u5d29\u88c2\uff0c\u4f46\u8fd8\u4e0d\u80fd\u636e\u6b64\u5224\u65ad\u635f\u574f\u539f\u56e0\u3002",
-            "\u5f20\u6d1e\u77e5\u9053\u6bcd\u4eb2\u5df2\u7528\u4ed6\u7684\u79bb\u9547\u8239\u8d39\u652f\u4ed8\u94c1\u95e8\u6813\u5de5\u94b1\uff0c\u81ea\u5df1\u6682\u65f6\u65e0\u6cd5\u6309\u539f\u8ba1\u5212\u79bb\u9547\u627e\u5de5\u3002",
-            "\u5f20\u6d1e\u542c\u89c1\u65b0\u6813\u843d\u4e0b\u540e\u7684\u4e09\u4e0b\u6572\u95e8\u58f0\uff0c\u5e76\u786e\u8ba4\u9662\u5185\u770b\u95e8\u72d7\u5f53\u65f6\u6ca1\u6709\u53eb\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u9547\u4e0a\u51fa\u4e8b\u4eba\u5bb6\u7684\u95e8\u6ca1\u6709\u660e\u663e\u7834\u635f\uff0c\u95e8\u69db\u5916\u4e0e\u6b7b\u8005\u811a\u8fb9\u5404\u6709\u4e00\u53ea\u978b\u3002",
-            "\u5f20\u6d1e\u5f97\u77e5\u6b7b\u8005\u5bb6\u5c5e\u5c06\u6572\u95e8\u8282\u594f\u8ba4\u4f5c\u4e0b\u846c\u8005\u751f\u524d\u7684\u8282\u594f\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u674e\u4e8c\u5bb6\u4e5f\u66fe\u542c\u8fc7\u4e0e\u5f20\u5bb6\u76f8\u540c\u7684\u4e09\u4e0b\u6572\u95e8\u58f0\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u8d75\u5bb6\u94c1\u95e8\u6813\u548c\u95e8\u6247\u5747\u5b8c\u6574\uff0c\u8d75\u8001\u5927\u4ecd\u6b7b\u5728\u95e8\u540e\u7684\u5802\u5c4b\u91cc\u3002",
-            "\u5f20\u6d1e\u5f97\u77e5\u8d75\u8001\u5927\u5728\u542c\u89c1\u4ea1\u6bcd\u58f0\u97f3\u540e\u81ea\u884c\u62bd\u5f00\u94c1\u95e8\u6813\uff0c\u662f\u5426\u5b9e\u9645\u5f00\u95e8\u65e0\u4eba\u770b\u89c1\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u8d75\u5bb6\u4e0e\u5f20\u5bb6\u95e8\u677f\u5185\u4fa7\u5747\u51fa\u73b0\u8fc7\u7eb8\u7070\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u5f20\u5bb6\u95e8\u5916\u7559\u978b\u7684\u5f53\u591c\uff0c\u4e09\u4e0b\u6572\u95e8\u58f0\u5728\u978b\u8fb9\u505c\u4f4f\uff0c\u672a\u7ee7\u7eed\u54cd\u8d77\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u5929\u4eae\u540e\u95e8\u5916\u7684\u978b\u79bb\u95e8\u69db\u66f4\u8fd1\u3001\u978b\u5c16\u6539\u671d\u95e8\u5185\uff0c\u77f3\u9636\u58a8\u7ebf\u672a\u88ab\u64e6\u6389\uff0c\u5468\u56f4\u6ca1\u6709\u62d6\u75d5\u6216\u811a\u5370\u3002",
-            "\u5f20\u6d1e\u5f97\u77e5\u7236\u4eb2\u4ece\u796d\u7530\u6563\u9875\u4e2d\u67e5\u5230\u7960\u5802\u5468\u8fb9\u65e7\u65e5\u53cd\u590d\u4fee\u95e8\u5e76\u4f34\u968f\u6536\u79df\u4eba\u59d3\u540d\u6d88\u5931\u7684\u8bb0\u5f55\uff0c\u4f46\u73b0\u6709\u8d26\u76ee\u65e0\u6cd5\u8bf4\u660e\u539f\u56e0\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u65cf\u8c31\u4e0a\u6709\u6570\u4e2a\u8fd1\u5e74\u540d\u5b57\u88ab\u6d53\u58a8\u6d82\u9ed1\uff0c\u5176\u4e2d\u5305\u62ec\u66fe\u7ed9\u4ed6\u505a\u8fc7\u6447\u8f66\u7684\u5f20\u4e94\u798f\u3002",
-            "\u5f20\u6d1e\u4e0e\u674e\u4e8c\u9694\u7740\u7960\u5802\u901a\u6c14\u683c\u53ea\u6570\u5230\u4e03\u5904\u65e7\u68fa\u68fa\u89d2\uff0c\u65e7\u5355\u5374\u767b\u8bb0\u5341\u4e00\u9897\u68fa\u9489\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u674e\u4e8c\u6bcd\u4eb2\u672a\u79bb\u5f00\u67d3\u574a\u65f6\uff0c\u674e\u4e8c\u5df2\u5728\u5bb6\u95e8\u5916\u542c\u89c1\u5979\u547c\u5524\u5c0f\u540d\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u95e8\u5916\u58f0\u97f3\u53ef\u501f\u7528\u4ecd\u5728\u4eba\u4e16\u8005\u7684\u58f0\u97f3\uff0c\u4e0d\u9650\u4e8e\u6b7b\u8005\u3002",
-            "\u5f20\u6d1e\u786e\u8ba4\u5f20\u5bb6\u4e00\u591c\u4e0d\u5e94\u58f0\u540e\u6682\u65f6\u65e0\u4eba\u6b7b\u4ea1\uff0c\u4f46\u95e8\u677f\u5185\u4fa7\u51fa\u73b0\u4e09\u4e2a\u6e7f\u9ed1\u6307\u5370\u3002",
-            "\u5f20\u6d1e\u5f97\u77e5\u5b59\u5bb6\u5b69\u5b50\u53d1\u70ed\u540e\u6bcd\u4eb2\u4e3a\u6c42\u533b\u81ea\u884c\u5f00\u95e8\uff0c\u5b69\u5b50\u4e0e\u6bcd\u4eb2\u5931\u8e2a\u3002"
-        ],
-        "body": {
-            "\u72b6\u6001": "\u53f3\u624b\u80cc\u89e6\u78b0\u65e7\u68fa\u6728\u540e\u7559\u6709\u767d\u971c\u6837\u51b7\u75db",
-            "\u5f02\u5e38\u8fa8\u8ba4": "\u5730\u4e0b\u5f02\u5e38\u9760\u8fd1\u65f6\u540e\u9888\u5148\u51fa\u73b0\u51b7\u610f\uff0c\u4e0d\u63d0\u4f9b\u89e3\u6cd5"
-        },
-        "inventory": []
-    },
-    "characters": {
-        "active": {
-            "\u5f20\u6d1e\u6bcd\u4eb2": {
-                "status": "\u7559\u4e0b\u95e8\u69db\u7559\u978b\u5e76\u6697\u85cf\u5907\u7528\u65e7\u978b",
-                "note": "\u5979\u4e0d\u786e\u4fe1\u978b\u80fd\u4fdd\u547d\uff0c\u5374\u5728\u65e0\u53ef\u9760\u529e\u6cd5\u65f6\u9009\u62e9\u4fdd\u7559\u8fd9\u6761\u6c11\u95f4\u504f\u65b9\u3002"
-            },
-            "\u5f20\u6d1e\u7236\u4eb2": {
-                "status": "\u53d6\u5f97\u796d\u7530\u6563\u9875\u5e76\u51b3\u5b9a\u5411\u65cf\u957f\u7d22\u770b\u7960\u5802\u65e7\u8d26",
-                "note": "\u8d75\u5bb6\u94c1\u6813\u5b8c\u597d\u4ecd\u6b7b\u4eba\u540e\uff0c\u4ed6\u53d1\u73b0\u7960\u5802\u5468\u8fb9\u591a\u6b21\u4fee\u95e8\u8bb0\u5f55\u4e0e\u6536\u79df\u4eba\u59d3\u540d\u6d88\u5931\u76f8\u90bb\uff0c\u51b3\u5b9a\u7ee7\u7eed\u8ffd\u67e5\u3002"
-            },
-            "\u5f20\u5bb6\u53d4\u516c": {
-                "status": "\u7ee7\u7eed\u4ee5\u662f\u5426\u5e94\u58f0\u8ffd\u95ee\u8d75\u5bb6\u6b7b\u56e0",
-                "note": "\u4ed6\u62d2\u7edd\u89e3\u91ca\u65e7\u4f8b\uff0c\u53ea\u5f3a\u8c03\u95e8\u80fd\u5173\u4f4f\u98ce\u800c\u5173\u4e0d\u4f4f\u4eba\u5fc3\u3002"
-            },
-            "\u6728\u5320\u8001\u674e": {
-                "status": "\u5df2\u6536\u53d6\u5de5\u94b1\u5e76\u4e3a\u5f20\u5bb6\u88c5\u597d\u94c1\u95e8\u6813",
-                "note": "\u4ed6\u53ea\u8bc1\u660e\u4e09\u526f\u65e7\u6728\u6813\u7684\u5d29\u88c2\u65b9\u5411\uff0c\u4e0d\u58f0\u79f0\u77e5\u9053\u635f\u574f\u539f\u56e0\u6216\u95e8\u5916\u4e8b\u7269\u3002"
-            },
-            "\u674e\u4e8c": {
-                "status": "\u4e0e\u5f20\u6d1e\u5f62\u6210\u5171\u540c\u9690\u7792",
-                "note": "\u4ed6\u627f\u8ba4\u81ea\u5bb6\u4e5f\u542c\u8fc7\u76f8\u540c\u6572\u95e8\u58f0\uff0c\u5e76\u4e0e\u5f20\u6d1e\u7ea6\u5b9a\u6682\u4e0d\u544a\u77e5\u5927\u4eba\u3002"
-            },
-            "\u5f20\u6d1e\u7236\u4eb2": {
-                "status": "\u6b7b\u4e8e\u7960\u5802\u5730\u4e0b\u53f0\u9636",
-                "note": "\u7b2c13\u7ae0\u8fdb\u5165\u5730\u4e0b\u67e5\u65e7\u5355\u540e\u6b7b\u4ea1\uff0c\u4e0d\u5e94\u518d\u89c6\u4e3a\u5728\u573a\u4eba\u7269\u3002"
-            },
-            "\u5f20\u6d1e\u6bcd\u4eb2": {
-                "status": "\u5df2\u9762\u5bf9\u8239\u8d39\u53ea\u591f\u9001\u8d70\u4e00\u4eba\u7684\u73b0\u5b9e",
-                "note": "\u5979\u60f3\u9001\u5f20\u6d1e\u5148\u79bb\u9547\uff0c\u5374\u88ab\u5f20\u6d1e\u62d2\u7edd\u3002"
-            },
-            "\u5f20\u5bb6\u53d4\u516c": {
-                "status": "\u6b7b\u4e8e\u7960\u5802\u4f9b\u684c\u65c1",
-                "note": "\u7b2c11\u7ae0\u72ec\u81ea\u5b88\u95e8\u540e\u6b7b\u4ea1\uff0c\u4ec5\u7559\u4e0b\u65e7\u68fa\u6728\u3001\u94a5\u5319\u4e0e\u4e0d\u5b8c\u6574\u7ecf\u9a8c\u3002"
-            }
-        },
-        "pending": {
-            "\u7f57\u6587\u677e": {
-                "first_appearance": 85,
-                "status": "\u672a\u51fa\u573a"
-            },
-            "\u674e\u5e86\u4e4b": {
-                "first_appearance": 164,
-                "status": "\u672a\u51fa\u573a"
-            },
-            "\u5b5f\u5c0f\u8463": {
-                "first_appearance": 210,
-                "status": "\u672a\u51fa\u573a"
-            },
-            "\u5f20\u5e7c\u7ea2": {
-                "first_appearance": 245,
-                "status": "\u672a\u51fa\u573a"
-            },
-            "\u7f57\u5343": {
-                "first_appearance": 275,
-                "status": "\u672a\u51fa\u573a"
-            },
-            "\u5f20\u4f2f\u534e": {
-                "first_appearance": 301,
-                "status": "\u672a\u51fa\u573a"
-            },
-            "\u79e6\u8001": {
-                "birth_year_range": [
-                    1905,
-                    1915
-                ],
-                "first_appearance": 310,
-                "status": "\u5c1a\u672a\u51fa\u573a"
-            }
-        },
-    "deceased": ["\u5f20\u5bb6\u53d4\u516c", "\u5f20\u6d1e\u7236\u4eb2"]
-    },
-    "world_lore": {
-        "reveal_layer": 1,
-        "confirmed": [
-            "\u767d\u65e5\u7070\u4e0e\u591c\u95f4\u7070\u5206\u522b\u53d1\u73b0\u4e8e\u84b8\u7b3c\u5185\u90e8\u548c\u7c73\u7f38\u5e95\uff1b\u8fd9\u662f\u4e24\u6b21\u5206\u5f00\u8bb0\u5f55\u7684\u4f4d\u7f6e\u4e8b\u5b9e\u3002",
-            "\u5f20\u5bb6\u9662\u95e8\u5df2\u7531\u65e7\u6728\u6813\u6362\u88c5\u4e3a\u94c1\u95e8\u6813\u3002",
-            "\u4e09\u526f\u6765\u81ea\u4e0d\u540c\u4f4f\u6237\u7684\u65e7\u6728\u6813\u90fd\u6709\u7531\u5185\u5411\u5916\u5d29\u88c2\u7684\u53ef\u89c1\u75d5\u8ff9\u3002",
-            "\u5f20\u5bb6\u65b0\u6813\u843d\u4e0b\u540e\u7684\u5f53\u591c\uff0c\u95e8\u5916\u54cd\u8d77\u4e09\u4e0b\u6572\u51fb\uff0c\u9662\u5185\u770b\u95e8\u72d7\u6ca1\u6709\u53eb\u3002",
-            "\u51fa\u4e8b\u4eba\u5bb6\u7684\u9662\u95e8\u65e0\u660e\u663e\u7834\u635f\uff0c\u95e8\u69db\u5916\u4e00\u53ea\u978b\u4e0e\u6b7b\u8005\u811a\u8fb9\u4e00\u53ea\u978b\u540c\u65f6\u5b58\u5728\u3002",
-            "\u5f20\u5bb6\u4e0e\u674e\u4e8c\u5bb6\u6240\u95fb\u6572\u95e8\u8282\u594f\u76f8\u540c\u3002",
-            "\u8d75\u5bb6\u94c1\u95e8\u6813\u4e0e\u95e8\u6247\u5747\u5b8c\u6574\uff0c\u4f46\u8d75\u8001\u5927\u5728\u591c\u91cc\u81ea\u884c\u62bd\u5f00\u95e8\u6813\u540e\u4ecd\u6b7b\u5728\u95e8\u540e\u7684\u5802\u5c4b\u91cc\u3002",
-            "\u8d75\u5bb6\u4e0e\u5f20\u5bb6\u9662\u95e8\u5185\u4fa7\u90fd\u51fa\u73b0\u8fc7\u7eb8\u7070\u3002",
-            "\u5f20\u5bb6\u95e8\u5916\u7559\u978b\u7684\u5f53\u591c\u54cd\u8d77\u4e09\u4e0b\u6572\u95e8\u58f0\uff0c\u58f0\u97f3\u5728\u978b\u8fb9\u505c\u4f4f\u540e\u672a\u518d\u7ee7\u7eed\u3002",
-            "\u5929\u4eae\u540e\u5f20\u5bb6\u95e8\u5916\u7684\u978b\u5411\u95e8\u69db\u79fb\u52a8\u7ea6\u4e00\u5c3a\u3001\u978b\u5c16\u6539\u671d\u95e8\u5185\uff0c\u77f3\u9636\u58a8\u7ebf\u4ecd\u5728\uff0c\u978b\u5468\u65e0\u62d6\u75d5\u548c\u811a\u5370\u3002"
-            ,"\u65cf\u8c31\u4e0a\u6709\u6570\u4e2a\u8fd1\u5e74\u540d\u5b57\u88ab\u6d53\u58a8\u6d82\u9ed1\u3002"
-            ,"\u7960\u5802\u53ef\u89c1\u65e7\u68fa\u4e03\u53e3\uff0c\u65e7\u5355\u5374\u8bb0\u8f7d\u5341\u4e00\u9897\u68fa\u9489\u3002"
-            ,"\u674e\u4e8c\u6bcd\u4eb2\u672a\u79bb\u5f00\u67d3\u574a\u65f6\uff0c\u674e\u4e8c\u5728\u7a7a\u5c4b\u95e8\u5916\u542c\u89c1\u5979\u547c\u5524\u5c0f\u540d\u3002"
-            ,"\u5f20\u5bb6\u4e00\u591c\u4e0d\u5e94\u58f0\u540e\u65e0\u4eba\u6b7b\u4ea1\uff0c\u95e8\u677f\u5185\u4fa7\u51fa\u73b0\u4e09\u4e2a\u6e7f\u9ed1\u6307\u5370\u3002"
-            ,"\u5b59\u5bb6\u6bcd\u4eb2\u4e3a\u53d1\u70ed\u5a74\u513f\u6c42\u533b\u81ea\u884c\u5f00\u95e8\u540e\uff0c\u6bcd\u5b50\u5747\u5931\u8e2a\u3002"
-        ],
-        "hypotheses": [
-            "\u94c1\u95e8\u6813\u53ef\u80fd\u6bd4\u65e7\u6728\u6813\u66f4\u96be\u88ab\u7834\u574f\uff0c\u4ece\u800c\u6321\u4f4f\u95e8\u5916\u7684\u672a\u77e5\u4e8b\u7269\uff0c\u4f46\u5c1a\u65e0\u5b9e\u9645\u7ed3\u679c\u9a8c\u8bc1\u3002",
-            "\u65e7\u6728\u6813\u7531\u5185\u5411\u5916\u5d29\u88c2\u53ef\u80fd\u610f\u5473\u7740\u635f\u574f\u5e76\u975e\u7531\u95e8\u5916\u76f4\u63a5\u649e\u51fb\u9020\u6210\uff0c\u4f46\u73b0\u6709\u4e09\u526f\u6837\u672c\u4e0d\u8db3\u4ee5\u786e\u5b9a\u539f\u56e0\u3002",
-            "\u6572\u95e8\u58f0\u53ef\u80fd\u4f1a\u6a21\u4eff\u8fd1\u671f\u4e0b\u846c\u8005\u751f\u524d\u7684\u8282\u594f\uff0c\u4f46\u76ee\u524d\u53ea\u6709\u6b7b\u8005\u5bb6\u5c5e\u7684\u8fa8\u8ba4\uff0c\u5c1a\u4e0d\u80fd\u786e\u5b9a\u6765\u6e90\u3002",
-            "\u94c1\u95e8\u6813\u4e0d\u80fd\u76f4\u63a5\u963b\u6b62\u95e8\u5916\u7684\u672a\u77e5\u4e8b\u7269\uff1b\u5b83\u81f3\u591a\u5728\u4f4f\u6237\u672a\u81ea\u884c\u5f00\u95e8\u65f6\u5ef6\u8fdf\u4e00\u6b21\u9009\u62e9\u3002",
-            "\u95e8\u69db\u7559\u978b\u53ef\u80fd\u6539\u53d8\u95e8\u5916\u672a\u77e5\u4e8b\u7269\u505c\u7559\u7684\u4f4d\u7f6e\u6216\u505c\u987f\u65f6\u95f4\uff0c\u4f46\u5355\u6b21\u89c2\u5bdf\u4e0d\u8db3\u4ee5\u8bc1\u660e\u5b83\u80fd\u4fdd\u62a4\u4f4f\u6237\u3002"
-            ,"\u95e8\u5916\u58f0\u97f3\u53ef\u80fd\u501f\u7528\u6d3b\u4eba\u7684\u58f0\u97f3\uff0c\u4e0d\u5b9c\u518d\u7b80\u5355\u89c6\u4e3a\u6b7b\u8005\u8fd4\u5bb6\u3002"
-            ,"\u4e0d\u5e94\u58f0\u3001\u4e0d\u9760\u95e8\u53ef\u80fd\u6682\u65f6\u964d\u4f4e\u98ce\u9669\uff0c\u4f46\u73b0\u6709\u4e00\u6b21\u89c2\u5bdf\u4e0d\u8db3\u4ee5\u6784\u6210\u5b89\u5168\u89c4\u5219\u3002"
-        ],
-        "gold_known": false,
-        "post_office_status": "\u4e0d\u5b58\u5728",
-        "ancient_house_status": "\u4e0d\u5b58\u5728"
-    },
-    "active_foreshadows": {
-        "F-A01": {
-            "status": "\u5df2\u64ad\u79cd",
-            "plant_chapter": 1
-        },
-        "F-A02": {
-            "status": "\u5df2\u64ad\u79cd",
-            "plant_chapter": 6
-        },
-        "F-A03": {
-            "status": "\u5df2\u64ad\u79cd",
-            "plant_chapter": 7
-        }
-    },
-    "revealed_rules": [],
-    "recent_hooks": [
-        {
-            "chapter": 1,
-            "type": "\u672a\u89e3\u95ee\u9898",
-            "content": "\u591c\u95f4\u7eb8\u7070\u53d6\u51fa\u540e\uff0c\u767d\u65e5\u7070\u4ecd\u5728\u539f\u7559\u6837\u7897\uff0c\u591c\u95f4\u7070\u53e6\u7f6e\u7b2c\u4e8c\u53ea\u7897\uff0c\u6cbe\u7070\u7c73\u5df2\u76db\u5165\u95e8\u8fb9\u7a7a\u76c6\uff1b\u5f20\u6d1e\u5728\u8d26\u4e0a\u53ea\u5199\u201c\u53d1\u73b0\u4e8e\u7f38\u5e95\u201d\uff0c\u800c\u6bcd\u4eb2\u628a\u7960\u5802\u94a5\u5319\u6536\u8fdb\u8d34\u8eab\u6697\u888b\u3002"
-        },
-        {
-            "chapter": 2,
-            "type": "\u65b0\u5a01\u80c1",
-            "content": "\u65b0\u94c1\u6813\u521a\u843d\u4e0b\uff0c\u9662\u95e8\u5916\u4fbf\u54cd\u8d77\u95f4\u9694\u5206\u660e\u7684\u4e09\u4e0b\u6572\u51fb\uff0c\u770b\u95e8\u72d7\u5168\u7a0b\u6ca1\u6709\u53eb\uff1b\u5f20\u5bb6\u5c1a\u4e0d\u77e5\u9053\u94c1\u6813\u80fd\u5426\u6321\u4f4f\u4ec0\u4e48\uff0c\u800c\u5f20\u6d1e\u7684\u79bb\u9547\u8239\u8d39\u5df2\u7ecf\u82b1\u6389\u3002"
-        },
-        {
-            "chapter": 3,
-            "type": "\u672a\u89e3\u95ee\u9898",
-            "content": "\u674e\u4e8c\u63cf\u8ff0\u7684\u6572\u95e8\u8282\u594f\u4e0e\u5f20\u5bb6\u6628\u591c\u5b8c\u5168\u76f8\u540c\uff1b\u5f20\u6d1e\u77e5\u9053\u8fd9\u4e0d\u662f\u81ea\u5bb6\u9662\u95e8\u65c1\u4e00\u6b21\u5b64\u7acb\u7684\u602a\u54cd\u3002"
-        },
-        {
-            "chapter": 4,
-            "type": "\u65b0\u8bc1\u636e",
-            "content": "\u8d75\u5bb6\u94c1\u6813\u5b8c\u597d\uff0c\u8d75\u8001\u5927\u4ecd\u6b7b\u5728\u95e8\u540e\uff1b\u5f20\u6d1e\u8fd8\u5728\u81ea\u5bb6\u95e8\u677f\u5185\u4fa7\u53d1\u73b0\u7eb8\u7070\u3002"
-        },
-        {
-            "chapter": 5,
-            "type": "\u672a\u89e3\u95ee\u9898",
-            "content": "\u5f20\u5bb6\u95e8\u5916\u7559\u978b\u7684\u591c\u91cc\uff0c\u4e09\u4e0b\u6572\u95e8\u6ca1\u6709\u7ee7\u7eed\uff1b\u5929\u4eae\u540e\uff0c\u90a3\u53ea\u978b\u5374\u8d8a\u8fc7\u58a8\u7ebf\uff0c\u978b\u5c16\u671d\u5411\u95e8\u5185\u3002"
-        },
-        {
-            "chapter": 6,
-            "type": "家族谜面",
-            "content": "族谱上四个近年名字被浓墨涂黑，张洞将其与祠堂地面的四块补砖并列记录。"
-        },
-        {
-            "chapter": 7,
-            "type": "数量矛盾",
-            "content": "祠堂内只数到七口旧棺，旧单却登记十一颗棺钉；通气格封死后，刮擦声仿佛到了墙外。"
-        },
-        {
-            "chapter": 8,
-            "type": "规则修正",
-            "content": "门外声音借用了仍在染坊的李二母亲，又在张家借父亲声音呼叫张洞。"
-        },
-        {
-            "chapter": 9,
-            "type": "暂时安全",
-            "content": "一家人没有开门，天亮后门板内侧留下三个湿黑指印。"
-        },
-        {
-            "chapter": 10,
-            "type": "新威胁",
-            "content": "孙家因婴儿发热自行开门后母子失踪；叔公交出祠堂钥匙，说今夜该轮到他守门。"
-        }
+    "known_info": [
+      "双桥镇祠堂内可见七口旧棺，旧单登记十一颗棺钉；多出的四个钉位仍在更深处。",
+      "门外声音会借用生者与死者的声音，完整铁门栓只能减少人主动开门的机会。",
+      "旧棺木与锈黑棺钉均带有异常，能让门外客与棺下影短暂相互牵制，但会加重操作者风险。",
+      "被涂黑的四个名字与祠堂四块补砖及守位记录有关，具体职责未解。",
+      "双桥镇的临时限制并未消灭异常，镇子仍有复发风险。",
+      "渡口雾天，水下存在会以手印选中靠近水边的人。",
+      "被选中的人第一次接触水会被拖拽，第二次接触水可能直接溺死；湿脚印会留下异常移动方向。",
+      "鸡鸣曾令水下存在暂时退散，替死者烧纸的火也曾让它停在火盆前；两者均未被验证为可重复的安全规则。",
+      "辨认异常时，应先记录它逼人走向的顺序与路径；看见路径不等于能避开路径。"
     ],
-    "chapter_summaries": {
-        "compression_level": 0,
-        "summaries": {
-            "1": {
-                "title": "\u7076\u95f4\u7684\u7eb8\u7070",
-                "core": "\u4ee5\u4e24\u5904\u5c01\u95ed\u5bb9\u5668\u5185\u7684\u7eb8\u7070\u4f4d\u7f6e\u5efa\u7acb\u9996\u4efd\u53ef\u6838\u5bf9\u8bb0\u5f55\uff0c\u5e76\u8feb\u4f7f\u6bcd\u4eb2\u5c06\u7960\u5802\u94a5\u5319\u64a4\u79bb\u5899\u9489\u3001\u6700\u7ec8\u6539\u4e3a\u8d34\u8eab\u4fdd\u7ba1\u3002",
-                "irreversible_changes": [
-                    "protagonist_known_info_add",
-                    "timeline_elapsed_days",
-                    "character_updates",
-                    "world_confirmed_add"
-                ]
-            },
-            "2": {
-                "title": "\u94c1\u95e8\u6813",
-                "core": "\u6bcd\u4eb2\u7528\u5f20\u6d1e\u79bb\u9547\u627e\u5de5\u7684\u8239\u8d39\u652f\u4ed8\u5e76\u5b89\u88c5\u94c1\u95e8\u6813\uff0c\u4f7f\u5f20\u5bb6\u4e3a\u5c1a\u672a\u8bc1\u5b9e\u7684\u5371\u9669\u4ed8\u51fa\u65e0\u6cd5\u64a4\u56de\u7684\u7ecf\u6d4e\u4ee3\u4ef7\uff0c\u5f20\u6d1e\u56e0\u6b64\u5931\u53bb\u539f\u5b9a\u79bb\u9547\u76d8\u7f20\u3002",
-                "irreversible_changes": [
-                    "protagonist_known_info_add",
-                    "timeline_elapsed_days",
-                    "character_updates",
-                    "world_confirmed_add",
-                    "world_hypotheses_add"
-                ]
-            },
-            "3": {
-                "title": "\u5c11\u4e00\u53ea\u978b",
-                "core": "\u628a\u9547\u4e0a\u4f20\u8a00\u8f6c\u5316\u4e3a\u53ef\u6838\u5bf9\u7684\u6b7b\u4ea1\u73b0\u573a\uff0c\u5e76\u4f7f\u5f20\u6d1e\u4e0e\u674e\u4e8c\u56e0\u5171\u540c\u9690\u7792\u800c\u5f62\u6210\u65e0\u6cd5\u64a4\u56de\u7684\u5173\u7cfb\u3002",
-                "irreversible_changes": [
-                    "protagonist_known_info_add",
-                    "timeline_elapsed_days",
-                    "character_updates",
-                    "world_confirmed_add",
-                    "world_hypotheses_add"
-                ]
-            },
-            "4": {
-                "title": "\u597d\u6813",
-                "core": "\u8d75\u5bb6\u94c1\u6813\u5b8c\u597d\u5374\u4ecd\u6709\u4eba\u6b7b\u5728\u95e8\u540e\uff0c\u63a8\u7ffb\u94c1\u5668\u53ef\u76f4\u63a5\u4fdd\u547d\u7684\u60f3\u6cd5\uff1b\u5f20\u6d1e\u540c\u65f6\u786e\u8ba4\u7eb8\u7070\u5df2\u51fa\u73b0\u5728\u9662\u95e8\u5185\u4fa7\u3002",
-                "irreversible_changes": [
-                    "protagonist_known_info_add",
-                    "timeline_elapsed_days",
-                    "character_updates",
-                    "world_confirmed_add",
-                    "world_hypotheses_add"
-                ]
-            },
-            "5": {
-                "title": "\u95e8\u69db\u4e0a\u7684\u978b",
-                "core": "\u95e8\u69db\u7559\u978b\u8ba9\u4e09\u4e0b\u6572\u95e8\u6682\u65f6\u505c\u4f4f\uff0c\u5374\u5728\u5929\u4eae\u540e\u4ee5\u5411\u5185\u79fb\u52a8\u7684\u65b9\u5f0f\u663e\u51fa\u4e0d\u53ef\u9760\uff1b\u7236\u4eb2\u5219\u4ece\u796d\u7530\u6563\u9875\u627e\u5230\u8ffd\u67e5\u7960\u5802\u65e7\u8d26\u7684\u7ebf\u7d22\u3002",
-                "irreversible_changes": [
-                    "protagonist_known_info_add",
-                    "timeline_elapsed_days",
-                    "character_updates",
-                    "world_confirmed_add",
-                    "world_hypotheses_add"
-                ]
-            },
-            "6": {
-                "title": "被墨吃掉的人",
-                "core": "族谱上被涂黑的近年名字使张洞确认家族曾主动抹去过往死亡记录。",
-                "irreversible_changes": ["protagonist_known_info_add", "timeline_elapsed_days", "world_confirmed_add"]
-            },
-            "7": {
-                "title": "七口棺，十一颗钉",
-                "core": "张洞和李二只数到七口旧棺，却得到十一颗棺钉的数量矛盾，并失去通气格观察口。",
-                "irreversible_changes": ["protagonist_known_info_add", "timeline_elapsed_days", "world_confirmed_add"]
-            },
-            "8": {
-                "title": "声音先到",
-                "core": "李二母亲本人仍在染坊时声音先到空屋，张洞修正了门外声音只借死人声音的猜测。",
-                "irreversible_changes": ["protagonist_known_info_add", "timeline_elapsed_days", "world_confirmed_add", "world_hypotheses_add"]
-            },
-            "9": {
-                "title": "不应声",
-                "core": "张家全家熬到天亮未开门，门板内侧却留下三个指印；父亲不再信任叔公独自守祠堂。",
-                "irreversible_changes": ["protagonist_known_info_add", "timeline_elapsed_days", "character_updates", "world_confirmed_add"]
-            },
-            "10": {
-                "title": "门自己没开",
-                "core": "孙家为病婴开门后母子失踪，张洞拒绝独自离镇，叔公交出钥匙准备守门。",
-                "irreversible_changes": ["protagonist_known_info_add", "timeline_elapsed_days", "character_updates", "world_confirmed_add"]
-            }
-        }
+    "body": {
+      "状态": "右手背因旧棺木留下的白霜样冷痛加重，潮湿时会发青发麻。",
+      "异常辨认": "棺下影靠近时后颈先发冷；规则洞察目前只能帮助张洞整理可观察的触发顺序，不提供解法。"
     },
-    "last_review": {
-        "chapter": 10,
-        "grade": "A",
-        "verdict": "PASS",
-        "timestamp": "2026-08-02T13:40:00"
+    "inventory": [
+      "父亲账本",
+      "四张被涂黑者的名字纸条",
+      "李二削制的木哨"
+    ]
+  },
+  "characters": {
+    "active": {
+      "张洞母亲": {
+        "status": "已在双桥镇临时限制后乘日船往汉阳投亲",
+        "note": "她拒绝让张洞以守祠为唯一职责，要求他在能平安归来前不要回镇。"
+      },
+      "李二": {
+        "status": "留在双桥镇，与老李共同照看镇上动静",
+        "note": "他不再把张洞当作万能办法，仍会用直白的方式阻止张洞犯险。"
+      },
+      "木匠老李": {
+        "status": "留在双桥镇",
+        "note": "他承认父亲曾参与祠堂修补，却不知道封存的完整来历。"
+      }
+    },
+    "pending": {
+      "罗文松": {"first_appearance": 85, "status": "未出场"},
+      "李庆之": {"first_appearance": 164, "status": "未出场"},
+      "孟小董": {"first_appearance": 210, "status": "未出场"},
+      "张幼红": {"first_appearance": 245, "status": "未出场"},
+      "罗千": {"first_appearance": 275, "status": "未出场"},
+      "张伯华": {"first_appearance": 301, "status": "未出场"},
+      "秦老": {"birth_year_range": [1905, 1915], "first_appearance": 310, "status": "尚未出场"}
+    },
+    "deceased": ["张家叔公", "张洞父亲"]
+  },
+  "world_lore": {
+    "reveal_layer": 1,
+    "confirmed": [
+      "双桥镇疑棺泄漏由门外声音与棺下影两层异常组成，它们会彼此干扰但不会互相消灭。",
+      "祠堂七棺十一钉中的四个空钉位属于更深结构，来源未明。",
+      "渡口的水下存在可将杀人过程延伸至室内的水中。"
+    ],
+    "hypotheses": [
+      "双桥镇四名被涂黑者可能曾以守位身份参与封存，但记录不足以解释其命运。",
+      "水下存在的湿脚印可能标识它逼近受害者的路径，而不单是行踪。"
+    ],
+    "gold_known": false,
+    "post_office_status": "不存在线索",
+    "ancient_house_status": "不存在线索"
+  },
+  "active_foreshadows": {
+    "F-A01": {"status": "部分回收", "plant_chapter": 1, "note": "纸灰已经指向祠堂及镇外，但根源未明。"},
+    "F-A02": {"status": "部分回收", "plant_chapter": 6, "note": "四个被涂黑的名字与守位、补砖相连。"},
+    "F-A03": {"status": "延续", "plant_chapter": 7, "note": "四个空钉位只显示更深结构，未解释来源。"},
+    "F-B16": {"status": "已播种", "plant_chapter": 25, "note": "张洞离镇时被人察觉身上带着异样冷气。"}
+  },
+  "revealed_rules": [
+    "门外客依赖人主动打开边界；不应声和留鞋均不能保证安全。",
+    "双桥镇旧棺结构只能制造两层异常的临时牵制。",
+    "水下存在的鸡鸣、纸火反应与湿脚印路径都只完成单次观察。"
+  ],
+  "recent_hooks": [
+    {"chapter": 26, "type": "新异常", "content": "雾里水下伸出的手选中了渡口赶货人。"},
+    {"chapter": 27, "type": "重复威胁", "content": "第一夜室内浅水已能拖人，湿脚印留下了第二次来临的方向。"},
+    {"chapter": 28, "type": "杀伤升级", "content": "第二次接触水导致受害者从体内溺死，江水不再需要留在江边。"},
+    {"chapter": 29, "type": "暂时逃脱", "content": "鸡鸣让水下手掌松开，湿脚印却仍朝岸上延伸。"},
+    {"chapter": 30, "type": "新问题", "content": "张洞发现船舱内有通往船底的湿脚印。"}
+  ],
+  "chapter_summaries": {
+    "compression_level": 0,
+    "summaries": {
+      "21": {"title": "留下的人", "core": "母亲、李二和老李各自作出不同去留决定，纸灰转而停在老李门口。", "irreversible_changes": ["character_updates", "world_confirmed_add"]},
+      "22": {"title": "四个名字", "core": "四个被涂黑的名字与守位记录和补砖相连。", "irreversible_changes": ["protagonist_known_info_add", "world_confirmed_add"]},
+      "23": {"title": "把门关在里面", "core": "旧棺木令两层异常短暂停顿，木片开始损耗。", "irreversible_changes": ["world_hypotheses_add"]},
+      "24": {"title": "钉不回去", "core": "异常旧物造成临时牵制，四个空钉位仍未补上。", "irreversible_changes": ["protagonist_body_updates", "world_confirmed_add"]},
+      "25": {"title": "出镇", "core": "双桥镇仅获临时限制，张洞与母亲分开并离镇。", "irreversible_changes": ["protagonist_location", "character_updates"]},
+      "26": {"title": "雾里渡口", "core": "张洞目睹渡口水下存在选中第一名受害者。", "irreversible_changes": ["world_confirmed_add"]},
+      "27": {"title": "湿脚印", "core": "第一次室内接触水触发拖拽，留下湿脚印。", "irreversible_changes": ["protagonist_known_info_add"]},
+      "28": {"title": "第二盆水", "core": "第二次接触水导致受害者死亡，水下存在能在远离江边处杀人。", "irreversible_changes": ["world_confirmed_add"]},
+      "29": {"title": "鸡叫之前", "core": "鸡鸣使水下存在暂退，张洞在代价选择中救下孩子。", "irreversible_changes": ["protagonist_known_info_add"]},
+      "30": {"title": "不该走的路", "core": "张洞形成初步规则洞察，只能辨认触发顺序和路径。", "irreversible_changes": ["ability_updates", "protagonist_known_info_add"]}
     }
+  },
+  "last_review": {
+    "chapter": 30,
+    "grade": "A",
+    "verdict": "PASS",
+    "timestamp": "2026-08-02T13:20:00"
+  }
 }
