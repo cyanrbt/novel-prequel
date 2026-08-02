@@ -1,22 +1,22 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-02T00:30:00",
+  "last_updated": "2026-08-02T01:00:00",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 1,
-    "next_chapter": 2,
+    "last_chapter": 2,
+    "next_chapter": 3,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
-    "current_phase": "征兆",
-    "last_title": "灶间的纸灰"
+    "current_phase": "试探",
+    "last_title": "铁门栓"
   },
   "timeline": {
     "current_year": 1908,
     "era": "清末",
     "year_label": "清末（辛亥革命前三年）",
-    "elapsed_days": 1
+    "elapsed_days": 2
   },
   "protagonist": {
     "name": "张洞",
@@ -31,7 +31,9 @@
     },
     "known_info": [
       "白日，纸灰出现在盖着的空蒸屉内部；当日傍晚，原样本消失，米缸底出现另一撮纸灰。",
-      "叔公对祠堂钥匙与纸灰反应异常，收走钥匙并禁止张洞出门。"
+      "叔公对祠堂钥匙与纸灰反应异常，收走钥匙并禁止张洞出门。",
+      "完整铁门栓只能增加开门的难度；东巷一户曾装铁扣，仍因住户主动开门而出事。",
+      "张家门框十年前的补木内也藏有发白纸灰。"
     ],
     "body": {"状态": "正常"},
     "inventory": []
@@ -39,7 +41,7 @@
   "characters": {
     "active": {
       "张洞父亲": {"status": "在家中记账", "note": "想结束家里用沉默处理旧事的习惯。"},
-      "张洞母亲": {"status": "在家中操持生计", "note": "优先顾及米粮、船费与儿子的活路。"},
+      "张洞母亲": {"status": "动用船钱装上铁门栓", "note": "她用张洞离镇的盘缠换取一夜的门后安全。"},
       "张家叔公": {"status": "暂管祠堂旧物", "note": "相信少说、锁好、补好能让家里活下去。"},
       "李二": {"status": "染坊学徒", "note": "张洞同辈，嘴硬但对自家危险极敏感。"},
       "木匠老李": {"status": "经营木匠铺", "note": "只相信自己看见的损坏痕迹。"}
@@ -69,12 +71,14 @@
   "completed_milestones": [],
   "revealed_rules": [],
   "recent_hooks": [
-    {"chapter": 1, "type": "安全区崩坏", "content": "纸灰从蒸屉消失，出现在未被打开的米缸底。"}
+    {"chapter": 1, "type": "安全区崩坏", "content": "纸灰从蒸屉消失，出现在未被打开的米缸底。"},
+    {"chapter": 2, "type": "新威胁", "content": "新铁栓装好当夜，院门外响起三下敲门，狗没有叫。"}
   ],
   "chapter_summaries": {
     "compression_level": 0,
     "summaries": {
-      "1": {"title": "灶间的纸灰", "core": "纸灰两次出现在不可能的位置，张家第一次因查明还是躲开而公开冲突。", "irreversible_changes": ["protagonist_known_info_add", "character_updates"]}
+      "1": {"title": "灶间的纸灰", "core": "纸灰两次出现在不可能的位置，张家第一次因查明还是躲开而公开冲突。", "irreversible_changes": ["protagonist_known_info_add", "character_updates"]},
+      "2": {"title": "铁门栓", "core": "母亲动用船钱安装铁门栓；它只能拖延人的选择，门外的三下敲门仍在夜里响起。", "irreversible_changes": ["protagonist_known_info_add", "character_updates"]}
     }
   }
 }
