@@ -1,0 +1,146 @@
+{
+  "schema": "novel-prequel-state",
+  "last_updated": "2026-08-02T13:20:00",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 30,
+    "next_chapter": 31,
+    "current_volume": 1,
+    "current_volume_name": "大汉市",
+    "current_event": "event_1b",
+    "current_event_name": "渡口雾影",
+    "current_phase": "试探",
+    "last_title": "不该走的路"
+  },
+  "timeline": {
+    "current_year": 1908,
+    "era": "清末",
+    "year_label": "清末（辛亥革命前三年）",
+    "elapsed_days": 36
+  },
+  "protagonist": {
+    "name": "张洞",
+    "age": 18,
+    "location": "大汉市·江边渡口",
+    "erosion": 0,
+    "abilities": {
+      "灵异感知": {
+        "status": "被动形成",
+        "unlock_after": ["M1-DUAL-EXPOSURE"]
+      },
+      "规则洞察": {
+        "status": "初步形成",
+        "unlock_after": ["M1B-PATH-RECORD"]
+      },
+      "抹除灵异": {
+        "status": "未觉醒",
+        "unlock_after": ["M2-ACTIVE-PRICE"]
+      },
+      "威势压制": {
+        "status": "未形成",
+        "unlock_after": ["M3-SEVEN-FORMED"]
+      }
+    },
+    "known_info": [
+      "双桥镇祠堂内可见七口旧棺，旧单登记十一颗棺钉；多出的四个钉位仍在更深处。",
+      "门外声音会借用生者与死者的声音，完整铁门栓只能减少人主动开门的机会。",
+      "旧棺木与锈黑棺钉均带有异常，能让门外客与棺下影短暂相互牵制，但会加重操作者风险。",
+      "被涂黑的四个名字与祠堂四块补砖及守位记录有关，具体职责未解。",
+      "双桥镇的临时限制并未消灭异常，镇子仍有复发风险。",
+      "渡口雾天，水下存在会以手印选中靠近水边的人。",
+      "被选中的人第一次接触水会被拖拽，第二次接触水可能直接溺死；湿脚印会留下异常移动方向。",
+      "鸡鸣曾令水下存在暂时退散，替死者烧纸的火也曾让它停在火盆前；两者均未被验证为可重复的安全规则。",
+      "辨认异常时，应先记录它逼人走向的顺序与路径；看见路径不等于能避开路径。"
+    ],
+    "body": {
+      "状态": "右手背因旧棺木留下的白霜样冷痛加重，潮湿时会发青发麻。",
+      "异常辨认": "棺下影靠近时后颈先发冷；规则洞察目前只能帮助张洞整理可观察的触发顺序，不提供解法。"
+    },
+    "inventory": [
+      "父亲账本",
+      "四张被涂黑者的名字纸条",
+      "李二削制的木哨"
+    ]
+  },
+  "characters": {
+    "active": {
+      "张洞母亲": {
+        "status": "已在双桥镇临时限制后乘日船往汉阳投亲",
+        "note": "她拒绝让张洞以守祠为唯一职责，要求他在能平安归来前不要回镇。"
+      },
+      "李二": {
+        "status": "留在双桥镇，与老李共同照看镇上动静",
+        "note": "他不再把张洞当作万能办法，仍会用直白的方式阻止张洞犯险。"
+      },
+      "木匠老李": {
+        "status": "留在双桥镇",
+        "note": "他承认父亲曾参与祠堂修补，却不知道封存的完整来历。"
+      }
+    },
+    "pending": {
+      "罗文松": {"appearance_after": "M2-ACTIVE-PRICE", "status": "未出场"},
+      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "秦老": {"birth_year_range": [1905, 1915], "appearance_after": "M3-CORE-MEMBERS-MET", "status": "尚未出场"}
+    },
+    "deceased": ["张家叔公", "张洞父亲"]
+  },
+  "world_lore": {
+    "reveal_layer": 1,
+    "confirmed": [
+      "双桥镇疑棺泄漏由门外声音与棺下影两层异常组成，它们会彼此干扰但不会互相消灭。",
+      "祠堂七棺十一钉中的四个空钉位属于更深结构，来源未明。",
+      "渡口的水下存在可将杀人过程延伸至室内的水中。"
+    ],
+    "hypotheses": [
+      "双桥镇四名被涂黑者可能曾以守位身份参与封存，但记录不足以解释其命运。",
+      "水下存在的湿脚印可能标识它逼近受害者的路径，而不单是行踪。"
+    ],
+    "gold_known": false,
+    "post_office_status": "不存在线索",
+    "ancient_house_status": "不存在线索"
+  },
+  "active_foreshadows": {
+    "F-A01": {"status": "部分回收", "plant_chapter": 1, "note": "纸灰已经指向祠堂及镇外，但根源未明。"},
+    "F-A02": {"status": "部分回收", "plant_chapter": 6, "note": "四个被涂黑的名字与守位、补砖相连。"},
+    "F-A03": {"status": "延续", "plant_chapter": 7, "note": "四个空钉位只显示更深结构，未解释来源。"},
+    "F-B16": {"status": "已播种", "plant_chapter": 25, "note": "张洞离镇时被人察觉身上带着异样冷气。"}
+  },
+  "completed_milestones": ["M1-DUAL-EXPOSURE", "M1B-PATH-RECORD"],
+  "revealed_rules": [
+    "门外客依赖人主动打开边界；不应声和留鞋均不能保证安全。",
+    "双桥镇旧棺结构只能制造两层异常的临时牵制。",
+    "水下存在的鸡鸣、纸火反应与湿脚印路径都只完成单次观察。"
+  ],
+  "recent_hooks": [
+    {"chapter": 26, "type": "新异常", "content": "雾里水下伸出的手选中了渡口赶货人。"},
+    {"chapter": 27, "type": "重复威胁", "content": "第一夜室内浅水已能拖人，湿脚印留下了第二次来临的方向。"},
+    {"chapter": 28, "type": "杀伤升级", "content": "第二次接触水导致受害者从体内溺死，江水不再需要留在江边。"},
+    {"chapter": 29, "type": "暂时逃脱", "content": "鸡鸣让水下手掌松开，湿脚印却仍朝岸上延伸。"},
+    {"chapter": 30, "type": "新问题", "content": "张洞发现船舱内有通往船底的湿脚印。"}
+  ],
+  "chapter_summaries": {
+    "compression_level": 0,
+    "summaries": {
+      "21": {"title": "留下的人", "core": "母亲、李二和老李各自作出不同去留决定，纸灰转而停在老李门口。", "irreversible_changes": ["character_updates", "world_confirmed_add"]},
+      "22": {"title": "四个名字", "core": "四个被涂黑的名字与守位记录和补砖相连。", "irreversible_changes": ["protagonist_known_info_add", "world_confirmed_add"]},
+      "23": {"title": "把门关在里面", "core": "旧棺木令两层异常短暂停顿，木片开始损耗。", "irreversible_changes": ["world_hypotheses_add"]},
+      "24": {"title": "钉不回去", "core": "异常旧物造成临时牵制，四个空钉位仍未补上。", "irreversible_changes": ["protagonist_body_updates", "world_confirmed_add"]},
+      "25": {"title": "出镇", "core": "双桥镇仅获临时限制，张洞与母亲分开并离镇。", "irreversible_changes": ["protagonist_location", "character_updates"]},
+      "26": {"title": "雾里渡口", "core": "张洞目睹渡口水下存在选中第一名受害者。", "irreversible_changes": ["world_confirmed_add"]},
+      "27": {"title": "湿脚印", "core": "第一次室内接触水触发拖拽，留下湿脚印。", "irreversible_changes": ["protagonist_known_info_add"]},
+      "28": {"title": "第二盆水", "core": "第二次接触水导致受害者死亡，水下存在能在远离江边处杀人。", "irreversible_changes": ["world_confirmed_add"]},
+      "29": {"title": "鸡叫之前", "core": "鸡鸣使水下存在暂退，张洞在代价选择中救下孩子。", "irreversible_changes": ["protagonist_known_info_add"]},
+      "30": {"title": "不该走的路", "core": "张洞形成初步规则洞察，只能辨认触发顺序和路径。", "irreversible_changes": ["ability_updates", "protagonist_known_info_add"]}
+    }
+  },
+  "last_review": {
+    "chapter": 30,
+    "grade": "A",
+    "verdict": "PASS",
+    "timestamp": "2026-08-02T13:20:00"
+  }
+}
