@@ -133,11 +133,13 @@ def _print_review(result: dict) -> None:
 
 def command_lint(args) -> int:
     text = args.path.read_text(encoding="utf-8")
+    length_policy = load_config(PROJECT_ROOT).get("chapter_length")
     result = scan_draft(
         text,
         [],
         _era_bans(args.year),
         {"chapter_number": args.chapter, "prohibited_elements": []},
+        length_policy=length_policy,
     )
     _print_review(result)
     return 0 if result["passed"] else 2
@@ -145,6 +147,7 @@ def command_lint(args) -> int:
 
 def command_review(args) -> int:
     state = load_state(STATE_FILE)
+    length_policy = load_config(PROJECT_ROOT).get("chapter_length")
     paths = formal_chapter_paths(PROJECT_ROOT)
     selected = paths[-args.last :] if args.last else paths
     previous: list[str] = []
@@ -156,6 +159,7 @@ def command_review(args) -> int:
             previous[-5:],
             _era_bans(state["timeline"]["current_year"]),
             {"chapter_number": number, "prohibited_elements": []},
+            length_policy=length_policy,
         )
         print(f"\n第{number}章: {'PASS' if result['passed'] else 'FAIL'}")
         _print_review(result)

@@ -5,7 +5,13 @@
     "end_year": 1950
   },
   "target_chapters": 600,
-  "words_per_chapter": 4500,
+  "words_per_chapter": 4200,
+  "chapter_length": {
+    "safe_min": 2500,
+    "target_min": 3200,
+    "target_max": 5000,
+    "safe_max": 8000
+  },
   "style": "original",
 
   "key_files": {
@@ -84,7 +90,7 @@
   "git": {"auto_commit": false},
 
   "volume_structure": [
-    {"volume": 1, "name": "大汉市",       "chapter_range": [1, 80],   "chapters": 80,  "years": "1900-1911"},
+    {"volume": 1, "name": "大汉市",       "chapter_range": [1, 80],   "chapters": 80,  "years": "1908-1911"},
     {"volume": 2, "name": "乱世觉醒",     "chapter_range": [81, 160], "chapters": 80,  "years": "1912-1927"},
     {"volume": 3, "name": "七老集结",     "chapter_range": [161, 320],"chapters": 160, "years": "1930-1940"},
     {"volume": 4, "name": "黑暗降临",     "chapter_range": [321, 460],"chapters": 140, "years": "1937-1945"},

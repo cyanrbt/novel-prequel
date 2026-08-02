@@ -16,12 +16,14 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["location", "characters", "goal", "conflict", "irreversible_change"],
+        "required": ["location", "characters", "goal", "conflict", "function", "pressure_change", "irreversible_change"],
         "properties": {
           "location": {"type": "string"},
           "characters": {"type": "array", "items": {"type": "string"}},
           "goal": {"type": "string"},
           "conflict": {"type": "string"},
+          "function": {"type": "string"},
+          "pressure_change": {"type": "string"},
           "irreversible_change": {"type": "string"}
         }
       }

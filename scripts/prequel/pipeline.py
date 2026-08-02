@@ -428,7 +428,13 @@ def accept_dry_run(
         "recent_chapters_for_repetition", 5
     )
     recent = recent_chapters(project_root, state, recent_limit)
-    static_review = scan_draft(draft, recent, planner_context["era_bans"], plan)
+    static_review = scan_draft(
+        draft,
+        recent,
+        planner_context["era_bans"],
+        plan,
+        length_policy=load_config(project_root).get("chapter_length"),
+    )
     workspace.write_json("static_review.json", static_review)
     if not static_review["passed"]:
         hard_failures = [
@@ -981,7 +987,11 @@ class WritingPipeline:
                 workspace.write_text("draft.txt", draft)
 
                 static_review = scan_draft(
-                    draft, recent, planner_context["era_bans"], plan
+                    draft,
+                    recent,
+                    planner_context["era_bans"],
+                    plan,
+                    length_policy=self.config.get("chapter_length"),
                 )
                 workspace.write_json("static_review.json", static_review)
                 if not static_review["passed"]:

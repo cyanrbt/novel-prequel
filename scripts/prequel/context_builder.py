@@ -230,9 +230,9 @@ def build_writer_packet(
         "character_voices": DEFAULT_CHARACTER_VOICES,
         "style_principles": [
             "冷静记录异常事实，不替读者命名恐惧",
-            "规则必须经观察、假说、试错、后果和临时结论显现",
+            "规则线在事件内经历观察、假说、试错、后果和临时结论；单章不必机械走完闭环",
             "使用具体生活代价，不用抽象悲伤动作模板",
-            "每个场景必须改变选择、关系、规则假说或生存条件",
+            "章节必须有不可逆转折；场景可承担准备、阻力、升级、关系显影或余波，并改变人物压力",
             "不复制原著标志性句式、段落或对白",
         ],
         "recent_repetition_signatures": _recent_signatures(recent_texts),

@@ -12,7 +12,7 @@ def _valid_plan():
         "event_id": "event_1",
         "phase": "征兆",
         "chapter_purpose": "建立第一次异常",
-        "scenes": [{"irreversible_change": "纸灰进入门内"}],
+        "scenes": [{"goal": "检查门板", "conflict": "纸灰进入门内", "function": "升级", "pressure_change": "张洞不再相信院门安全", "irreversible_change": "纸灰进入门内"}],
         "new_information": ["纸灰会移动"],
         "state_changes": {
             "protagonist_known_info_add": ["纸灰会移动"],
@@ -115,6 +115,17 @@ class QualityGateTests(unittest.TestCase):
             {"chapter_number": 1, "prohibited_elements": []},
         )
         self.assertTrue(result["passed"], result["issues"])
+
+    def test_custom_safe_min_blocks_short_draft(self):
+        result = scan_draft(
+            "第1章：短章\n\n" + "甲" * 120,
+            [],
+            {"characters": [], "terms": []},
+            {"chapter_number": 1, "prohibited_elements": []},
+            length_policy={"safe_min": 2500, "target_min": 3200, "target_max": 5000, "safe_max": 8000},
+        )
+        self.assertFalse(result["passed"])
+        self.assertIn("WORD_COUNT_HARD_FAIL", {item["code"] for item in result["issues"]})
 
     def test_plan_must_match_next_chapter_and_change_state(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

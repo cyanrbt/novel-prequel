@@ -42,6 +42,13 @@ ACTION_PATTERNS = {
     "眼光变暗": r"眼睛里的光变了.{0,20}更暗",
 }
 
+DEFAULT_LENGTH_POLICY = {
+    "safe_min": 1,
+    "target_min": 3500,
+    "target_max": 5000,
+    "safe_max": 8000,
+}
+
 
 def _result(issues: list[Issue], metrics: dict[str, Any]) -> dict[str, Any]:
     return {
@@ -98,8 +105,15 @@ def validate_plan(
         issues.append(Issue("NO_SCENES", "P1", "规划没有场景", "scenes"))
     else:
         for index, scene in enumerate(scenes, 1):
-            if not isinstance(scene, dict) or not scene.get("irreversible_change"):
-                issues.append(Issue("SCENE_NO_CHANGE", "P1", f"场景{index}没有不可逆变化", repr(scene)[:160]))
+            if not isinstance(scene, dict):
+                issues.append(Issue("SCENE_NOT_OBJECT", "P1", f"场景{index}不是object", repr(scene)[:160]))
+                continue
+            if not scene.get("goal") or not scene.get("conflict"):
+                issues.append(Issue("SCENE_NO_DRAMATIC_PRESSURE", "P1", f"场景{index}缺少目标或阻力", repr(scene)[:160]))
+            if not scene.get("function") and not scene.get("irreversible_change"):
+                issues.append(Issue("SCENE_NO_FUNCTION", "P1", f"场景{index}缺少场景功能", repr(scene)[:160]))
+            if not scene.get("pressure_change") and not scene.get("irreversible_change"):
+                issues.append(Issue("SCENE_NO_PRESSURE_CHANGE", "P1", f"场景{index}没有压力变化", repr(scene)[:160]))
     foreshadows = plan.get("foreshadow_operations")
     if not isinstance(foreshadows, dict):
         issues.append(Issue("BAD_FORESHADOW_OPS", "P1", "伏笔操作必须是object", repr(foreshadows)))
@@ -172,6 +186,8 @@ def scan_draft(
     recent_texts: list[str],
     era_bans: dict[str, Any],
     plan: dict[str, Any],
+    *,
+    length_policy: dict[str, int] | None = None,
 ) -> dict[str, Any]:
     issues: list[Issue] = []
     stripped = text.strip() if isinstance(text, str) else ""
@@ -229,8 +245,29 @@ def scan_draft(
     negation_count = len(re.findall(r"不是.{0,24}是", stripped))
     if negation_count > 3:
         issues.append(Issue("NEGATION_TEMPLATE_OVERUSE", "P2", "‘不是…是…’句式过多", str(negation_count)))
-    if char_count < 1800 or char_count > 8000:
-        issues.append(Issue("WORD_COUNT", "P2", "正文长度超出1800-8000字安全范围", str(char_count)))
+    policy = {**DEFAULT_LENGTH_POLICY, **(length_policy or {})}
+    safe_min = int(policy["safe_min"])
+    target_min = int(policy["target_min"])
+    target_max = int(policy["target_max"])
+    safe_max = int(policy["safe_max"])
+    if char_count < safe_min or char_count > safe_max:
+        issues.append(
+            Issue(
+                "WORD_COUNT_HARD_FAIL",
+                "P1",
+                f"正文长度超出{safe_min}-{safe_max}字安全范围",
+                str(char_count),
+            )
+        )
+    elif char_count < target_min or char_count > target_max:
+        issues.append(
+            Issue(
+                "WORD_COUNT_TARGET_MISS",
+                "P2",
+                f"正文未达到{target_min}-{target_max}字目标范围，需审查是否充分演出",
+                str(char_count),
+            )
+        )
 
     return _result(
         issues,
@@ -240,5 +277,6 @@ def scan_draft(
             "dash_per_thousand": dash_per_thousand,
             "negation_template_count": negation_count,
             "action_counts": action_counts,
+            "length_policy": policy,
         },
     )

@@ -37,6 +37,8 @@ def valid_plan_json() -> str:
                     "characters": ["张洞", "张洞母亲"],
                     "goal": "建立日常",
                     "conflict": "纸灰出现在不该出现的位置",
+                    "function": "升级",
+                    "pressure_change": "张洞必须记录纸灰位置",
                     "irreversible_change": "张洞开始记录纸灰位置",
                 }
             ],

@@ -240,6 +240,7 @@ class QualityEvolutionEngine:
         self.router = router
         self.caller = caller
         self.config = config.get("quality_evolution", {})
+        self.length_policy = config.get("chapter_length")
         self.mode = mode
         self.shadow_dimension = shadow_dimension
         self.max_workers = max_workers
@@ -315,7 +316,13 @@ class QualityEvolutionEngine:
                 None,
                 f"GENERATE_{identifier.upper()}",
             )
-            static = scan_draft(draft, recent, planner_context["era_bans"], plan)
+            static = scan_draft(
+                draft,
+                recent,
+                planner_context["era_bans"],
+                plan,
+                length_policy=self.length_policy,
+            )
             hard = [
                 item["message"]
                 for item in static["issues"]
@@ -898,7 +905,13 @@ class QualityEvolutionEngine:
             caller.cancel_before_provider(reservations[1])
             manifest.fail("revision_round_01", "修订调用失败")
             return selected, [{"accepted": False, "reason": "REVISION_CALL_FAILED"}], False, False
-        static = scan_draft(revised_draft, recent, planner_context["era_bans"], plan)
+        static = scan_draft(
+            revised_draft,
+            recent,
+            planner_context["era_bans"],
+            plan,
+            length_policy=self.length_policy,
+        )
         workspace.write_text(draft_path, revised_draft)
         workspace.write_json(static_path, static)
         if not static["passed"]:
