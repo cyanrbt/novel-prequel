@@ -1,4 +1,31 @@
 {
   "schema": "novel-memory-index",
-  "entries": []
+  "entries": [
+    {
+      "characters": [
+        "张洞",
+        "李二",
+        "死者家属"
+      ],
+      "locations": [
+        "大汉市·双桥镇·出事人家门外与堂屋",
+        "大汉市·双桥镇·回张家途中僻巷"
+      ],
+      "event_id": "event_1",
+      "foreshadows": [],
+      "irreversible_changes": [
+        "protagonist_known_info_add",
+        "timeline_year",
+        "timeline_elapsed_days",
+        "character_updates",
+        "world_confirmed_add",
+        "world_hypotheses_add"
+      ],
+      "hook_type": "未解问题",
+      "summary": "把镇上传言转化为可核对的死亡现场，并使张洞与李二因共同隐瞒而形成无法撤回的关系。",
+      "chapter": 3,
+      "source_path": "novel/chapters/vol_01/chapter_003.txt",
+      "source_sha256": "e6ed6eb051bda04f6be13b6263300db7975b6c697322baced5116547d65c9303"
+    }
+  ]
 }
