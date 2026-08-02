@@ -3,20 +3,20 @@
     "last_updated": "2026-08-02T12:30:00",
     "machine_state": "IDLE",
     "chapter": {
-        "last_chapter": 10,
-        "next_chapter": 11,
+        "last_chapter": 20,
+        "next_chapter": 21,
         "current_volume": 1,
         "current_volume_name": "\u5927\u6c49\u5e02",
         "current_event": "event_1",
         "current_event_name": "\u5927\u6c49\u5e02\u7591\u68fa",
         "current_phase": "\u5f81\u5146",
-        "last_title": "\u95e8\u81ea\u5df1\u6ca1\u5f00"
+        "last_title": "\u4e00\u591c\u4e24\u95e8"
     },
     "timeline": {
         "current_year": 1908,
         "era": "\u6e05\u672b",
         "year_label": "\u6e05\u672b\uff08\u8f9b\u4ea5\u9769\u547d\u524d\u4e09\u5e74\uff09",
-        "elapsed_days": 10
+        "elapsed_days": 20
     },
     "protagonist": {
         "name": "\u5f20\u6d1e",
@@ -25,7 +25,7 @@
         "erosion": 0,
         "abilities": {
             "\u7075\u5f02\u611f\u77e5": {
-                "status": "\u672a\u89c9\u9192",
+                "status": "\u88ab\u52a8\u5f62\u6210",
                 "unlock_chapter": 15
             },
             "\u89c4\u5219\u6d1e\u5bdf": {
@@ -66,7 +66,8 @@
             "\u5f20\u6d1e\u5f97\u77e5\u5b59\u5bb6\u5b69\u5b50\u53d1\u70ed\u540e\u6bcd\u4eb2\u4e3a\u6c42\u533b\u81ea\u884c\u5f00\u95e8\uff0c\u5b69\u5b50\u4e0e\u6bcd\u4eb2\u5931\u8e2a\u3002"
         ],
         "body": {
-            "\u72b6\u6001": "\u6b63\u5e38"
+            "\u72b6\u6001": "\u53f3\u624b\u80cc\u89e6\u78b0\u65e7\u68fa\u6728\u540e\u7559\u6709\u767d\u971c\u6837\u51b7\u75db",
+            "\u5f02\u5e38\u8fa8\u8ba4": "\u5730\u4e0b\u5f02\u5e38\u9760\u8fd1\u65f6\u540e\u9888\u5148\u51fa\u73b0\u51b7\u610f\uff0c\u4e0d\u63d0\u4f9b\u89e3\u6cd5"
         },
         "inventory": []
     },
@@ -93,16 +94,16 @@
                 "note": "\u4ed6\u627f\u8ba4\u81ea\u5bb6\u4e5f\u542c\u8fc7\u76f8\u540c\u6572\u95e8\u58f0\uff0c\u5e76\u4e0e\u5f20\u6d1e\u7ea6\u5b9a\u6682\u4e0d\u544a\u77e5\u5927\u4eba\u3002"
             },
             "\u5f20\u6d1e\u7236\u4eb2": {
-                "status": "\u51b3\u5b9a\u505c\u6b62\u7531\u53d4\u516c\u72ec\u81ea\u770b\u7ba1\u7960\u5802",
-                "note": "\u4ed6\u4ece\u65cf\u8c31\u3001\u796d\u7530\u6563\u9875\u4e0e\u95e8\u5916\u58f0\u97f3\u4e2d\u786e\u4fe1\u53d4\u516c\u638c\u63e1\u65e7\u4f8b\uff0c\u4e0d\u518d\u63a5\u53d7\u5176\u5355\u72ec\u5904\u7f6e\u3002"
+                "status": "\u6b7b\u4e8e\u7960\u5802\u5730\u4e0b\u53f0\u9636",
+                "note": "\u7b2c13\u7ae0\u8fdb\u5165\u5730\u4e0b\u67e5\u65e7\u5355\u540e\u6b7b\u4ea1\uff0c\u4e0d\u5e94\u518d\u89c6\u4e3a\u5728\u573a\u4eba\u7269\u3002"
             },
             "\u5f20\u6d1e\u6bcd\u4eb2": {
                 "status": "\u5df2\u9762\u5bf9\u8239\u8d39\u53ea\u591f\u9001\u8d70\u4e00\u4eba\u7684\u73b0\u5b9e",
                 "note": "\u5979\u60f3\u9001\u5f20\u6d1e\u5148\u79bb\u9547\uff0c\u5374\u88ab\u5f20\u6d1e\u62d2\u7edd\u3002"
             },
             "\u5f20\u5bb6\u53d4\u516c": {
-                "status": "\u5df2\u4ea4\u51fa\u7960\u5802\u94a5\u5319\u5e76\u51c6\u5907\u72ec\u81ea\u5b88\u95e8",
-                "note": "\u4ed6\u627f\u8ba4\u66fe\u542c\u8fc7\u6709\u4eba\u5f00\u95e8\uff0c\u4f46\u4ecd\u62d2\u7edd\u7ec6\u8bf4\u8fc7\u5f80\u3002"
+                "status": "\u6b7b\u4e8e\u7960\u5802\u4f9b\u684c\u65c1",
+                "note": "\u7b2c11\u7ae0\u72ec\u81ea\u5b88\u95e8\u540e\u6b7b\u4ea1\uff0c\u4ec5\u7559\u4e0b\u65e7\u68fa\u6728\u3001\u94a5\u5319\u4e0e\u4e0d\u5b8c\u6574\u7ecf\u9a8c\u3002"
             }
         },
         "pending": {
@@ -139,7 +140,7 @@
                 "status": "\u5c1a\u672a\u51fa\u573a"
             }
         },
-        "deceased": []
+    "deceased": ["\u5f20\u5bb6\u53d4\u516c", "\u5f20\u6d1e\u7236\u4eb2"]
     },
     "world_lore": {
         "reveal_layer": 1,
