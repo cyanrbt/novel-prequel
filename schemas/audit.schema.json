@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "audit.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["audit_type", "through_chapter", "findings", "debts", "summary"],
+  "properties": {
+    "audit_type": {"type": "string", "enum": ["health", "arc"]},
+    "through_chapter": {"type": "integer", "minimum": 1},
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "severity", "chapters", "evidence", "explanation"],
+        "properties": {
+          "code": {"type": "string"},
+          "severity": {"type": "string", "enum": ["P1", "P2", "P3"]},
+          "chapters": {"type": "array", "items": {"type": "integer", "minimum": 1}},
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["chapter", "quote"],
+              "properties": {
+                "chapter": {"type": "integer", "minimum": 1},
+                "quote": {"type": "string"}
+              }
+            }
+          },
+          "explanation": {"type": "string"}
+        }
+      }
+    },
+    "debts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "priority", "scope", "instruction", "acceptance"],
+        "properties": {
+          "id": {"type": "string"},
+          "priority": {"type": "string", "enum": ["P1", "P2", "P3"]},
+          "scope": {"type": "string", "const": "future"},
+          "instruction": {"type": "string"},
+          "acceptance": {"type": "string"}
+        }
+      }
+    },
+    "summary": {"type": "string"}
+  }
+}

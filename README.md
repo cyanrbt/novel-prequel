@@ -14,10 +14,10 @@
 
 | 能力 | 作用 |
 |---|---|
-| 三 Agent 分工 | Planner 负责因果与状态，Writer 负责正文，Reviewer 独立给出证据化审查 |
+| 质量进化分工 | Planner 规划，Writer 并发生成两份候选，集成 Reviewer 初筛，必要时触发专项复核与一次盲选 |
 | 单一真相源 | 当前章号、人物、时间、伏笔和已知规则集中在一个状态文件中 |
 | 事务式写作 | 章节、元数据和状态同步提升；任一步骤失败都不改变正式内容 |
-| 双层质量门禁 | 静态检查时代、章号、能力和重复，语义审查角色、结构、风格与设定 |
+| 多层质量门禁 | 静态检查后按连续性、人物、文学性、反 AI 痕迹计分，并用匿名选票交叉验证 |
 | 连续性控制 | 最近章节摘要、钩子、人物状态和伏笔在每次规划时进入受控上下文 |
 | 可恢复工作区 | 每次尝试保留规划、正文和两类审查报告，支持人工确认后再提升 |
 
@@ -27,16 +27,18 @@
 flowchart LR
     U[创作指令] --> O[Python 编排器]
     O --> P[Planner 规划]
-    P --> W[Writer 写作]
-    W --> R[Reviewer 审查]
-    R -->|未通过| P
-    R -->|通过| G[静态与语义门禁]
+    P --> W[Writer 两候选并发]
+    W --> R[集成初筛并发]
+    R --> B[条件专项复核 / 必要时一次盲选]
+    B --> V[最多一次定向修订与差分验证]
+    V -->|未达门禁| H[保留工件等待人工]
+    V -->|合格| G[确定性提升政策]
     G -->|原子提升| C[正式章节]
     G -->|同步更新| S[当前状态]
     C --> M[合订本]
 ```
 
-一次写作尝试会产生规划 JSON、正文、静态报告、语义报告和工件清单。只有规划依据有效、正文没有 P1 问题、审查证据能够在正文中定位时，系统才会同时写入正式章节、章节元数据和当前状态。
+默认平衡模式把 Planner 在内的所有模型调用限制为最多 10 次：两候选和两次集成初筛构成 5 次基础路径，专项复核最多两次，只有分差接近时才调用一次 Selector，修订与验证必须成对预留且最多一次。失败、超时和无效输出一旦启动 Provider 都计入预算；系统不做无条件补写或外层重新规划。
 
 完整的状态机、文件契约与恢复方式见 [创作引擎手册](init.md)。
 
@@ -110,10 +112,32 @@ python3 scripts/orchestrator.py preflight
 python3 scripts/orchestrator.py next --dry-run
 ```
 
+`--dry-run` 只是不提升正式文件，仍会真实消耗模型额度。默认 `balanced` 最多 10 次调用；需要更快的单候选人工确认路径时使用：
+
+```bash
+python3 scripts/orchestrator.py next --mode fast --dry-run
+```
+
+快速模式最多 3 次调用（规划、单候选、集成初筛），不会自动提升。
+
+中断后可按输入和工件哈希恢复，不会重复执行已完成阶段：
+
+```bash
+python3 scripts/orchestrator.py next --resume --dry-run
+```
+
+恢复只复用状态哈希、工件哈希和模型路由指纹都一致的已完成阶段；中断中的调用会作为已花费失败调用结算。`--resume` 不增加原预算，也不会产生第 11 次调用。旧流程的 `REPLAN` 工作区显示为只读，不能按新版预算恢复。
+
 检查工作区中的规划、正文与审查报告后，提升最近一次通过的尝试：
 
 ```bash
 python3 scripts/orchestrator.py accept
+```
+
+边界稿也可以人工选择一个已通过硬门禁的候选：
+
+```bash
+python3 scripts/orchestrator.py accept --candidate 2
 ```
 
 也可以让通过门禁的尝试直接提升：
@@ -128,6 +152,15 @@ python3 scripts/orchestrator.py next
 # 审查最近五章
 python3 scripts/orchestrator.py review --last 5
 
+# 为最近两章生成四维只读校准报告
+python3 scripts/orchestrator.py review --last 2 --specialists
+
+# 显式执行到期审计；审计使用独立的单次调用预算
+python3 scripts/orchestrator.py audit
+
+# 手动执行二十章级阶段复审；只生成报告和未来债务
+python3 scripts/orchestrator.py audit --arc
+
 # 从正式章节重建连续阅读合订本
 python3 scripts/orchestrator.py merge
 
@@ -137,6 +170,39 @@ python3 scripts/orchestrator.py recover
 # 运行自动测试
 python3 -m unittest discover -v
 ```
+
+章节晋级只在 `decision.json` 标记 `audits_due`，不会自动调用审计模型。
+
+### 模型路由与运行状态
+
+- Terra medium：Planner、集成初筛；Terra high：专项复核和复杂验证。
+- Sol medium：候选正文与 Selector；Sol high：定向修订。
+- Luna high：局部差分验证。
+- `WAITING_USER`：已有可检查工件，但自动提升条件不足。
+- `BUDGET_EXHAUSTED`：预算已封顶；可无新增调用地查看或人工比较，也可显式创建新预算运行。
+- 候选失败时 `decision.md` 会列出失败阶段、已花费调用、当前最佳工件及未自动补写原因。
+
+执行章节生成时，CLI 会逐行显示模型调用开始、完成、失败以及审查工件校验结果：
+
+```bash
+python3 scripts/orchestrator.py next --dry-run --mode balanced
+```
+
+模型进程正常返回后仍需校验其结构化工件，因此“模型调用完成”和“审查有效”是两个不同状态。无效审查不会被误记为正文硬失败，也不会自动重试；原始输出保存在对应候选目录的 `diagnostics/*.invalid.txt`，最终 CLI 和 `decision.json` 会给出准确路径。
+
+最终摘要中的“实际墙钟耗时”是用户真实等待时间；“并发调用耗时合计”是所有模型调用时长相加，因两个任务可以并发，后者可能明显大于前者。
+
+获批的十次试运行必须逐次由用户启动。至少五次可轮换使用 `--shadow-review`，最后只读汇总：
+
+```bash
+python3 scripts/benchmark_pipeline.py \
+  --manifest novel/work/chapter_003/attempt_01/run_manifest.json \
+  --manifest PATH_02 --manifest PATH_03 --manifest PATH_04 --manifest PATH_05 \
+  --manifest PATH_06 --manifest PATH_07 --manifest PATH_08 --manifest PATH_09 \
+  --manifest PATH_10
+```
+
+汇总脚本不会启动模型；影子专项仍占用单章既有预算，不能突破两次专项或 10 次总上限。
 
 ## 项目结构
 
@@ -160,7 +226,7 @@ novel-prequel/
     ├── state/current.json          # 当前创作状态
     ├── rules/                      # 权威规则与设定边界
     ├── style/                      # 风格参数与民国语境锚点
-    ├── knowledge/                  # 事实等级与时代禁入项
+    ├── knowledge/                  # 事实等级、长期索引、质量经验与创作债务
     ├── characters/                 # 人物卡
     ├── anomalies/                  # 异常设计卡
     ├── plots/                      # 事件大纲
@@ -177,7 +243,8 @@ novel-prequel/
 - 规划引用的事实 ID 已注册，并产生实际状态变化；
 - 未解锁能力、现代人物和时代错位词汇没有进入正文；
 - 最近五章不存在完整段落复用、累计长句复用或明显场景模板复制；
-- Reviewer 的证据确实存在于正文，且 PASS 结论与评分、修改要求一致；
+- 集成初筛及实际触发的专项证据确实存在于正文，各维度达到资格线；
+- 双候选接近时一次匿名盲选有效，单合格候选还必须通过连续性专项守卫；
 - 章节、元数据和状态能够作为一个整体写入。
 
 规则入口见 [创作规则全书](novel/rules/rulebook.md)，结构化设定边界见 [创作知识索引](novel/knowledge/README.md)。

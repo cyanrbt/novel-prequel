@@ -7,9 +7,37 @@ from pathlib import Path
 from scripts.prequel.artifacts import ChapterWorkspace
 from scripts.prequel.errors import ArtifactValidationError, ProviderError
 from scripts.prequel.provider import CodexCliProvider
+from scripts.prequel.provider import provider_from_spec
 
 
 class ProviderTests(unittest.TestCase):
+    def test_provider_spec_adds_explicit_model_and_effort(self):
+        provider = provider_from_spec(
+            {
+                "type": "codex_cli",
+                "command": ["codex", "exec"],
+                "model": "gpt-5.6-terra",
+                "reasoning_effort": "medium",
+            },
+            Path.cwd(),
+        )
+        self.assertEqual(provider.model, "gpt-5.6-terra")
+        self.assertEqual(provider.reasoning_effort, "medium")
+        self.assertIn("--model", provider.command)
+        self.assertIn('model_reasoning_effort="medium"', provider.command)
+
+    def test_provider_spec_rejects_ultra(self):
+        with self.assertRaises(ProviderError):
+            provider_from_spec(
+                {
+                    "type": "codex_cli",
+                    "command": ["codex", "exec"],
+                    "model": "gpt-5.6-sol",
+                    "reasoning_effort": "ultra",
+                },
+                Path.cwd(),
+            )
+
     def test_output_schemas_use_openai_supported_object_contract(self):
         unsupported = {"minProperties", "maxProperties", "minLength", "maxLength"}
 
@@ -25,7 +53,15 @@ class ProviderTests(unittest.TestCase):
                 for index, value in enumerate(node):
                     inspect(value, f"{path}[{index}]")
 
-        for name in ("plan", "review"):
+        for name in (
+            "plan",
+            "review",
+            "integrated_review",
+            "specialist_review",
+            "revision_verification",
+            "ballot",
+            "audit",
+        ):
             schema = json.loads(Path(f"schemas/{name}.schema.json").read_text(encoding="utf-8"))
             inspect(schema, name)
 

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "specialist_review.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "dimension", "score", "hard_failures", "warnings", "evidence", "required_revisions", "summary"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]},
+    "score": {"type": "integer", "minimum": 0, "maximum": 100},
+    "hard_failures": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["code", "quote", "explanation"], "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}}},
+    "warnings": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["code", "quote", "explanation"], "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}}},
+    "evidence": {"type": "array", "minItems": 3, "items": {"type": "object", "additionalProperties": false, "required": ["quote", "finding"], "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}}},
+    "required_revisions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["code", "quote", "instruction", "acceptance"], "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "instruction": {"type": "string"}, "acceptance": {"type": "string"}}}},
+    "summary": {"type": "string"}
+  }
+}

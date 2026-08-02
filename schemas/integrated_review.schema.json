@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "integrated_review.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "scores", "confidences", "hard_failures", "warnings", "evidence", "required_revisions", "specialist_requests", "fact_findings", "summaries"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "scores": {
+      "type": "object", "additionalProperties": false,
+      "required": ["continuity", "character", "craft", "anti_slop"],
+      "properties": {
+        "continuity": {"type": "integer", "minimum": 0, "maximum": 100},
+        "character": {"type": "integer", "minimum": 0, "maximum": 100},
+        "craft": {"type": "integer", "minimum": 0, "maximum": 100},
+        "anti_slop": {"type": "integer", "minimum": 0, "maximum": 100}
+      }
+    },
+    "confidences": {
+      "type": "object", "additionalProperties": false,
+      "required": ["continuity", "character", "craft", "anti_slop"],
+      "properties": {
+        "continuity": {"type": "number", "minimum": 0, "maximum": 1},
+        "character": {"type": "number", "minimum": 0, "maximum": 1},
+        "craft": {"type": "number", "minimum": 0, "maximum": 1},
+        "anti_slop": {"type": "number", "minimum": 0, "maximum": 1}
+      }
+    },
+    "hard_failures": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "code", "quote", "explanation"], "properties": {"dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]}, "code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}}},
+    "warnings": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "code", "quote", "explanation"], "properties": {"dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]}, "code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}}},
+    "evidence": {
+      "type": "object", "additionalProperties": false,
+      "required": ["continuity", "character", "craft", "anti_slop"],
+      "properties": {
+        "continuity": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["quote", "finding"], "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}}},
+        "character": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["quote", "finding"], "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}}},
+        "craft": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["quote", "finding"], "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}}},
+        "anti_slop": {"type": "array", "minItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["quote", "finding"], "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}}}
+      }
+    },
+    "required_revisions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "code", "quote", "instruction", "acceptance"], "properties": {"dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]}, "code": {"type": "string"}, "quote": {"type": "string"}, "instruction": {"type": "string"}, "acceptance": {"type": "string"}}}},
+    "specialist_requests": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "reason", "decision_impact"], "properties": {"dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]}, "reason": {"type": "string"}, "decision_impact": {"type": "string"}}}},
+    "fact_findings": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["fact_id", "value", "quote"], "properties": {"fact_id": {"type": "string"}, "value": {"type": "string"}, "quote": {"type": "string"}}}},
+    "summaries": {
+      "type": "object", "additionalProperties": false,
+      "required": ["continuity", "character", "craft", "anti_slop"],
+      "properties": {"continuity": {"type": "string"}, "character": {"type": "string"}, "craft": {"type": "string"}, "anti_slop": {"type": "string"}}
+    }
+  }
+}

@@ -152,6 +152,24 @@ def atomic_save_json(path: Path, value: Any, *, backup: bool = False) -> None:
         raise AtomicWriteError(f"文件写入失败 {path}: {exc}") from exc
 
 
+def atomic_save_text(path: Path, content: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_name: str | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", dir=path.parent, delete=False
+        ) as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+            temp_name = handle.name
+        os.replace(temp_name, path)
+    except OSError as exc:
+        if temp_name:
+            Path(temp_name).unlink(missing_ok=True)
+        raise AtomicWriteError(f"文件写入失败 {path}: {exc}") from exc
+
+
 def atomic_save_state(path: Path, state: dict[str, Any]) -> None:
     errors = validate_state(state)
     if errors:

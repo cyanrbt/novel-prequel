@@ -26,8 +26,51 @@
 
   "provider": {
     "type": "codex_cli",
-    "command": ["codex", "exec", "--ephemeral", "--sandbox", "read-only", "--color", "never", "--skip-git-repo-check"],
+    "command": ["codex", "exec", "--ephemeral", "--sandbox", "read-only", "--color", "never", "--skip-git-repo-check", "--config", "sqlite_home=\"novel/work/.codex-runtime\""],
+    "model": "gpt-5.6-terra",
+    "reasoning_effort": "medium",
     "timeout_seconds": 900
+  },
+
+  "model_profiles": {
+    "default": {"model": "gpt-5.6-terra", "reasoning_effort": "medium"},
+    "terra_medium": {"model": "gpt-5.6-terra", "reasoning_effort": "medium"},
+    "terra_high": {"model": "gpt-5.6-terra", "reasoning_effort": "high"},
+    "sol_medium": {"model": "gpt-5.6-sol", "reasoning_effort": "medium"},
+    "sol_high": {"model": "gpt-5.6-sol", "reasoning_effort": "high"},
+    "luna_high": {"model": "gpt-5.6-luna", "reasoning_effort": "high"}
+  },
+
+  "stage_routes": {
+    "planner": "terra_medium",
+    "candidate_writer": "sol_medium",
+    "integrated_reviewer": "terra_medium",
+    "continuity_reviewer": "terra_high",
+    "character_reviewer": "terra_high",
+    "craft_reviewer": "terra_high",
+    "anti_slop_reviewer": "terra_high",
+    "selector": "sol_medium",
+    "reviser": "sol_high",
+    "verifier": "luna_high",
+    "verifier_complex": "terra_high",
+    "arc_reviewer": "terra_high"
+  },
+
+  "quality_evolution": {
+    "call_limit": 10,
+    "candidate_count": 2,
+    "max_workers": 2,
+    "selector_score_gap": 4,
+    "revision_rounds": 1,
+    "weights": {"continuity": 0.3, "character": 0.25, "craft": 0.3, "anti_slop": 0.15},
+    "candidate_floors": {"continuity": 85, "character": 75, "craft": 75, "anti_slop": 80},
+    "auto_promote": {"weighted_score": 85, "continuity": 90, "character": 82, "craft": 82, "anti_slop": 82, "ballot_votes": 2},
+    "manual_floor": 78,
+    "max_dimension_regression": 3
+  },
+
+  "context_limits": {
+    "recent_chars": 10000
   },
 
   "quality_gates": {
@@ -35,8 +78,7 @@
     "exact_paragraph_min_chars": 30,
     "repeated_long_sentence_limit": 3,
     "dash_per_thousand_warn": 8,
-    "negation_template_warn": 3,
-    "max_retries": 3
+    "negation_template_warn": 3
   },
 
   "git": {"auto_commit": false},
@@ -75,6 +117,12 @@
     "style_drift_check_interval": 10,
     "max_context_size_kb": 80,
     "max_revealed_rules": 50,
-    "max_retries": 3
-  }
+    "max_retries": 3,
+    "max_active_lessons": 8,
+    "lesson_window_chapters": 10,
+    "lesson_activation_count": 3,
+    "lesson_retire_after_clean_chapters": 10
+  },
+
+  "audits": {"health_interval": 10, "arc_interval": 20}
 }

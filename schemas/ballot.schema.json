@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "ballot.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["winner", "criteria", "evidence", "rationale"],
+  "properties": {
+    "winner": {"type": "string", "enum": ["A", "B", "TIE"]},
+    "criteria": {"type": "object", "additionalProperties": false, "required": ["plan_fulfillment", "character", "pacing", "anti_slop"], "properties": {"plan_fulfillment": {"type": "string", "enum": ["A", "B", "TIE"]}, "character": {"type": "string", "enum": ["A", "B", "TIE"]}, "pacing": {"type": "string", "enum": ["A", "B", "TIE"]}, "anti_slop": {"type": "string", "enum": ["A", "B", "TIE"]}}},
+    "evidence": {"type": "array", "minItems": 4, "items": {"type": "object", "additionalProperties": false, "required": ["candidate", "quote", "finding"], "properties": {"candidate": {"type": "string", "enum": ["A", "B"]}, "quote": {"type": "string"}, "finding": {"type": "string"}}}},
+    "rationale": {"type": "string"}
+  }
+}

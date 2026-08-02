@@ -1,4 +1,5 @@
 import re
+import json
 import subprocess
 import unittest
 from pathlib import Path
@@ -28,6 +29,20 @@ class RepositoryHygieneTests(unittest.TestCase):
         )
         for relative in local_paths:
             self.assertTrue(self.is_ignored(relative), relative)
+
+    def test_codex_sqlite_runtime_stays_in_ignored_work_area(self):
+        config = json.loads(
+            (ROOT / "config/prequel_config.json").read_text(encoding="utf-8")
+        )
+        command = config["provider"]["command"]
+        index = command.index("--config")
+        self.assertEqual(
+            command[index + 1],
+            'sqlite_home="novel/work/.codex-runtime"',
+        )
+        self.assertTrue(
+            self.is_ignored("novel/work/.codex-runtime/state.sqlite")
+        )
 
     def test_operational_files_use_stable_identifiers(self):
         paths = (
@@ -62,6 +77,18 @@ class RepositoryHygieneTests(unittest.TestCase):
             if "://" in target:
                 continue
             self.assertTrue((ROOT / target).exists(), target)
+
+    def test_readme_documents_quality_evolution_commands(self):
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+        for command in ("next --resume", "accept --candidate", "audit --arc"):
+            self.assertIn(command, text)
+
+    def test_engine_manual_links_to_quality_design(self):
+        text = (ROOT / "init.md").read_text(encoding="utf-8")
+        self.assertIn(
+            "docs/superpowers/specs/2026-08-01-quality-evolution-pipeline-design.md",
+            text,
+        )
 
 
 if __name__ == "__main__":

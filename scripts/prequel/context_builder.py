@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import re
+from difflib import unified_diff
 from pathlib import Path
 from typing import Any
 
@@ -37,7 +38,11 @@ def _recent_signatures(texts: list[str]) -> dict[str, Any]:
     return {"recent_endings": endings, "action_counts": frequent_actions}
 
 
-def build_planner_context(project_root: Path, state: dict[str, Any]) -> dict[str, Any]:
+def build_planner_context(
+    project_root: Path,
+    state: dict[str, Any],
+    memory_context: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     registry = _read_json(project_root / "novel/knowledge/canon_registry.json")
     event_id = state["chapter"]["current_event"]
     event_path = project_root / "novel/plots" / f"{event_id}.md"
@@ -60,7 +65,7 @@ def build_planner_context(project_root: Path, state: dict[str, Any]) -> dict[str
         for fact in registry.get("facts", [])
         if fact.get("id") in {"CANON-RULE-001", "CANON-RULE-002", "PREQUEL-EVENT-001"}
     ]
-    return {
+    result = {
         "chapter": state["chapter"],
         "timeline": state["timeline"],
         "protagonist": state["protagonist"],
@@ -77,6 +82,9 @@ def build_planner_context(project_root: Path, state: dict[str, Any]) -> dict[str
             "reason": era_bans.get("reason", ""),
         },
     }
+    if memory_context is not None:
+        result["memory_context"] = memory_context
+    return result
 
 
 DEFAULT_CHARACTER_VOICES = {
@@ -86,6 +94,113 @@ DEFAULT_CHARACTER_VOICES = {
     "张洞母亲": "关注粮食、债务、船费、名声与活人的去处；不承担神秘导师功能",
     "李二": "话多，习惯用俗例判断危险，容易把临时经验当成保命法",
 }
+
+
+CANDIDATE_FOCUSES = (
+    {
+        "name": "causal_tension",
+        "instruction": "优先强化场景因果和规则试错；每次异常升级都必须改变人物下一步选择。",
+    },
+    {
+        "name": "character_pressure",
+        "instruction": "优先强化人物利益、关系压力和现实代价；异常必须落到具体生活选择。",
+    },
+    {
+        "name": "atmospheric_precision",
+        "instruction": "优先强化克制的感官证据、空间变化和节奏；避免解释未知与模板化惊吓。",
+    },
+)
+
+
+FOCUS_PAIRS = (
+    ("causal_tension", "character_pressure"),
+    ("causal_tension", "atmospheric_precision"),
+    ("character_pressure", "atmospheric_precision"),
+)
+
+
+def select_candidate_focuses(
+    plan: dict[str, Any], chapter_number: int
+) -> tuple[dict[str, str], dict[str, str]]:
+    rendered = json.dumps(
+        {
+            key: plan.get(key)
+            for key in (
+                "chapter_purpose",
+                "phase",
+                "scenes",
+                "rule_hypotheses",
+                "new_information",
+                "hook",
+            )
+        },
+        ensure_ascii=False,
+    )
+    groups = {
+        "causal_tension": ("调查", "规则", "证据", "试错", "异常", "因果", "线索"),
+        "character_pressure": ("关系", "人物", "争执", "对话", "利益", "亲缘", "选择"),
+        "atmospheric_precision": ("空间", "声音", "气味", "黑暗", "夜", "门", "压迫", "恐惧"),
+    }
+    scores = {
+        name: sum(rendered.count(keyword) for keyword in keywords)
+        for name, keywords in groups.items()
+    }
+    ordered = sorted(scores, key=lambda name: (-scores[name], name))
+    if scores[ordered[1]] == 0 or scores[ordered[0]] == scores[ordered[2]]:
+        selected_names = FOCUS_PAIRS[(chapter_number - 1) % len(FOCUS_PAIRS)]
+        reason = "chapter_rotation"
+    else:
+        selected_names = (ordered[0], ordered[1])
+        reason = "plan_keywords"
+    by_name = {item["name"]: item for item in CANDIDATE_FOCUSES}
+    return tuple(
+        {**by_name[name], "selection_reason": reason} for name in selected_names
+    )  # type: ignore[return-value]
+
+
+def _bounded_text(value: Any, limit: int) -> Any:
+    if not isinstance(value, str) or len(value) <= limit:
+        return value
+    return value[:limit]
+
+
+def build_chapter_context_pack(
+    state: dict[str, Any],
+    planner_context: dict[str, Any],
+    recent_texts: list[str],
+    limits: dict[str, int] | None = None,
+) -> dict[str, Any]:
+    limits = limits or {}
+    core = {
+        "chapter": state["chapter"],
+        "timeline": state["timeline"],
+        "protagonist": state["protagonist"],
+        "active_characters": state["characters"].get("active", {}),
+        "world_lore": state["world_lore"],
+        "active_foreshadows": state["active_foreshadows"],
+        "canon_facts": planner_context.get("canon_facts", []),
+        "era_bans": planner_context.get("era_bans", {}),
+        "event_outline": planner_context.get("event_outline", ""),
+    }
+    memory = planner_context.get("memory_context", {})
+    retrieved = {
+        "archive": memory.get("archive", []),
+        "lessons": memory.get("lessons", [])[:8],
+        "debts": memory.get("debts", []),
+    }
+    recent_limit = limits.get("recent_chars", 10000)
+    recent = [_bounded_text(text, recent_limit) for text in recent_texts[-5:]]
+    pack = {"core": core, "retrieved": retrieved, "recent": recent}
+    pack["metrics"] = context_metrics(pack)
+    return pack
+
+
+def context_metrics(packet: dict[str, Any]) -> dict[str, int]:
+    return {
+        key: len(json.dumps(value, ensure_ascii=False, sort_keys=True))
+        for key, value in packet.items()
+        if key != "metrics"
+    }
 
 
 def build_writer_packet(
@@ -122,9 +237,141 @@ def build_writer_packet(
         ],
         "recent_repetition_signatures": _recent_signatures(recent_texts),
     }
+    if context.get("memory_context"):
+        packet["quality_memory"] = {
+            "archive": context["memory_context"].get("archive", []),
+            "lessons": context["memory_context"].get("lessons", [])[:8],
+            "debts": context["memory_context"].get("debts", []),
+        }
     if revision_context:
         packet["revision_context"] = revision_context
     return packet
+
+
+def build_candidate_packet(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    recent_texts: list[str],
+    planner_context: dict[str, Any],
+    candidate_index: int,
+) -> dict[str, Any]:
+    if candidate_index < 0 or candidate_index >= 2:
+        raise ArtifactValidationError("候选创作焦点索引无效")
+    packet = build_writer_packet(state, plan, recent_texts, planner_context)
+    packet["candidate_focus"] = select_candidate_focuses(
+        plan, plan["chapter_number"]
+    )[candidate_index]
+    packet["candidate_constraints"] = {
+        "independent_draft": True,
+        "do_not_reference_other_candidates": True,
+    }
+    return packet
+
+
+def build_integrated_review_packet(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    draft: str,
+    static_review: dict[str, Any],
+    planner_context: dict[str, Any],
+) -> dict[str, Any]:
+    packet = build_reviewer_packet(
+        state, plan, draft, static_review, planner_context
+    )
+    packet["allowed_fact_ids"] = [
+        item["id"]
+        for item in planner_context.get("canon_facts", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    ]
+    packet["review_dimensions"] = list(("continuity", "character", "craft", "anti_slop"))
+    packet["evidence_rule"] = "每个quote必须逐字连续存在于draft"
+    return packet
+
+
+def build_specialist_packet(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    draft: str,
+    static_review: dict[str, Any],
+    planner_context: dict[str, Any],
+    dimension: str,
+) -> dict[str, Any]:
+    return {
+        **build_reviewer_packet(
+            state, plan, draft, static_review, planner_context
+        ),
+        "dimension": dimension,
+        "evidence_rule": "所有 quote 必须逐字出现在 draft 中",
+    }
+
+
+def build_ballot_packet(
+    plan: dict[str, Any], draft_a: str, draft_b: str
+) -> dict[str, Any]:
+    return {
+        "plan": plan,
+        "candidate_A": draft_a,
+        "candidate_B": draft_b,
+        "blind_rule": "只使用 A/B 标签，不推测候选来源或创作焦点",
+    }
+
+
+def build_revision_packet(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    recent_texts: list[str],
+    planner_context: dict[str, Any],
+    previous_draft: str,
+    instructions: list[dict[str, Any]],
+) -> dict[str, Any]:
+    packet = build_writer_packet(
+        state,
+        plan,
+        recent_texts,
+        planner_context,
+        {
+            "previous_draft": previous_draft,
+            "instructions": instructions,
+            "source": "consensus_specialist_reviews",
+        },
+    )
+    packet["revision_guardrails"] = {
+        "preserve_uncriticized_strengths": True,
+        "return_complete_chapter": True,
+    }
+    return packet
+
+
+def build_verification_packet(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    planner_context: dict[str, Any],
+    previous_draft: str,
+    revised_draft: str,
+    target_issues: list[dict[str, Any]],
+) -> dict[str, Any]:
+    diff = "\n".join(
+        unified_diff(
+            previous_draft.splitlines(),
+            revised_draft.splitlines(),
+            fromfile="before",
+            tofile="after",
+            lineterm="",
+        )
+    )
+    return {
+        "chapter_number": plan["chapter_number"],
+        "plan": plan,
+        "revised_draft": revised_draft,
+        "diff": diff,
+        "target_issues": target_issues,
+        "continuity_anchors": {
+            "timeline": state["timeline"],
+            "protagonist": state["protagonist"],
+            "canon_facts": planner_context.get("canon_facts", []),
+            "era_bans": planner_context.get("era_bans", {}),
+        },
+    }
 
 
 def build_reviewer_packet(

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "revision_verification.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "passed", "resolved", "regressions", "evidence", "updated_scores", "summary"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "passed": {"type": "boolean"},
+    "resolved": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["code", "resolved", "explanation"], "properties": {"code": {"type": "string"}, "resolved": {"type": "boolean"}, "explanation": {"type": "string"}}}},
+    "regressions": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "code", "quote", "explanation"], "properties": {"dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]}, "code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}}},
+    "evidence": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["code", "quote", "finding"], "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "finding": {"type": "string"}}}},
+    "updated_scores": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["dimension", "score"], "properties": {"dimension": {"type": "string", "enum": ["continuity", "character", "craft", "anti_slop"]}, "score": {"type": "integer", "minimum": 0, "maximum": 100}}}},
+    "summary": {"type": "string"}
+  }
+}

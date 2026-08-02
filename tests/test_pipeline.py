@@ -4,9 +4,15 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
-from scripts.prequel.errors import QualityGateError
+from scripts.prequel.errors import LegacyRunNotResumable, QualityGateError
+from scripts.prequel.evolution import EvolutionResult
+from scripts.prequel.artifacts import ChapterWorkspace
+from scripts.prequel.run_manifest import RunManifest, fingerprint
+from scripts.prequel.memory import MemoryStore
 from scripts.prequel.pipeline import WritingPipeline, accept_dry_run, merge_formal_chapters
+from scripts.prequel.quality import scan_draft
 
 
 class FakeProvider:
@@ -111,7 +117,13 @@ def make_project_fixture(root: Path) -> Path:
     (root / "novel/knowledge/canon_registry.json").write_text(json.dumps(registry, ensure_ascii=False), encoding="utf-8")
     (root / "novel/plots/event_1.md").write_text("# event_1\n\nCh01 纸灰。", encoding="utf-8")
     config = {
-        "provider": {"type": "codex_cli", "command": ["codex", "exec"], "timeout_seconds": 10},
+        "provider": {
+            "type": "codex_cli",
+            "command": ["codex", "exec"],
+            "model": "gpt-5.6-terra",
+            "reasoning_effort": "medium",
+            "timeout_seconds": 10,
+        },
         "quality_gates": {"recent_chapters_for_repetition": 5, "max_retries": 1},
         "git": {"auto_commit": False},
     }
@@ -124,6 +136,111 @@ def make_project_fixture(root: Path) -> Path:
 
 
 class PipelineTests(unittest.TestCase):
+    def test_legacy_replan_is_read_only_and_not_resumable(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            pipeline = WritingPipeline(root, FakeProvider([]))
+            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
+            workspace = ChapterWorkspace.create(root / "novel/work", 1, 1)
+            manifest = RunManifest.create(workspace, 1, fingerprint(state))
+            manifest.set_status("REPLAN", valid_candidates=0)
+            self.assertEqual(manifest.display_status(), "LEGACY_REPLAN")
+            with self.assertRaises(LegacyRunNotResumable):
+                pipeline._attempt_number(1, True, fingerprint(state))
+
+    def test_next_cli_accepts_modes_shadow_and_unbounded_positive_candidate(self):
+        from scripts.orchestrator import build_parser
+
+        parser = build_parser()
+        self.assertEqual(parser.parse_args(["next"]).mode, "balanced")
+        self.assertEqual(parser.parse_args(["next", "--mode", "fast"]).mode, "fast")
+        self.assertEqual(
+            parser.parse_args(["next", "--shadow-review", "continuity"]).shadow_review,
+            "continuity",
+        )
+        self.assertEqual(parser.parse_args(["accept", "--candidate", "4"]).candidate, 4)
+
+    def test_review_parser_accepts_specialist_calibration(self):
+        from scripts.orchestrator import build_parser
+
+        args = build_parser().parse_args(["review", "--last", "2", "--specialists"])
+        self.assertTrue(args.specialists)
+
+    def test_high_confidence_evolution_result_promotes_atomically(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            config_path = root / "config/prequel_config.json"
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config["quality_evolution"] = {}
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            MemoryStore(root)
+            draft = valid_draft()
+            plan = json.loads(valid_plan_json())
+            static = scan_draft(
+                draft,
+                [],
+                {"characters": ["周正"], "terms": ["负责人"]},
+                plan,
+            )
+            reviews = {
+                dimension: {
+                    "summary": f"{dimension}通过",
+                    "evidence": [
+                        {"quote": "门板上的灰", "finding": "具体异常"},
+                        {"quote": "没有落到底", "finding": "观察成立"},
+                        {"quote": "到了门内", "finding": "边界改变"},
+                    ],
+                    "warnings": [],
+                }
+                for dimension in ("continuity", "character", "craft", "anti_slop")
+            }
+            card = {
+                "scores": {
+                    "continuity": 92,
+                    "character": 88,
+                    "craft": 88,
+                    "anti_slop": 86,
+                },
+                "weighted_score": 89.1,
+                "hard_failures": [],
+                "required_revisions": [],
+            }
+            evolution = EvolutionResult(
+                "AUTO_PROMOTE",
+                "candidate_01",
+                draft,
+                static,
+                reviews,
+                card,
+                {"status": "AUTO_PROMOTE"},
+            )
+
+            class Router:
+                def __init__(self):
+                    self.planner = FakeProvider([valid_plan_json()])
+
+                def provider_for(self, stage):
+                    return self.planner
+
+                def profile_for(self, stage):
+                    return "default"
+
+            with patch("scripts.prequel.pipeline.QualityEvolutionEngine") as engine:
+                engine.return_value.run.return_value = evolution
+                events = []
+                result = WritingPipeline(root, providers=Router()).run_next(
+                    progress=events.append
+                )
+            self.assertTrue(result.promoted)
+            self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
+            manifest = json.loads((result.workspace / "run_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["budget"]["spent"], 1)
+            self.assertEqual(manifest["budget"]["calls"]["call_001"]["stage"], "planner")
+            self.assertEqual(
+                [event["kind"] for event in events],
+                ["CALL_STARTED", "CALL_COMPLETED"],
+            )
+
     def test_script_entrypoint_can_import_project_package(self):
         result = subprocess.run(
             [sys.executable, "scripts/orchestrator.py", "--help"],

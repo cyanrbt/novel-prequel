@@ -14,6 +14,14 @@ class ProviderError(PrequelError):
     """The configured model provider could not return usable content."""
 
 
+class CallBudgetExceeded(PrequelError):
+    """A model call was blocked before provider start by the chapter budget."""
+
+
+class LegacyRunNotResumable(PrequelError):
+    """A pre-budget REPLAN workspace can only be inspected."""
+
+
 class QualityGateError(PrequelError):
     """A plan, draft, or semantic review failed a mandatory gate."""
 
