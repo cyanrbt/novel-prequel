@@ -29,6 +29,36 @@
       "chapter": 3,
       "source_path": "novel/chapters/vol_01/chapter_003.txt",
       "source_sha256": "d9f913e827fd0005ef0ff00312c5aa4f383e7460818fb87ee547dc791a88c5b3"
+    },
+    {
+      "characters": [
+        "出事人家家属",
+        "张家叔公",
+        "张洞",
+        "张洞母亲",
+        "张洞父亲",
+        "木匠老李",
+        "李二"
+      ],
+      "locations": [
+        "双桥镇·东巷出事人家门后",
+        "双桥镇·木匠铺",
+        "张家院落·堂屋"
+      ],
+      "event_id": "event_1",
+      "foreshadows": [],
+      "irreversible_changes": [
+        "protagonist_known_info_add",
+        "timeline_year",
+        "timeline_elapsed_days",
+        "character_updates",
+        "world_hypotheses_add"
+      ],
+      "hook_type": "未解问题",
+      "summary": "以一户装有完好铁栓仍因住户自行开门而死的反例，迫使张洞放弃把铁器当作安全手段，并开始记录开门前的逼迫",
+      "chapter": 4,
+      "source_path": "novel/chapters/vol_01/chapter_004.txt",
+      "source_sha256": "0e38e8a3bfaa0cac999ed1c22ab16f6c1d02a92f72be598df75bbaf2d7ff9572"
     }
   ]
 }

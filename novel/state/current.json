@@ -1,22 +1,22 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-02T17:58:35",
+  "last_updated": "2026-08-02T18:06:26",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 3,
-    "next_chapter": 4,
+    "last_chapter": 4,
+    "next_chapter": 5,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
     "current_phase": "试探",
-    "last_title": "少一只鞋"
+    "last_title": "好栓"
   },
   "timeline": {
     "current_year": 1908,
     "era": "清末",
     "year_label": "清末（辛亥革命前三年）",
-    "elapsed_days": 3
+    "elapsed_days": 4
   },
   "protagonist": {
     "name": "张洞",
@@ -57,7 +57,10 @@
       "镇上已有住户在听见与下葬者生前相同的三下敲门后死在门后，门无明显破损。",
       "门槛外一只鞋与死者脚边另一只鞋同时存在，鞋的摆放尚不能说明作用。",
       "李二家也听过与张家昨夜相同的敲门节奏。",
-      "李二已将自家遭遇只告诉张洞，两人暂不向长辈坦白。"
+      "李二已将自家遭遇只告诉张洞，两人暂不向长辈坦白。",
+      "铁门栓只能增加主动开门的难度，不能阻止住户因门外动静自行拔栓。",
+      "判断门栓作用时，必须记录住户开门前听见的内容及其开门理由。",
+      "东巷死者家的门板内侧有纸灰。"
     ],
     "body": {
       "状态": "正常"
@@ -67,16 +70,16 @@
   "characters": {
     "active": {
       "张洞父亲": {
-        "status": "在家中记账",
-        "note": "想结束家里用沉默处理旧事的习惯。"
+        "status": "质疑铁门栓的效用",
+        "note": "要求叔公为暗中订栓的理由提供事实，而非继续以沉默结束谈话。"
       },
       "张洞母亲": {
         "status": "动用船钱装上铁门栓",
         "note": "她用张洞离镇的盘缠换取一夜的门后安全。"
       },
       "张家叔公": {
-        "status": "暂管祠堂旧物",
-        "note": "相信少说、锁好、补好能让家里活下去。"
+        "status": "继续隐瞒旧事",
+        "note": "面对反例只追问死者是否听见名字，未说明缘由。"
       },
       "李二": {
         "status": "与张洞共同隐瞒自家异响",
@@ -87,8 +90,8 @@
         "note": "只相信自己看见的损坏痕迹。"
       },
       "张洞": {
-        "status": "获得镇上外部对照",
-        "note": "不再只把昨夜敲门视为张家孤例，开始记录声音、门与鞋的事实。"
+        "status": "开始记录开门前的逼迫条件",
+        "note": "已放弃把铁门栓当作可直接挡住异常的简单结论。"
       }
     },
     "pending": {
@@ -132,7 +135,8 @@
     "confirmed": [],
     "hypotheses": [
       "门外的三下敲门可能与死者生前的节奏有关，但尚不能确定来者是否就是尸体。",
-      "门槛外留鞋可能与事件有关，但没有证据证明它能保护住户。"
+      "门槛外留鞋可能与事件有关，但没有证据证明它能保护住户。",
+      "门外的声音可能会利用住户在现实上无法置之不理的内容，逼其主动开门；尚无足够样本确认。"
     ],
     "gold_known": false,
     "post_office_status": "不存在线索",
@@ -162,6 +166,11 @@
       "chapter": 3,
       "type": "未解问题",
       "content": "李二所述的敲门节奏与张家新铁栓装好当夜听见的三下完全相同，张洞必须判断铁栓究竟挡住了什么、又没挡住什么。"
+    },
+    {
+      "chapter": 4,
+      "type": "未解问题",
+      "content": "东巷死者家完整的门板内侧沾着纸灰；张洞必须判断纸灰为何会出现在门后。"
     }
   ],
   "chapter_summaries": {
@@ -192,13 +201,23 @@
           "character_updates",
           "world_hypotheses_add"
         ]
+      },
+      "4": {
+        "title": "好栓",
+        "core": "以一户装有完好铁栓仍因住户自行开门而死的反例，迫使张洞放弃把铁器当作安全手段，并开始记录开门前的逼迫。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "timeline_elapsed_days",
+          "character_updates",
+          "world_hypotheses_add"
+        ]
       }
     }
   },
   "last_review": {
-    "chapter": 3,
+    "chapter": 4,
     "grade": "A",
     "verdict": "PASS",
-    "timestamp": "2026-08-02T17:58:35"
+    "timestamp": "2026-08-02T18:06:26"
   }
 }
