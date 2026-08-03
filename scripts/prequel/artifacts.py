@@ -17,6 +17,8 @@ ALLOWED_ARTIFACTS = {
     "draft.txt",
     "static_review.json",
     "semantic_review.json",
+    "reader_review.json",
+    "reader_review.invalid.txt",
     "promotion_manifest.json",
     "run_manifest.json",
     "decision.json",

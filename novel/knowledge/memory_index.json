@@ -3,62 +3,59 @@
   "entries": [
     {
       "characters": [
-        "出事人家家属",
-        "张家叔公",
         "张洞",
-        "张洞母亲",
         "张洞父亲",
-        "李二"
+        "张洞母亲",
+        "张家叔公",
+        "季三",
+        "阿顺",
+        "刘婶"
       ],
       "locations": [
-        "双桥镇出事人家门前与堂屋",
-        "张家院落门后",
-        "染坊后巷"
+        "大汉市·双桥镇·渡口",
+        "季三渡船·客舱与底舱门前"
       ],
       "event_id": "event_1",
       "foreshadows": [],
       "irreversible_changes": [
-        "protagonist_known_info_add",
-        "timeline_year",
-        "timeline_elapsed_days",
-        "character_updates",
-        "world_hypotheses_add"
+        "逃离计划受阻",
+        "家庭分离",
+        "异常首次直接观察"
       ],
-      "hook_type": "未解问题",
-      "summary": "将张家的夜间异响转化为可核对的镇上死亡事件，并使张洞与李二因共同隐瞒而绑定。",
-      "chapter": 3,
-      "source_path": "novel/chapters/vol_01/chapter_003.txt",
-      "source_sha256": "d9f913e827fd0005ef0ff00312c5aa4f383e7460818fb87ee547dc791a88c5b3"
+      "hook_type": "行动受阻与未解问题",
+      "summary": "张洞和母亲以仅有的两块船牌准备离镇，父亲与叔公各自选择留下；渡船底舱却借用活着的阿顺之声敲门。张洞阻止阿顺触碰门栓，众目睽睽下舱门仍未打开，出逃船只仍被迫停航。",
+      "chapter": 1,
+      "source_path": "novel/chapters/vol_01/chapter_001.txt"
     },
     {
       "characters": [
-        "出事人家家属",
-        "张家叔公",
+        "刘婶",
+        "季三",
         "张洞",
         "张洞母亲",
         "张洞父亲",
-        "木匠老李",
-        "李二"
+        "阿顺"
       ],
       "locations": [
-        "双桥镇·东巷出事人家门后",
-        "双桥镇·木匠铺",
-        "张家院落·堂屋"
+        "双桥镇渡口外的借宿铺与祠堂方向街巷",
+        "季三渡船客舱与底舱门前",
+        "季三渡船底舱门前"
       ],
       "event_id": "event_1",
       "foreshadows": [],
       "irreversible_changes": [
         "protagonist_known_info_add",
+        "protagonist_location",
         "timeline_year",
         "timeline_elapsed_days",
         "character_updates",
         "world_hypotheses_add"
       ],
       "hook_type": "未解问题",
-      "summary": "以一户装有完好铁栓仍因住户自行开门而死的反例，迫使张洞放弃把铁器当作安全手段，并开始记录开门前的逼迫",
-      "chapter": 4,
-      "source_path": "novel/chapters/vol_01/chapter_004.txt",
-      "source_sha256": "0e38e8a3bfaa0cac999ed1c22ab16f6c1d02a92f72be598df75bbaf2d7ff9572"
+      "summary": "张洞以失去当夜借宿机会为代价，把渡船异响从传言变成可复核记录，并将一家人的逃离分歧推入现实选择。",
+      "chapter": 2,
+      "source_path": "novel/chapters/vol_01/chapter_002.txt",
+      "source_sha256": "728a89f5f9e5d82dd1c8988a52dd6ffe02ed43b8f282f918101fed9d1168d706"
     }
   ]
 }

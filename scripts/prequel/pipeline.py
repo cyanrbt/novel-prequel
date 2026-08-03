@@ -35,6 +35,11 @@ from .progress import ProgressSink
 from .model_router import StageModelRouter
 from .provider import ModelProvider, provider_from_config
 from .quality import Issue, scan_draft, validate_plan, validate_review
+from .reader_review import (
+    build_blind_reader_packet,
+    build_blind_reader_prompt,
+    validate_blind_reader_review,
+)
 from .run_manifest import RunManifest, fingerprint
 from .state_store import load_state, validate_state
 
@@ -506,6 +511,33 @@ def accept_dry_run(
         ),
         "待接受审查",
     )
+    reader_gate = load_config(project_root).get("quality_gates", {}).get(
+        "blind_reader_gate", {}
+    )
+    if reader_gate.get("enabled", False):
+        # Acceptance may follow a targeted edit of a candidate. Always obtain
+        # a fresh blind read here so a report for an earlier text cannot be
+        # reused merely because it lives in the same workspace.
+        router = StageModelRouter.from_config(load_config(project_root), project_root)
+        raw = router.provider_for("blind_reader_reviewer").generate(
+            build_blind_reader_prompt(
+                project_root,
+                build_blind_reader_packet(state, number, draft),
+            ),
+            project_root / "schemas/reader_review.schema.json",
+        )
+        try:
+            reader_review = parse_json_artifact(raw, "accept-blind-reader")
+            workspace.write_json("reader_review.json", reader_review)
+        except ArtifactValidationError:
+            workspace.write_raw_text("reader_review.invalid.txt", raw)
+            raise
+        require_no_p1(
+            validate_blind_reader_review(reader_review, draft, number),
+            "接受前盲读者审查",
+        )
+        if reader_review.get("verdict") != "PASS":
+            raise QualityGateError("接受前盲读者审查未通过")
     promote_atomically(
         project_root,
         state,
@@ -801,9 +833,14 @@ class WritingPipeline:
             self.project_root / "novel/work", number, attempt
         )
         resuming_workspace = resume and workspace.exists("run_manifest.json")
-        call_limit = 3 if mode == "fast" else self.config.get(
+        call_limit = 4 if mode == "fast" else self.config.get(
             "quality_evolution", {}
-        ).get("call_limit", 10)
+        ).get("call_limit", 11)
+        reader_gate_enabled = bool(
+            self.config.get("quality_gates", {})
+            .get("blind_reader_gate", {})
+            .get("enabled", False)
+        )
         if workspace.exists("run_manifest.json"):
             manifest = RunManifest.load(workspace)
             if manifest.data.get("status") == "REPLAN" or "budget" not in manifest.data:
@@ -846,6 +883,7 @@ class WritingPipeline:
                 "prompt_version": "budgeted-adaptive-initial",
             }
         )
+        reader_reservation = None
         try:
             if manifest.can_reuse("plan", plan_input_hash, route_fingerprint):
                 caller.stage_reused("plan")
@@ -886,6 +924,12 @@ class WritingPipeline:
                         "route_fingerprint": route_fingerprint,
                     },
                 )
+            # Reserve the blind reader before candidate evolution so the existing
+            # generation budget cannot consume the mandatory final gate.
+            if reader_gate_enabled:
+                reader_reservation = caller.reserve_many(
+                    [("blind_reader_reviewer", "BLIND_READER_GATE")]
+                )[0]
             engine_result = QualityEvolutionEngine(
                 self.project_root,
                 self.router,
@@ -902,6 +946,11 @@ class WritingPipeline:
                 manifest=manifest,
             )
         except (ArtifactValidationError, ProviderError, QualityGateError, CallBudgetExceeded) as exc:
+            if reader_reservation is not None:
+                try:
+                    caller.cancel_before_provider(reader_reservation)
+                except ArtifactValidationError:
+                    pass
             stage = manifest.data.get("current_stage", "pipeline")
             manifest.fail(stage, str(exc))
             status = (
@@ -926,6 +975,8 @@ class WritingPipeline:
             return PipelineResult(number, workspace.path, False, None, None, status)
 
         if engine_result.draft is None or engine_result.static_review is None:
+            if reader_reservation is not None:
+                caller.cancel_before_provider(reader_reservation)
             return PipelineResult(
                 number, workspace.path, False, None, None, engine_result.status
             )
@@ -944,6 +995,8 @@ class WritingPipeline:
                 "质量演进汇总审查",
             )
         except (ArtifactValidationError, QualityGateError) as exc:
+            if reader_reservation is not None:
+                caller.cancel_before_provider(reader_reservation)
             manifest.set_status("WAITING_USER", valid_candidates=manifest.data["valid_candidates"], waiting_reason=str(exc))
             return PipelineResult(
                 number,
@@ -953,7 +1006,130 @@ class WritingPipeline:
                 None,
                 "WAITING_USER",
             )
-        promoted = engine_result.status == "AUTO_PROMOTE" and not dry_run
+        if engine_result.status != "AUTO_PROMOTE":
+            if reader_reservation is not None:
+                caller.cancel_before_provider(reader_reservation)
+            return PipelineResult(
+                number,
+                workspace.path,
+                False,
+                engine_result.static_review,
+                semantic_review,
+                engine_result.status,
+            )
+
+        if not reader_gate_enabled:
+            promoted = not dry_run
+            status = engine_result.status
+            if promoted:
+                promote_atomically(
+                    self.project_root,
+                    state,
+                    plan,
+                    engine_result.draft,
+                    engine_result.static_review,
+                    semantic_review,
+                    workspace,
+                )
+                manifest.set_status(
+                    "COMPLETED", valid_candidates=manifest.data["valid_candidates"]
+                )
+                mark_due_audits(self.project_root, self.config, number, workspace)
+                status = "COMPLETED"
+            return PipelineResult(
+                number,
+                workspace.path,
+                promoted,
+                engine_result.static_review,
+                semantic_review,
+                status,
+            )
+
+        if reader_reservation is None:
+            raise QualityGateError("盲读者门禁未预留调用")
+        reader_packet = build_blind_reader_packet(state, number, engine_result.draft)
+        reader_input_hash = fingerprint(reader_packet)
+        reader_settings = caller._settings_for("blind_reader_reviewer")
+        reader_route_fingerprint = fingerprint(
+            {
+                "profile": reader_settings.profile,
+                "model": reader_settings.model,
+                "reasoning_effort": reader_settings.reasoning_effort,
+                "prompt_version": "blind-reader-gate",
+            }
+        )
+        reader_raw: str | None = None
+        try:
+            manifest.begin("blind_reader_review")
+            reader_raw = caller.call_reserved(
+                reader_reservation,
+                build_blind_reader_prompt(self.project_root, reader_packet),
+                self.project_root / "schemas/reader_review.schema.json",
+            )
+            reader_review = parse_json_artifact(
+                reader_raw,
+                "blind-reader-review",
+            )
+            require_no_p1(
+                validate_blind_reader_review(reader_review, engine_result.draft, number),
+                "盲读者审查结构",
+            )
+            workspace.write_json("reader_review.json", reader_review)
+            manifest.complete(
+                "blind_reader_review",
+                reader_input_hash,
+                ["reader_review.json"],
+                {
+                    "model_profile": reader_settings.profile,
+                    "prompt_version": "blind-reader-gate",
+                    "call_count": 1,
+                    "route_fingerprint": reader_route_fingerprint,
+                },
+            )
+        except (ArtifactValidationError, ProviderError, QualityGateError) as exc:
+            if reader_raw:
+                workspace.write_raw_text("reader_review.invalid.txt", reader_raw)
+            manifest.fail("blind_reader_review", str(exc))
+            manifest.set_status(
+                "WAITING_USER",
+                valid_candidates=manifest.data["valid_candidates"],
+                waiting_reason=f"盲读者门禁无效: {exc}",
+            )
+            return PipelineResult(
+                number,
+                workspace.path,
+                False,
+                engine_result.static_review,
+                semantic_review,
+                "WAITING_USER",
+            )
+        if reader_review["verdict"] != "PASS":
+            decision = {
+                "chapter_number": number,
+                "status": "WAITING_USER",
+                "reasons": ["盲读者审查未通过"],
+                "reader_verdict": reader_review["verdict"],
+                "reader_report": "reader_review.json",
+                "safe_actions": ["查看盲读者报告和既有候选"],
+                "new_budget_actions": ["以报告中的定向问题发起新的生成运行"],
+                "resume_warning": "当前候选不会自动提升；盲读者问题必须先修复。",
+            }
+            workspace.write_json("decision.json", decision)
+            manifest.set_status(
+                "WAITING_USER",
+                valid_candidates=manifest.data["valid_candidates"],
+                waiting_reason=f"盲读者审查要求{reader_review['verdict']}",
+            )
+            return PipelineResult(
+                number,
+                workspace.path,
+                False,
+                engine_result.static_review,
+                semantic_review,
+                "WAITING_USER",
+            )
+
+        promoted = not dry_run
         status = engine_result.status
         if promoted:
             promote_atomically(

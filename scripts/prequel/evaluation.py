@@ -175,11 +175,34 @@ def selection_policy(
     near.sort(key=lambda item: (-item["scorecard"]["weighted_score"], item["identifier"]))
     if near:
         return SelectionAction("REVISE", near[0]["identifier"], False)
+    # A single, precisely located factual contradiction in an otherwise strong
+    # candidate is safer to repair-and-verify than to discard blindly.  This
+    # path is deliberately narrow: content-level hard failures have already
+    # been filtered before semantic scoring, and multiple/low-score failures
+    # still require human intervention or a fresh run.
+    revisable_hard = [
+        item
+        for item in candidates
+        if item["classification"] == "HARD_FAIL"
+        and item["scorecard"].get("weighted_score", 0) >= 82
+        and len(item["scorecard"].get("hard_failures", [])) == 1
+        and len(item["scorecard"].get("required_revisions", [])) == 1
+    ]
+    revisable_hard.sort(
+        key=lambda item: (-item["scorecard"]["weighted_score"], item["identifier"])
+    )
+    if revisable_hard:
+        return SelectionAction("REVISE", revisable_hard[0]["identifier"], False)
     return SelectionAction("WAITING_USER", None, False)
 
 
 def validate_revision_verification(
-    verification: dict[str, Any], revised_draft: str, expected_chapter: int
+    verification: dict[str, Any],
+    revised_draft: str,
+    expected_chapter: int,
+    *,
+    baseline_scores: dict[str, int] | None = None,
+    max_dimension_regression: int | None = None,
 ) -> list[Issue]:
     issues: list[Issue] = []
     if verification.get("chapter_number") != expected_chapter:
@@ -193,6 +216,32 @@ def validate_revision_verification(
         quote = item.get("quote") if isinstance(item, dict) else None
         if not quote or quote not in revised_draft:
             issues.append(Issue("VERIFY_FALSE_EVIDENCE", "P1", "验证引文不在修订稿", repr(quote)))
+    if (
+        verification.get("passed") is True
+        and not verification.get("regressions")
+        and baseline_scores is not None
+        and max_dimension_regression is not None
+    ):
+        for item in verification.get("updated_scores", []):
+            if not isinstance(item, dict):
+                continue
+            dimension = item.get("dimension")
+            score = item.get("score")
+            baseline = baseline_scores.get(dimension)
+            if (
+                isinstance(score, int)
+                and isinstance(baseline, int)
+                and score < baseline - max_dimension_regression
+            ):
+                issues.append(
+                    Issue(
+                        "VERIFY_UNDECLARED_SCORE_REGRESSION",
+                        "P1",
+                        "验证声称无回归，却将"
+                        f"{dimension}从{baseline}降至{score}",
+                        repr(item),
+                    )
+                )
     return issues
 
 

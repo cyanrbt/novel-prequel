@@ -8,6 +8,7 @@ from unittest.mock import patch
 from scripts.prequel.artifacts import ChapterWorkspace
 from scripts.prequel.errors import ArtifactValidationError, ProviderError
 from scripts.prequel.evolution import QualityEvolutionEngine
+from scripts.prequel.evaluation import selection_policy, validate_revision_verification
 from scripts.prequel.model_calls import ModelCallExecutor
 from scripts.prequel.model_router import StageModelRouter
 from scripts.prequel.run_manifest import RunManifest, fingerprint
@@ -131,6 +132,42 @@ def verification():
 
 
 class EvolutionTests(unittest.TestCase):
+    def test_single_high_score_local_hard_failure_enters_verified_revision(self):
+        action = selection_policy(
+            [
+                {
+                    "identifier": "candidate_01",
+                    "classification": "HARD_FAIL",
+                    "scorecard": {
+                        "weighted_score": 90,
+                        "hard_failures": [{"code": "COUNT"}],
+                        "required_revisions": [{"code": "COUNT"}],
+                    },
+                }
+            ]
+        )
+        self.assertEqual((action.kind, action.selected_id), ("REVISE", "candidate_01"))
+
+    def test_passing_verification_cannot_hide_a_large_score_regression(self):
+        issues = validate_revision_verification(
+            {
+                "chapter_number": 1,
+                "passed": True,
+                "resolved": [],
+                "regressions": [],
+                "evidence": [],
+                "updated_scores": [{"dimension": "continuity", "score": 9}],
+                "summary": "错误地按十分制给分",
+            },
+            "修订稿正文",
+            1,
+            baseline_scores={"continuity": 86},
+            max_dimension_regression=3,
+        )
+        self.assertTrue(
+            any(issue.code == "VERIFY_UNDECLARED_SCORE_REGRESSION" for issue in issues)
+        )
+
     def test_review_diagnostic_paths_are_narrowly_whitelisted(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = ChapterWorkspace.create(Path(tmp), 1, 1)

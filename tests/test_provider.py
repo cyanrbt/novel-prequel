@@ -61,6 +61,7 @@ class ProviderTests(unittest.TestCase):
             "revision_verification",
             "ballot",
             "audit",
+            "reader_review",
         ):
             schema = json.loads(Path(f"schemas/{name}.schema.json").read_text(encoding="utf-8"))
             inspect(schema, name)

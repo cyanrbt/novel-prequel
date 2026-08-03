@@ -27,7 +27,12 @@ from scripts.prequel.pipeline import (
 from scripts.prequel.quality import scan_draft
 from scripts.prequel.evaluation import DIMENSIONS, build_scorecard, validate_specialist_review
 from scripts.prequel.pipeline import parse_json_artifact
-from scripts.prequel.state_store import atomic_save_json, load_state
+from scripts.prequel.reader_review import (
+    build_blind_reader_packet,
+    build_blind_reader_prompt,
+    validate_blind_reader_review,
+)
+from scripts.prequel.state_store import atomic_save_json, atomic_save_text, load_state
 
 
 STATE_FILE = PROJECT_ROOT / "novel/state/current.json"
@@ -320,6 +325,41 @@ def command_audit(args) -> int:
     return 0
 
 
+def command_reader_review(args) -> int:
+    state = load_state(STATE_FILE)
+    paths = formal_chapter_paths(PROJECT_ROOT)
+    if not paths:
+        raise StateValidationError("没有可供盲读者审查的正式章节")
+    by_number = {int(path.stem.split("_")[1]): path for path in paths}
+    chapter = args.chapter or max(by_number)
+    if chapter not in by_number:
+        raise StateValidationError(f"正式章节不存在: 第{chapter}章")
+    draft = by_number[chapter].read_text(encoding="utf-8")
+    config = load_config(PROJECT_ROOT)
+    router = StageModelRouter.from_config(config, PROJECT_ROOT)
+    packet = build_blind_reader_packet(state, chapter, draft)
+    raw = router.provider_for("blind_reader_reviewer").generate(
+        build_blind_reader_prompt(PROJECT_ROOT, packet),
+        PROJECT_ROOT / "schemas/reader_review.schema.json",
+    )
+    raw_target = PROJECT_ROOT / "novel/work/reader_reviews" / f"chapter_{chapter:03d}.raw.txt"
+    atomic_save_text(raw_target, raw)
+    report = parse_json_artifact(raw, f"reader-review-chapter-{chapter}")
+    failures = [
+        issue.message
+        for issue in validate_blind_reader_review(report, draft, chapter)
+        if issue.severity == "P1"
+    ]
+    if failures:
+        print(f"[STOP] 无效盲读者原始输出: {raw_target}")
+        raise StateValidationError("盲读者报告证据无效: " + "；".join(failures))
+    target = PROJECT_ROOT / "novel/work/reader_reviews" / f"chapter_{chapter:03d}.json"
+    atomic_save_json(target, report)
+    print(f"[OK] 盲读者报告: {target}")
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0 if report["verdict"] == "PASS" else 2
+
+
 def command_recover(args) -> int:
     backup = STATE_FILE.with_suffix(".json.bak")
     if not backup.exists():
@@ -354,7 +394,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=("balanced", "fast"),
         default="balanced",
-        help="balanced最多10次调用；fast最多3次调用",
+        help="balanced最多11次调用（含盲读者门禁）；fast最多4次调用（含盲读者门禁）",
     )
     next_parser.add_argument(
         "--shadow-review",
@@ -385,6 +425,10 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--last", type=int, default=5)
     review.add_argument("--specialists", action="store_true", help="生成四维只读专项校准报告")
     review.set_defaults(handler=command_review)
+
+    reader = sub.add_parser("reader-review", help="以盲读者身份审查一章正式正文，不读取大纲")
+    reader.add_argument("--chapter", type=_positive_int, help="默认审查最新正式章节")
+    reader.set_defaults(handler=command_reader_review)
 
     recover = sub.add_parser("recover", help="从已验证的状态备份恢复")
     recover.set_defaults(handler=command_recover)

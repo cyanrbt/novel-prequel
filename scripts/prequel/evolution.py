@@ -943,7 +943,13 @@ class QualityEvolutionEngine:
             )
             failures = _p1_messages(
                 validate_revision_verification(
-                    verification, revised_draft, plan["chapter_number"]
+                    verification,
+                    revised_draft,
+                    plan["chapter_number"],
+                    baseline_scores=selected.scorecard["scores"],
+                    max_dimension_regression=self.config.get(
+                        "max_dimension_regression", 3
+                    ),
                 )
             )
             if failures:
@@ -995,6 +1001,17 @@ class QualityEvolutionEngine:
         card["required_revisions"] = (
             [] if verification["passed"] else card.get("required_revisions", [])
         )
+        resolved_codes = {
+            item.get("code")
+            for item in verification.get("resolved", [])
+            if isinstance(item, dict) and item.get("resolved") is True
+        }
+        if verification["passed"]:
+            card["hard_failures"] = [
+                item
+                for item in card.get("hard_failures", [])
+                if item.get("code") not in resolved_codes
+            ]
         accepted = bool(verification["passed"] and not verification["regressions"])
         history = [
             {
@@ -1274,10 +1291,14 @@ class QualityEvolutionEngine:
                 "status": "WAITING_USER",
                 "reasons": ["候选未达到人工确认线；请检查最佳工件后显式决定后续动作"],
             }
-        if evaluation_degraded and outcome["status"] == "AUTO_PROMOTE":
+        # An invalid unselected alternative must not contaminate a candidate
+        # with its own valid evidence. The selected draft still has to pass the
+        # independent blind-reader gate before promotion.
+        selected_review_invalid = selected.review_failure is not None
+        if selected_review_invalid and outcome["status"] == "AUTO_PROMOTE":
             outcome = {
                 "status": "WAITING_USER",
-                "reasons": ["存在无效审查工件；严格门禁禁止自动晋级"],
+                "reasons": ["入选候选存在无效审查工件；严格门禁禁止自动晋级"],
             }
         status = "BUDGET_EXHAUSTED" if budget_exhausted else outcome["status"]
         return self._finish(

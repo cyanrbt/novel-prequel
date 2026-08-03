@@ -30,7 +30,8 @@
   "agents": {
     "planner": "agents/planner.md",
     "writer": "agents/writer.md",
-    "reviewer": "agents/reviewer.md"
+    "reviewer": "agents/reviewer.md",
+    "blind_reader_reviewer": "agents/reader_reviewer.md"
   },
 
   "provider": {
@@ -58,6 +59,7 @@
     "character_reviewer": "terra_high",
     "craft_reviewer": "terra_high",
     "anti_slop_reviewer": "terra_high",
+    "blind_reader_reviewer": "terra_high",
     "selector": "sol_medium",
     "reviser": "sol_high",
     "verifier": "luna_high",
@@ -66,7 +68,7 @@
   },
 
   "quality_evolution": {
-    "call_limit": 10,
+    "call_limit": 11,
     "candidate_count": 2,
     "max_workers": 2,
     "selector_score_gap": 4,
@@ -83,6 +85,7 @@
   },
 
   "quality_gates": {
+    "blind_reader_gate": {"enabled": true},
     "recent_chapters_for_repetition": 5,
     "exact_paragraph_min_chars": 30,
     "repeated_long_sentence_limit": 3,

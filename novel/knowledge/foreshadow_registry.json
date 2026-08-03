@@ -10,7 +10,7 @@
     "F-A01": {
       "class": "A",
       "status": "active",
-      "plant": "双桥镇开局：不该出现的纸灰",
+      "plant": "双桥镇早期：不该出现的纸灰",
       "recover_by": "M1-CITY-EXIT",
       "meaning": "纸灰指向封存泄漏的路径；根源保持未定。"
     },

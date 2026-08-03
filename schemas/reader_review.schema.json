@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "reader_review.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "verdict", "reader_recap", "blocking_issues", "warnings", "evidence", "revision_instructions"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "verdict": {"type": "string", "enum": ["PASS", "REVISE", "REPLAN"]},
+    "reader_recap": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["current_goal", "character_positions", "spatial_map", "causal_chain", "next_question"],
+      "properties": {
+        "current_goal": {"type": "string"},
+        "character_positions": {"type": "string"},
+        "spatial_map": {"type": "string"},
+        "causal_chain": {"type": "string"},
+        "next_question": {"type": "string"}
+      }
+    },
+    "blocking_issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "quote", "reader_question", "explanation"],
+        "properties": {
+          "code": {"type": "string"},
+          "quote": {"type": "string"},
+          "reader_question": {"type": "string"},
+          "explanation": {"type": "string"}
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "quote", "explanation"],
+        "properties": {
+          "code": {"type": "string"},
+          "quote": {"type": "string"},
+          "explanation": {"type": "string"}
+        }
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["quote", "finding"],
+        "properties": {"quote": {"type": "string"}, "finding": {"type": "string"}}
+      }
+    },
+    "revision_instructions": {"type": "array", "items": {"type": "string"}}
+  }
+}
