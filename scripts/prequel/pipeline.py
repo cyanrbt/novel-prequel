@@ -54,8 +54,34 @@ class PipelineResult:
     status: str = "COMPLETED"
 
 
+LOCAL_CONFIG_PATH = "config/prequel_config.local.json"
+TEMPLATE_CONFIGS = {
+    "codex_cli": "config/prequel_config.json",
+    "opencode_cli": "config/prequel_config.opencode.json",
+    "antigravity_cli": "config/prequel_config.antigravity.json",
+}
+
+
+def resolve_config_path(project_root: Path) -> Path:
+    override = os.environ.get("PREQUEL_CONFIG")
+    if override:
+        path = Path(override).expanduser()
+        return path if path.is_absolute() else project_root / path
+    local = project_root / LOCAL_CONFIG_PATH
+    return local if local.exists() else project_root / "config/prequel_config.json"
+
+
+def config_selection_origin(project_root: Path) -> str:
+    """Describe how the active config was chosen: env / local / default."""
+    if os.environ.get("PREQUEL_CONFIG"):
+        return "env"
+    if (project_root / LOCAL_CONFIG_PATH).exists():
+        return "local"
+    return "default"
+
+
 def load_config(project_root: Path) -> dict[str, Any]:
-    path = project_root / "config/prequel_config.json"
+    path = resolve_config_path(project_root)
     try:
         value = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -139,13 +165,15 @@ def run_preflight(
     if check_cli_capabilities:
         from .cli_capabilities import (
             bundled_model_catalog,
-            codex_version,
+            tool_version,
             validate_requested_routes,
         )
+        from .backends import backend_from_spec
 
-        command = config.get("provider", {}).get("command", ["codex"])
-        executable = command[0] if isinstance(command, list) and command else "codex"
-        catalog = bundled_model_catalog(executable)
+        spec = config.get("provider", {})
+        backend = backend_from_spec(spec)
+        command = spec.get("command", [backend.name])
+        executable = command[0] if isinstance(command, list) and command else backend.name
         requested = {
             stage: (
                 router.settings_for(stage).model,
@@ -153,15 +181,21 @@ def run_preflight(
             )
             for stage in sorted(config.get("stage_routes", {}))
         }
-        errors = validate_requested_routes(catalog, requested)
-        if errors:
-            raise QualityGateError("Codex模型能力预检失败: " + "；".join(errors))
-        checks.append(f"Codex CLI: {codex_version(executable)}")
+        try:
+            catalog = bundled_model_catalog(executable, backend.type)
+        except ProviderError as exc:
+            catalog = None
+            checks.append(f"{backend.label}: 模型目录不可用，跳过能力校验（{exc}）")
+        if catalog is not None:
+            errors = validate_requested_routes(catalog, requested)
+            if errors:
+                raise QualityGateError(f"{backend.label}模型能力预检失败: " + "；".join(errors))
+            checks.append(f"{backend.label} model and reasoning capabilities validated")
+        checks.append(f"{backend.label} CLI: {tool_version(executable, backend.type)}")
         checks.extend(
             f"route {stage}: {model}/{effort}"
             for stage, (model, effort) in requested.items()
         )
-        checks.append("Codex model and reasoning capabilities validated")
 
     if "quality_evolution" in config:
         for filename, field in (

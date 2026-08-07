@@ -1,62 +1,47 @@
 from __future__ import annotations
 
-import json
 import subprocess
 from typing import Any, Iterable
 
+from .backends import BACKENDS, backend_model_argv
 from .errors import ProviderError
 
 
-APPROVED_CODEX_MODELS = {
-    "gpt-5.6-sol",
-    "gpt-5.6-terra",
-    "gpt-5.6-luna",
-}
-APPROVED_REASONING_EFFORTS = {"low", "medium", "high", "xhigh"}
-
-
 def build_exec_argv(
-    base_command: Iterable[str], model: str, reasoning_effort: str
+    base_command: Iterable[str],
+    model: str,
+    reasoning_effort: str,
+    backend_type: str = "codex_cli",
 ) -> list[str]:
-    command = list(base_command)
-    if model not in APPROVED_CODEX_MODELS:
-        raise ProviderError(f"未知或未批准的Codex模型: {model}")
-    if reasoning_effort not in APPROVED_REASONING_EFFORTS:
-        raise ProviderError(f"不允许的思考强度: {reasoning_effort}")
-    if any(arg in {"-m", "--model"} for arg in command):
-        raise ProviderError("provider.command 不得内嵌模型参数")
-    if any("model_reasoning_effort" in arg for arg in command):
-        raise ProviderError("provider.command 不得内嵌思考强度")
-    return [
-        *command,
-        "--model",
-        model,
-        "--config",
-        f'model_reasoning_effort="{reasoning_effort}"',
-    ]
+    try:
+        backend = BACKENDS[backend_type]
+    except KeyError as exc:
+        raise ProviderError(f"不支持的 provider.type={backend_type}") from exc
+    return backend_model_argv(base_command, backend, model, reasoning_effort)
 
 
-def bundled_model_catalog(codex_command: str = "codex") -> dict[str, Any]:
+def bundled_model_catalog(
+    executable: str, backend_type: str = "codex_cli"
+) -> dict[str, Any] | None:
+    try:
+        backend = BACKENDS[backend_type]
+    except KeyError as exc:
+        raise ProviderError(f"不支持的 provider.type={backend_type}") from exc
+    argv = [executable, *backend.catalog_argv()]
     try:
         result = subprocess.run(
-            [codex_command, "debug", "models", "--bundled"],
+            argv,
             text=True,
             capture_output=True,
             check=False,
             timeout=30,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise ProviderError(f"无法读取Codex内置模型目录: {exc}") from exc
+        raise ProviderError(f"无法读取{backend.label}模型目录: {exc}") from exc
     if result.returncode != 0:
         detail = result.stderr.strip()[-1000:] or "无错误详情"
-        raise ProviderError(f"Codex模型目录命令失败: {detail}")
-    try:
-        value = json.loads(result.stdout)
-    except json.JSONDecodeError as exc:
-        raise ProviderError(f"Codex模型目录不是合法JSON: {exc}") from exc
-    if not isinstance(value, dict) or not isinstance(value.get("models"), list):
-        raise ProviderError("Codex模型目录缺少models数组")
-    return value
+        raise ProviderError(f"{backend.label}模型目录命令失败: {detail}")
+    return backend.parse_catalog(result.stdout)
 
 
 def validate_requested_routes(
@@ -76,22 +61,30 @@ def validate_requested_routes(
     for stage, (model, effort) in sorted(routes.items()):
         if model not in supported:
             errors.append(f"{stage}: 模型目录不存在 {model}")
-        elif effort not in supported[model]:
+        elif supported[model] and effort not in supported[model]:
             errors.append(f"{stage}: 模型目录不支持 {model}/{effort}")
     return errors
 
 
-def codex_version(codex_command: str = "codex") -> str:
+def tool_version(executable: str, backend_type: str = "codex_cli") -> str:
+    try:
+        backend = BACKENDS[backend_type]
+    except KeyError as exc:
+        raise ProviderError(f"不支持的 provider.type={backend_type}") from exc
     try:
         result = subprocess.run(
-            [codex_command, "--version"],
+            [executable, "--version"],
             text=True,
             capture_output=True,
             check=False,
             timeout=10,
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
-        raise ProviderError(f"无法读取Codex版本: {exc}") from exc
+        raise ProviderError(f"无法读取{backend.label}版本: {exc}") from exc
     if result.returncode != 0 or not result.stdout.strip():
-        raise ProviderError("Codex版本命令失败")
+        raise ProviderError(f"{backend.label}版本命令失败")
     return result.stdout.strip()
+
+
+def codex_version(codex_command: str = "codex") -> str:
+    return tool_version(codex_command, "codex_cli")

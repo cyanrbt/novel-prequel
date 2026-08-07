@@ -92,8 +92,49 @@ flowchart LR
 ### 环境要求
 
 - Python 3.10 或更高版本
-- 已安装并完成认证的 Codex CLI
+- 至少一个可用的 headless agent CLI（见下方「模型后端」）
 - Git
+
+### 模型后端
+
+管线通过 `config/prequel_config.json` 的 `provider.type` 选择后端，全部模型调用只走 `ModelProvider.generate(prompt, output_schema)` 协议，管线本身不感知具体工具。当前支持：
+
+| `provider.type` | 工具 | 结构化工件 | 备注 |
+|---|---|---|---|
+| `codex_cli` | Codex CLI | 原生 `--output-schema` | 默认；服务端强制 JSON |
+| `opencode_cli` | OpenCode `run --format json` | prompt 内嵌 schema + 客户端修复 | 模型名用 `provider/model` |
+| `antigravity_cli` | Antigravity `agy --print` | 原生 `--json-schema` | headless 需配置 `permissions.allow` |
+
+默认配置保持 Codex；切换后端时用 `PREQUEL_CONFIG` 选择备用配置，无需改动默认文件：
+
+```bash
+python3 scripts/orchestrator.py preflight                                        # Codex
+PREQUEL_CONFIG=config/prequel_config.opencode.json \
+  python3 scripts/orchestrator.py preflight                                     # OpenCode
+PREQUEL_CONFIG=config/prequel_config.antigravity.json \
+  python3 scripts/orchestrator.py preflight                                     # Antigravity
+```
+
+### 启动交互配置
+
+首次启动（`status` / `preflight`）且未选择后端时，会提示运行交互向导；也可随时显式执行：
+
+```bash
+python3 scripts/orchestrator.py setup
+```
+
+向导依次：选择 agent（Codex / OpenCode / Antigravity）→ 自动获取该 agent 的模型目录 → 选择模型 → 选择推理档位（Codex/OpenCode 手动选，Antigravity 由模型名推断）→ 写入被 Git 忽略的 `config/prequel_config.local.json`。此后所有命令自动使用该配置，无需再设环境变量；`PREQUEL_CONFIG` 优先级仍高于本地配置。
+
+非交互环境可显式指定（模型仍会先通过 agent 目录校验）：
+
+```bash
+python3 scripts/orchestrator.py setup --backend opencode_cli \
+  --model <provider>/<model> --effort medium
+```
+
+具体模型名以 `setup` 自动获取的目录为准（不同工具、不同环境各有差异）。
+
+`preflight` 会校验所选工具的版本、模型目录与阶段路由；模型目录不可用时只跳过能力校验（版本检查仍强制工具存在）。预检、生成与审计都通过同一配置选择后端。
 
 ### 获取项目
 
@@ -175,9 +216,8 @@ python3 -m unittest discover -v
 
 ### 模型路由与运行状态
 
-- Terra medium：Planner、集成初筛；Terra high：专项复核和复杂验证。
-- Sol medium：候选正文与 Selector；Sol high：定向修订。
-- Luna high：局部差分验证。
+阶段路由固定（Planner / Writer / 集成与专项 Reviewer / Selector / 修订与验证 / 盲读），每套配置用 `model_profiles` 把路由映射到所选后端的实际模型。Codex 配置的默认分工是 Terra medium（Planner、集成初筛）、Terra high（专项复核和复杂验证）、Sol medium（候选正文与 Selector）、Sol high（定向修订）、Luna high（局部差分验证）；opencode / antigravity 配置提供等价映射，可自行调整。
+
 - `WAITING_USER`：已有可检查工件，但自动提升条件不足。
 - `BUDGET_EXHAUSTED`：预算已封顶；可无新增调用地查看或人工比较，也可显式创建新预算运行。
 - 候选失败时 `decision.md` 会列出失败阶段、已花费调用、当前最佳工件及未自动补写原因。

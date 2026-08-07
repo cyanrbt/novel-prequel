@@ -8,3 +8,4 @@ __pycache__/
 novel/work/
 novel/state/current.json.bak
 shenmifushu.txt
+config/prequel_config.local.json

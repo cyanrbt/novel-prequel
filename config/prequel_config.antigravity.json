@@ -1,0 +1,140 @@
+{
+  "protagonist": "张洞",
+  "time_span": {
+    "start_year": 1890,
+    "end_year": 1950
+  },
+  "target_chapters": {"target": 600, "flexible_range": [520, 700], "mode": "milestone_driven"},
+  "words_per_chapter": 4200,
+  "chapter_length": {
+    "safe_min": 2500,
+    "target_min": 3200,
+    "target_max": 5000,
+    "safe_max": 8000
+  },
+  "style": "original",
+
+  "key_files": {
+    "state": "novel/state/current.json",
+    "rulebook": "novel/rules/rulebook.md",
+    "compact_style": "novel/style/compact_style.yaml",
+    "style_anchors": "novel/style/style_anchors.txt",
+    "series_architecture": "novel/plots/series_architecture.md",
+    "arc_registry": "novel/knowledge/arc_registry.json",
+    "foreshadow_registry": "novel/knowledge/foreshadow_registry.json",
+    "foreshadow_tracker": "novel/foreshadow_tracker.md",
+    "setting_whitelist": "novel/rules/setting_whitelist.md",
+    "setting_blacklist": "novel/rules/setting_blacklist.md"
+  },
+
+  "agents": {
+    "planner": "agents/planner.md",
+    "writer": "agents/writer.md",
+    "reviewer": "agents/reviewer.md",
+    "blind_reader_reviewer": "agents/reader_reviewer.md"
+  },
+
+  "provider": {
+    "type": "antigravity_cli",
+    "command": ["agy"],
+    "model": "gemini-3.6-flash-medium",
+    "reasoning_effort": "medium",
+    "timeout_seconds": 900
+  },
+
+  "model_profiles": {
+    "default": {"model": "gemini-3.6-flash-medium", "reasoning_effort": "medium"},
+    "terra_medium": {"model": "gemini-3.6-flash-medium", "reasoning_effort": "medium"},
+    "terra_high": {"model": "gemini-3.1-pro-high", "reasoning_effort": "high"},
+    "sol_medium": {"model": "gemini-3.6-flash-medium", "reasoning_effort": "medium"},
+    "sol_high": {"model": "gemini-3.1-pro-low", "reasoning_effort": "low"},
+    "luna_high": {"model": "gemini-3.6-flash-high", "reasoning_effort": "high"}
+  },
+
+  "stage_routes": {
+    "planner": "terra_medium",
+    "candidate_writer": "sol_medium",
+    "integrated_reviewer": "terra_medium",
+    "continuity_reviewer": "terra_high",
+    "character_reviewer": "terra_high",
+    "craft_reviewer": "terra_high",
+    "anti_slop_reviewer": "terra_high",
+    "blind_reader_reviewer": "terra_high",
+    "selector": "sol_medium",
+    "reviser": "sol_high",
+    "verifier": "luna_high",
+    "verifier_complex": "terra_high",
+    "arc_reviewer": "terra_high"
+  },
+
+  "quality_evolution": {
+    "call_limit": 11,
+    "candidate_count": 2,
+    "max_workers": 2,
+    "selector_score_gap": 4,
+    "revision_rounds": 1,
+    "weights": {"continuity": 0.3, "character": 0.25, "craft": 0.3, "anti_slop": 0.15},
+    "candidate_floors": {"continuity": 85, "character": 75, "craft": 75, "anti_slop": 80},
+    "auto_promote": {"weighted_score": 85, "continuity": 90, "character": 82, "craft": 82, "anti_slop": 82, "ballot_votes": 2},
+    "manual_floor": 78,
+    "max_dimension_regression": 3
+  },
+
+  "context_limits": {
+    "recent_chars": 10000
+  },
+
+  "quality_gates": {
+    "blind_reader_gate": {"enabled": true},
+    "recent_chapters_for_repetition": 5,
+    "exact_paragraph_min_chars": 30,
+    "repeated_long_sentence_limit": 3,
+    "dash_per_thousand_warn": 8,
+    "negation_template_warn": 3
+  },
+
+  "git": {"auto_commit": false},
+
+  "volume_structure": [
+    {"volume": 1, "name": "大汉市", "estimated_chapters": [65, 95], "years": "1908-1911", "exit_milestone": "M1-CITY-EXIT"},
+    {"volume": 2, "name": "乱世觉醒", "estimated_chapters": [70, 110], "years": "1912-1927", "exit_milestone": "M2-COOPERATION-ANCHOR"},
+    {"volume": 3, "name": "七老集结", "estimated_chapters": [130, 190], "years": "1930-1940", "exit_milestone": "M3-SEVEN-FORMED"},
+    {"volume": 4, "name": "黑暗降临", "estimated_chapters": [115, 165], "years": "1937-1945", "exit_milestone": "M4-SYSTEM-FAILURE"},
+    {"volume": 5, "name": "终极抉择", "estimated_chapters": [110, 160], "years": "1945-1950", "exit_milestone": "M5-FINAL-SEAL"}
+  ],
+
+  "world_reveal_layers": [
+    {"layer": 1, "name": "恐惧", "after": "M1-DUAL-EXPOSURE", "before": "M1-CITY-EXIT", "reveals": ["灵异存在", "鬼有规律"]},
+    {"layer": 2, "name": "规则", "after": "M1B-PATH-RECORD", "before": "M2-COOPERATION-ANCHOR", "reveals": ["规律可发现可利用", "驭鬼者概念成型"]},
+    {"layer": 3, "name": "代价", "after": "M2-ACTIVE-PRICE", "before": "M3-SEVEN-FORMED", "reveals": ["使用力量必有代价", "人与鬼的关系不可逆"]},
+    {"layer": 4, "name": "体系", "after": "M3-SEVEN-FORMED", "before": "M4-SYSTEM-FAILURE", "reveals": ["灵异体系可建造", "S级灵异需群体对抗"]},
+    {"layer": 5, "name": "抉择", "after": "M4-SYSTEM-FAILURE", "before": "M5-FINAL-SEAL", "reveals": ["终极方案是拖延战", "封印体系不可永久"]}
+  ],
+
+  "seven_elders_introduction": [
+    {"name": "罗文松", "event": "event_2", "earliest_after": "M2-ACTIVE-PRICE", "entry_condition": "邮局事件中形成合作锚点"},
+    {"name": "李庆之", "event": "event_3", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "其个人事件完成首次价值冲突"},
+    {"name": "孟小董", "event": "event_4", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "其个人事件迫使张洞接受代价观差异"},
+    {"name": "张幼红", "event": "event_5", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "其身份事件先于集结"},
+    {"name": "罗千", "event": "event_6", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "坟场事件先于共同限制"},
+    {"name": "张伯华", "event": "event_6b", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "药铺事件先于七人完成集结"},
+    {"name": "秦老", "event": "event_6b", "earliest_after": "M3-CORE-MEMBERS-MET", "entry_condition": "天生异类线在集结后段展开", "note": "出生年份仅保留1905-1915区间，不写死"}
+  ],
+
+  "memory_management": {
+    "chapter_summary_max_chars": 50,
+    "summary_compress_interval": 20,
+    "compress_target_chars": 10,
+    "foreshadow_check_interval": 5,
+    "style_drift_check_interval": 10,
+    "max_context_size_kb": 80,
+    "max_revealed_rules": 50,
+    "max_retries": 3,
+    "max_active_lessons": 8,
+    "lesson_window_chapters": 10,
+    "lesson_activation_count": 3,
+    "lesson_retire_after_clean_chapters": 10
+  },
+
+  "audits": {"health_interval": 10, "arc_interval": 20}
+}

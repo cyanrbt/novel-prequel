@@ -141,14 +141,23 @@ class CallBudget:
             budget = data["budget"]
             for call_id in list(budget["active"]):
                 record = budget["calls"][call_id]
-                record.update(
-                    {
-                        "status": "FAILED",
-                        "finished_at": utc_now(),
-                        "error_code": "INTERRUPTED",
-                        "error_summary": "上次进程结束时调用仍处于活动状态",
-                    }
-                )
+                if record["status"] == "RUNNING":
+                    record.update(
+                        {
+                            "status": "FAILED",
+                            "finished_at": utc_now(),
+                            "error_code": "INTERRUPTED",
+                            "error_summary": "上次进程结束时调用仍在执行",
+                        }
+                    )
+                elif record["status"] == "RESERVED":
+                    record.update(
+                        {
+                            "status": "CANCELLED",
+                            "finished_at": utc_now(),
+                            "error_summary": "上次进程结束时调用尚未启动，释放预留",
+                        }
+                    )
             budget["active"] = []
             self._recompute(budget)
 

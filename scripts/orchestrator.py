@@ -22,7 +22,18 @@ from scripts.prequel.pipeline import (
     formal_chapter_paths,
     load_config,
     merge_formal_chapters,
+    resolve_config_path,
+    config_selection_origin,
     run_preflight,
+)
+from scripts.prequel.setup import (
+    agent_labels,
+    available_efforts,
+    backend_executable,
+    build_backend_config,
+    fetch_model_catalog,
+    model_options,
+    write_local_config,
 )
 from scripts.prequel.quality import scan_draft
 from scripts.prequel.evaluation import DIMENSIONS, build_scorecard, validate_specialist_review
@@ -87,10 +98,12 @@ def command_status(args) -> int:
     state = load_state(STATE_FILE)
     chapter = state["chapter"]
     print("《神秘复苏前传》创作状态")
+    _print_config_status()
     print(f"状态: {state['machine_state']}")
     print(f"进度: 第{chapter['last_chapter']}章完成 → 第{chapter['next_chapter']}章待写")
     print(f"当前事件: {chapter['current_event_name']} / {chapter['current_phase']}")
     print(f"时间地点: {state['timeline']['current_year']}年 / {state['protagonist']['location']}")
+    _offer_setup()
     chapter_work = PROJECT_ROOT / "novel/work" / f"chapter_{chapter['next_chapter']:03d}"
     for attempt in sorted(chapter_work.glob("attempt_*"), reverse=True):
         manifest = attempt / "run_manifest.json"
@@ -125,8 +138,112 @@ def command_status(args) -> int:
 
 
 def command_preflight(args) -> int:
+    _print_config_status()
+    _offer_setup()
     for check in run_preflight(PROJECT_ROOT, check_cli_capabilities=True):
         print(f"[OK] {check}")
+    return 0
+
+
+def _active_config_label() -> str:
+    config = load_config(PROJECT_ROOT)
+    backend_type = config.get("provider", {}).get("type", "?")
+    backend = {"codex_cli": "Codex", "opencode_cli": "OpenCode", "antigravity_cli": "Antigravity"}.get(
+        backend_type, backend_type
+    )
+    profile = config.get("model_profiles", {}).get("default", {})
+    model = profile.get("model") or config.get("provider", {}).get("model", "?")
+    effort = profile.get("reasoning_effort") or config.get("provider", {}).get("reasoning_effort", "?")
+    return f"{backend} / {model} / {effort}"
+
+
+def _print_config_status() -> None:
+    origin = config_selection_origin(PROJECT_ROOT)
+    print(f"后端配置: {resolve_config_path(PROJECT_ROOT).name}（{origin}）→ {_active_config_label()}")
+    if origin == "default":
+        print("提示: 当前为默认 Codex 配置。运行 `python3 scripts/orchestrator.py setup` 选择 agent 与模型档位。")
+
+
+def _offer_setup() -> None:
+    """启动时若未显式选择后端，交互式询问是否配置 agent 与模型档位。"""
+    if config_selection_origin(PROJECT_ROOT) != "default":
+        return
+    if not sys.stdin.isatty():
+        return
+    answer = _prompt_input("未选择后端，是否现在配置 agent 与模型档位？（y/N）", "N").lower()
+    if answer in {"y", "yes"}:
+        _setup_backend()
+
+
+def _prompt_input(text: str, default: str | None = None) -> str:
+    suffix = f"（默认 {default}）" if default else ""
+    try:
+        raw = input(f"{text}{suffix}: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        raise SystemExit("\n已取消")
+    return raw or default or ""
+
+
+def _prompt_choice(text: str, options: list[tuple[str, str]], default: int = 1) -> str:
+    for index, (_, label) in enumerate(options, 1):
+        marker = " *" if index == default else ""
+        print(f"  {index}. {label}{marker}")
+    while True:
+        raw = _prompt_input(text, str(default))
+        try:
+            index = int(raw)
+        except ValueError:
+            print("请输入数字序号")
+            continue
+        if 1 <= index <= len(options):
+            return options[index - 1][0]
+        print(f"无效选择，请输入 1-{len(options)}")
+
+
+def _setup_backend(
+    backend_type: str | None = None,
+    model: str | None = None,
+    effort: str | None = None,
+) -> None:
+    from scripts.prequel.backends import BACKENDS
+
+    if backend_type is None:
+        backend_type = _prompt_choice("选择模型后端", agent_labels())
+    backend = BACKENDS[backend_type]
+    print(f"正在从 {backend_executable(PROJECT_ROOT, backend_type)} 获取模型目录...")
+    try:
+        catalog = fetch_model_catalog(PROJECT_ROOT, backend_type)
+    except PrequelError as exc:
+        raise PrequelError(f"无法获取{backend.label}模型目录: {exc}")
+    choices = model_options(backend_type, catalog)
+    if not choices:
+        raise PrequelError(f"{backend.label}没有可用模型；请确认该工具已安装并完成认证")
+    if model is None:
+        model = _prompt_choice(f"选择{backend.label}模型", choices)
+    if model not in {slug for slug, _ in choices}:
+        raise PrequelError(f"模型 {model} 不在{backend.label}目录中")
+    efforts = available_efforts(backend_type, catalog, model)
+    if effort is None:
+        if len(efforts) == 1:
+            effort = efforts[0]
+            print(f"推理档位（由模型名推断）: {effort}")
+        else:
+            effort = _prompt_choice(
+                "选择推理档位", [(item, item) for item in efforts]
+            )
+    if effort not in efforts:
+        raise PrequelError(f"档位 {effort} 不是 {model} 的可选项")
+    config = build_backend_config(PROJECT_ROOT, backend_type, model, effort)
+    target = write_local_config(PROJECT_ROOT, config)
+    print(f"[OK] 已写入 {target}")
+    print(f"后端: {backend.label} | 模型: {model} | 档位: {effort}")
+    print("后续命令自动使用该配置；临时覆盖可设置 PREQUEL_CONFIG 环境变量。")
+
+
+def command_setup(args) -> int:
+    if not sys.stdin.isatty() and not args.backend:
+        raise PrequelError("非交互终端请使用 --backend/--model/--effort 显式指定")
+    _setup_backend(backend_type=args.backend, model=args.model, effort=args.effort)
     return 0
 
 
@@ -425,6 +542,15 @@ def build_parser() -> argparse.ArgumentParser:
     review.add_argument("--last", type=int, default=5)
     review.add_argument("--specialists", action="store_true", help="生成四维只读专项校准报告")
     review.set_defaults(handler=command_review)
+
+    setup = sub.add_parser(
+        "setup",
+        help="交互式选择 agent 并自动获取模型目录，写入本地配置",
+    )
+    setup.add_argument("--backend", choices=("codex_cli", "opencode_cli", "antigravity_cli"), help="非交互模式指定后端")
+    setup.add_argument("--model", help="非交互模式指定模型")
+    setup.add_argument("--effort", help="非交互模式指定推理档位")
+    setup.set_defaults(handler=command_setup)
 
     reader = sub.add_parser("reader-review", help="以盲读者身份审查一章正式正文，不读取大纲")
     reader.add_argument("--chapter", type=_positive_int, help="默认审查最新正式章节")

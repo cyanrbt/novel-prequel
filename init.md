@@ -65,7 +65,7 @@
 | `WAITING_USER` | 等待人工判断 |
 | `ERROR` | 流程停止，正式内容不变 |
 
-运行前必须通过状态结构、模型提供方、设定注册表、事件大纲和正式章号连续性检查。
+运行前必须通过状态结构、模型提供方、设定注册表、事件大纲和正式章号连续性检查。模型提供方通过 `config/prequel_config.json` 的 `provider.type` 选择 Codex / OpenCode / Antigravity 三种 headless CLI，全部模型调用只走 `ModelProvider.generate(prompt, output_schema)` 协议，管线不感知具体工具；切换后端用 `PREQUEL_CONFIG` 指向备用配置（见 README「模型后端」）。
 
 ## 写作管线
 

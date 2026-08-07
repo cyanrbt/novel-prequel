@@ -52,12 +52,25 @@ class CallBudgetTests(unittest.TestCase):
                 list(pool.map(lambda _: worker(), range(2)))
             self.assertEqual(len([x for x in outcomes if x != "blocked"]), 1)
 
-    def test_stale_active_reservation_becomes_failed_on_resume(self):
+    def test_stale_active_reservation_is_released_on_resume(self):
         with tempfile.TemporaryDirectory() as tmp:
             manifest = self.make_manifest(Path(tmp), 10)
-            reservation = CallBudget(manifest).reserve(
-                "planner", SETTINGS, "PLAN"
-            )
+            budget = CallBudget(manifest)
+            reservation = budget.reserve("planner", SETTINGS, "PLAN")
+            self.assertEqual(budget.remaining, 9)
+            reloaded = RunManifest.load(manifest.workspace)
+            CallBudget(reloaded).recover_interrupted()
+            call = reloaded.data["budget"]["calls"][reservation.call_id]
+            self.assertEqual(call["status"], "CANCELLED")
+            self.assertEqual(reloaded.data["budget"]["spent"], 0)
+            self.assertEqual(reloaded.data["budget"]["remaining"], 10)
+
+    def test_interrupted_running_call_counts_as_failed(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            manifest = self.make_manifest(Path(tmp), 10)
+            budget = CallBudget(manifest)
+            reservation = budget.reserve("planner", SETTINGS, "PLAN")
+            budget.mark_running(reservation)
             reloaded = RunManifest.load(manifest.workspace)
             CallBudget(reloaded).recover_interrupted()
             call = reloaded.data["budget"]["calls"][reservation.call_id]
