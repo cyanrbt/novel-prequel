@@ -16,13 +16,28 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["location", "characters", "goal", "conflict", "function", "pressure_change", "irreversible_change"],
+        "required": ["location", "characters", "goal", "conflict", "function", "initial_state", "discovery_path", "knowledge_limits", "ordinary_explanations", "choice_reason", "end_state", "pressure_change", "irreversible_change"],
         "properties": {
           "location": {"type": "string"},
           "characters": {"type": "array", "items": {"type": "string"}},
           "goal": {"type": "string"},
           "conflict": {"type": "string"},
           "function": {"type": "string"},
+          "initial_state": {"type": "string"},
+          "discovery_path": {"type": "string"},
+          "knowledge_limits": {"type": "string"},
+          "ordinary_explanations": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["considered", "excluded", "remaining"],
+            "properties": {
+              "considered": {"type": "array", "items": {"type": "string"}},
+              "excluded": {"type": "array", "items": {"type": "string"}},
+              "remaining": {"type": "array", "items": {"type": "string"}}
+            }
+          },
+          "choice_reason": {"type": "string"},
+          "end_state": {"type": "string"},
           "pressure_change": {"type": "string"},
           "irreversible_change": {"type": "string"}
         }

@@ -1,0 +1,4 @@
+interface:
+  display_name: "小说逐段共读"
+  short_description: "AI 与真人逐阅读单元交换真实感受并沉淀可复用的章级反馈文档"
+  default_prompt: "使用 $novel-close-reading 与我逐段共读指定小说章节，并在读完后保存联合反馈。"

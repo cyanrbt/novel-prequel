@@ -1,4 +1,5 @@
 import json
+import hashlib
 import subprocess
 import sys
 import tempfile
@@ -11,8 +12,9 @@ from scripts.prequel.evolution import EvolutionResult
 from scripts.prequel.artifacts import ChapterWorkspace
 from scripts.prequel.run_manifest import RunManifest, fingerprint
 from scripts.prequel.memory import MemoryStore
-from scripts.prequel.pipeline import WritingPipeline, accept_dry_run, merge_formal_chapters
+from scripts.prequel.pipeline import WritingPipeline, _new_state_after_chapter, accept_dry_run, merge_formal_chapters
 from scripts.prequel.quality import scan_draft
+from scripts.prequel.state_settlement import expected_state_changes
 
 
 class FakeProvider:
@@ -38,6 +40,16 @@ def valid_plan_json() -> str:
                     "goal": "建立日常",
                     "conflict": "纸灰出现在不该出现的位置",
                     "function": "升级",
+                    "initial_state": "张家院门从内上栓，蒸笼有盖，张洞与母亲都在灶间。",
+                    "discovery_path": "张洞清点米粮时打开蒸笼，先检查笼盖再看见内部纸灰。",
+                    "knowledge_limits": "两人只知道祠堂当日无人烧纸，不知道纸灰何时进入。",
+                    "ordinary_explanations": {
+                        "considered": ["灶灰飘入", "家人曾开盖"],
+                        "excluded": ["灰从笼盖上方直接落入"],
+                        "remaining": ["此前已经有人把灰留在蒸笼中"]
+                    },
+                    "choice_reason": "张洞要保留现场，母亲则担心存粮受污染。",
+                    "end_state": "蒸笼纸灰被分碗留存，祠堂钥匙转由母亲贴身保管。",
                     "pressure_change": "张洞必须记录纸灰位置",
                     "irreversible_change": "张洞开始记录纸灰位置",
                 }
@@ -89,6 +101,78 @@ def review_json(verdict: str) -> str:
             "canon_assessment": "没有引入正传现代人物或新组织",
             "style_assessment": "叙事克制，结尾有安全区崩坏",
             "revision_instructions": [] if verdict == "PASS" else ["重新安排不可逆变化"],
+        },
+        ensure_ascii=False,
+    )
+
+
+def blind_reader_json(draft: str) -> str:
+    return json.dumps(
+        {
+            "chapter_number": 1,
+            "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
+            "verdict": "PASS",
+            "reader_recap": {
+                "current_goal": "张洞检查门上的灰。",
+                "character_positions": "张洞在门边。",
+                "spatial_map": "灰从门板外侧进入门内。",
+                "causal_chain": "张洞观察纸灰，随后安全边界失效。",
+                "next_question": "纸灰怎样越过关闭的门？",
+            },
+            "adversarial_checks": {
+                "ordinary_explanations": [],
+                "missing_preconditions": [],
+                "knowledge_or_behavior_gaps": [],
+                "physical_or_spatial_gaps": [],
+                "unsupported_recap_claims": [],
+            },
+            "reading_experience": {
+                "prose_accessibility": 4,
+                "character_believability": 4,
+                "target_emotion_effect": 4,
+                "narrative_momentum": 4,
+                "continue_reading": True,
+                "first_drop_point": None,
+                "friction_reasons": [],
+            },
+            "blocking_issues": [],
+            "warnings": [],
+            "evidence": [
+                {"quote": "门板上的灰", "finding": "目标有物理落点"},
+                {"quote": "没有落到底", "finding": "异常可以观察"},
+                {"quote": "到了门内", "finding": "章末边界发生变化"},
+            ],
+            "revision_instructions": [],
+        },
+        ensure_ascii=False,
+    )
+
+
+def state_settlement_json(state: dict, plan: dict, draft: str) -> str:
+    return json.dumps(
+        {
+            "chapter_number": 1,
+            "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
+            "verdict": "PASS",
+            "reader_visible_summary": {
+                "core": "张洞检查门板纸灰，发现它最终越过门板进入屋内。",
+                "evidence": ["门板上的灰", "到了门内"],
+            },
+            "hook": {
+                "type": plan["hook"]["type"],
+                "content": "纸灰已经进入门内",
+                "quote": "到了门内",
+            },
+            "change_evidence": [
+                {
+                    "path": item["path"],
+                    "value": item["value"],
+                    "quote": "门板上的灰",
+                    "finding": item["meaning"],
+                }
+                for item in expected_state_changes(state, plan)
+            ],
+            "missing_changes": [],
         },
         ensure_ascii=False,
     )
@@ -148,6 +232,160 @@ def make_project_fixture(root: Path) -> Path:
 
 
 class PipelineTests(unittest.TestCase):
+    def test_final_reader_and_state_gates_run_before_atomic_promotion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            config_path = root / "config/prequel_config.json"
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config["quality_evolution"] = {"call_limit": 12}
+            config["quality_gates"] = {
+                "recent_chapters_for_repetition": 5,
+                "blind_reader_gate": {"enabled": True},
+                "state_evidence_gate": {"enabled": True},
+            }
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            (root / "agents/reader_reviewer.md").write_text("盲读。", encoding="utf-8")
+            (root / "agents/state_settler.md").write_text("结算。", encoding="utf-8")
+            (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
+            (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
+            MemoryStore(root)
+            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
+            plan = json.loads(valid_plan_json())
+            draft = valid_draft()
+            static = scan_draft(
+                draft, [], {"characters": ["周正"], "terms": ["负责人"]}, plan
+            )
+            reviews = {
+                dimension: {
+                    "summary": f"{dimension}通过",
+                    "evidence": [
+                        {"quote": "门板上的灰", "finding": "具体异常"},
+                        {"quote": "没有落到底", "finding": "观察成立"},
+                        {"quote": "到了门内", "finding": "边界改变"},
+                    ],
+                    "warnings": [],
+                }
+                for dimension in ("continuity", "character", "craft", "anti_slop")
+            }
+            evolution = EvolutionResult(
+                "AUTO_PROMOTE",
+                "candidate_01",
+                draft,
+                static,
+                reviews,
+                {
+                    "scores": {"continuity": 92, "character": 88, "craft": 88, "anti_slop": 86},
+                    "weighted_score": 89.1,
+                    "hard_failures": [],
+                    "required_revisions": [],
+                },
+                {"status": "AUTO_PROMOTE"},
+            )
+
+            class Router:
+                def __init__(self):
+                    self.providers = {
+                        "planner": FakeProvider([valid_plan_json()]),
+                        "blind_reader_reviewer": FakeProvider([blind_reader_json(draft)]),
+                        "state_settler": FakeProvider([state_settlement_json(state, plan, draft)]),
+                    }
+
+                def provider_for(self, stage):
+                    return self.providers[stage]
+
+                def profile_for(self, stage):
+                    return stage
+
+            with patch("scripts.prequel.pipeline.QualityEvolutionEngine") as engine:
+                engine.return_value.run.return_value = evolution
+                result = WritingPipeline(root, providers=Router()).run_next()
+            self.assertTrue(result.promoted)
+            manifest = json.loads((result.workspace / "run_manifest.json").read_text(encoding="utf-8"))
+            self.assertEqual(manifest["stages"]["blind_reader_review"]["status"], "COMPLETED")
+            self.assertEqual(manifest["stages"]["state_settlement"]["status"], "COMPLETED")
+            self.assertEqual(manifest["budget"]["spent"], 3)
+            promoted_state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
+            self.assertEqual(
+                promoted_state["chapter_summaries"]["summaries"]["1"]["core"],
+                "张洞检查门板纸灰，发现它最终越过门板进入屋内。",
+            )
+
+    def test_state_summary_and_hook_come_from_final_text_settlement(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = json.loads(valid_plan_json())
+        settlement = {
+            "reader_visible_summary": {"core": "张洞在门内发现异常纸灰并留下样本。", "evidence": []},
+            "hook": {"type": "安全区崩坏", "content": "纸灰已经越过门板", "quote": "到了门内"},
+        }
+        updated = _new_state_after_chapter(
+            state, plan, json.loads(review_json("PASS")), settlement
+        )
+        self.assertEqual(
+            updated["chapter_summaries"]["summaries"]["1"]["core"],
+            settlement["reader_visible_summary"]["core"],
+        )
+        self.assertEqual(updated["recent_hooks"][-1]["content"], "纸灰已经越过门板")
+
+    def test_unevidenced_plan_candidates_do_not_pollute_live_state(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = json.loads(valid_plan_json())
+        expected = {
+            item["path"]: item for item in expected_state_changes(state, plan)
+        }
+        settled_paths = {
+            "state_changes.protagonist_known_info_add[0]",
+            "foreshadow_operations.plant[0]",
+        }
+        settlement = {
+            "reader_visible_summary": {
+                "core": "张洞发现纸灰已经离开祠堂并留下异常样本。",
+                "evidence": [],
+            },
+            "hook": {
+                "type": "安全区崩坏",
+                "content": "纸灰进入门内",
+                "quote": "到了门内",
+            },
+            "change_evidence": [
+                {
+                    "path": path,
+                    "value": expected[path]["value"],
+                    "quote": "纸灰",
+                    "finding": expected[path]["meaning"],
+                }
+                for path in settled_paths
+            ],
+        }
+        updated = _new_state_after_chapter(
+            state, plan, json.loads(review_json("PASS")), settlement
+        )
+        self.assertIn("纸灰会离开祠堂", updated["protagonist"]["known_info"])
+        self.assertEqual(updated["timeline"]["elapsed_days"], 0)
+        self.assertNotIn(
+            "纸灰可能标记被敲门者", updated["world_lore"]["hypotheses"]
+        )
+        self.assertIn("F-A01", updated["active_foreshadows"])
+
+    def test_exit_milestone_advances_volume_event_and_reveal_layer(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = json.loads(valid_plan_json())
+        plan["milestone_operations"]["complete"] = ["M1-CITY-EXIT"]
+        config = {
+            "volume_structure": [
+                {"volume": 1, "name": "大汉市", "exit_milestone": "M1-CITY-EXIT"},
+                {"volume": 2, "name": "乱世觉醒", "entry_event": "event_2", "entry_event_name": "鬼邮局初现"},
+            ],
+            "world_reveal_layers": [
+                {"layer": 2, "after": "M1-CITY-EXIT"}
+            ],
+        }
+        updated = _new_state_after_chapter(
+            state, plan, json.loads(review_json("PASS")), config=config
+        )
+        self.assertEqual(updated["chapter"]["current_volume"], 2)
+        self.assertEqual(updated["chapter"]["current_event"], "event_2")
+        self.assertEqual(updated["world_lore"]["reveal_layer"], 2)
+
     def test_legacy_replan_is_read_only_and_not_resumable(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))

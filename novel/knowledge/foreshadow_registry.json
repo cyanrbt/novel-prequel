@@ -24,9 +24,9 @@
     "F-A03": {
       "class": "A",
       "status": "active",
-      "plant": "双桥镇中段：七棺十一钉的四个空钉位",
+      "plant": "双桥镇中段：七组可见旧钉位与四处无法在可见旧棺上定位的钉位",
       "recover_by": "M2-COOPERATION-ANCHOR",
-      "meaning": "更深结构存在，但第一卷只允许确认其未被解决。"
+      "meaning": "四处额外钉位指向更深结构；第一卷只允许确认其存在且未被解决。"
     },
     "F-B16": {
       "class": "B",

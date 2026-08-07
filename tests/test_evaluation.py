@@ -2,6 +2,7 @@ import unittest
 
 from scripts.prequel.evaluation import (
     build_scorecard,
+    canonicalize_artifact_quotes,
     classify_candidate,
     eligible,
     merge_specialist_review,
@@ -69,6 +70,41 @@ def integrated(scores=None, hard=False):
 
 
 class EvaluationTests(unittest.TestCase):
+    def test_quote_canonicalization_repairs_only_source_mappable_boundaries(self):
+        draft = (
+            "母亲说：“先收好。还要查账。”\n\n"
+            "灰沿着竹篾裂开。\n\n蒸屉的缝里是干净的。"
+            "\n母亲从腰间解下布带，把钥匙系在内侧，又把外衣压好。"
+        )
+        artifact = {
+            "evidence": [
+                {"quote": "母亲说：“先收好。”", "finding": "边界"},
+                {
+                    "quote": "灰沿着竹篾裂开。蒸屉的缝里是干净的。",
+                    "finding": "空行",
+                },
+                {"quote": "“灰沿着竹篾裂开。”", "finding": "叙述句误加引号"},
+                {
+                    "quote": "母亲从腰间解下布带，把钥匙系在内侧。",
+                    "finding": "句末标点边界",
+                },
+                {"quote": "正文并不存在", "finding": "假证据"},
+            ]
+        }
+        repaired = canonicalize_artifact_quotes(artifact, draft)
+        self.assertEqual(repaired, 4)
+        self.assertEqual(artifact["evidence"][0]["quote"], "母亲说：“先收好。")
+        self.assertEqual(
+            artifact["evidence"][1]["quote"],
+            "灰沿着竹篾裂开。\n\n蒸屉的缝里是干净的。",
+        )
+        self.assertEqual(artifact["evidence"][2]["quote"], "灰沿着竹篾裂开。")
+        self.assertEqual(
+            artifact["evidence"][3]["quote"],
+            "母亲从腰间解下布带，把钥匙系在内侧",
+        )
+        self.assertEqual(artifact["evidence"][4]["quote"], "正文并不存在")
+
     def test_integrated_false_quote_is_rejected(self):
         value = integrated()
         value["evidence"]["craft"][0]["quote"] = "不存在"

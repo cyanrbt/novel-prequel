@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "state_settlement.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chapter_number", "draft_sha256", "verdict", "reader_visible_summary", "hook", "change_evidence", "missing_changes"],
+  "properties": {
+    "chapter_number": {"type": "integer", "minimum": 1},
+    "draft_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "verdict": {"type": "string", "enum": ["PASS", "INSUFFICIENT_EVIDENCE"]},
+    "reader_visible_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["core", "evidence"],
+      "properties": {
+        "core": {"type": "string"},
+        "evidence": {"type": "array", "minItems": 2, "items": {"type": "string"}}
+      }
+    },
+    "hook": {
+      "anyOf": [
+        {"type": "null"},
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "content", "quote"],
+          "properties": {
+            "type": {"type": "string"},
+            "content": {"type": "string"},
+            "quote": {"type": "string"}
+          }
+        }
+      ]
+    },
+    "change_evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "value", "quote", "finding"],
+        "properties": {
+          "path": {"type": "string"},
+          "value": {"type": "string"},
+          "quote": {"type": "string"},
+          "finding": {"type": "string"}
+        }
+      }
+    },
+    "missing_changes": {"type": "array", "items": {"type": "string"}}
+  }
+}

@@ -394,7 +394,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--mode",
         choices=("balanced", "fast"),
         default="balanced",
-        help="balanced最多11次调用（含盲读者门禁）；fast最多4次调用（含盲读者门禁）",
+        help="balanced最多12次调用（含盲读与状态结算）；fast最多5次预留且始终人工确认",
     )
     next_parser.add_argument(
         "--shadow-review",

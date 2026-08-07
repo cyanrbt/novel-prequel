@@ -29,6 +29,81 @@ class SelectionAction:
     selection_confident: bool
 
 
+def _canonical_quote(quote: str, draft: str) -> str:
+    """Repair only deterministic boundary/whitespace errors in model quotes.
+
+    This does not fuzzy-match words or invent evidence.  A repaired quote must
+    still map to one unique, contiguous source slice in the draft.
+    """
+    if quote in draft:
+        return quote
+    candidates = [quote.strip()]
+    wrappers = {"“": "”", "‘": "’", '"': '"', "'": "'"}
+    stripped = candidates[0]
+    if (
+        len(stripped) >= 8
+        and stripped[:1] in wrappers
+        and stripped[-1:] == wrappers[stripped[0]]
+    ):
+        candidates.append(stripped[1:-1])
+    if candidates[0].endswith(("”", "’", '"', "'")) and len(candidates[0]) >= 8:
+        candidates.append(candidates[0][:-1])
+    if candidates[0].endswith(("。", "！", "？", "；")) and len(candidates[0]) >= 8:
+        candidates.append(candidates[0][:-1])
+    for candidate in candidates:
+        if candidate in draft:
+            return candidate
+        compact_quote = "".join(candidate.split())
+        if len(compact_quote) < 8:
+            continue
+        compact_draft: list[str] = []
+        source_positions: list[int] = []
+        for index, character in enumerate(draft):
+            if character.isspace():
+                continue
+            compact_draft.append(character)
+            source_positions.append(index)
+        rendered = "".join(compact_draft)
+        if rendered.count(compact_quote) != 1:
+            continue
+        start = rendered.index(compact_quote)
+        end = start + len(compact_quote) - 1
+        return draft[source_positions[start] : source_positions[end] + 1]
+    return quote
+
+
+def canonicalize_artifact_quotes(artifact: Any, draft: str) -> int:
+    """Canonicalize model evidence in place and return the repair count."""
+    repaired = 0
+
+    def visit(value: Any, parent_key: str | None = None) -> None:
+        nonlocal repaired
+        if isinstance(value, dict):
+            for key, item in value.items():
+                if key == "quote" and isinstance(item, str):
+                    canonical = _canonical_quote(item, draft)
+                    if canonical != item:
+                        value[key] = canonical
+                        repaired += 1
+                else:
+                    visit(item, key)
+        elif isinstance(value, list):
+            if parent_key == "evidence" and all(
+                isinstance(item, str) for item in value
+            ):
+                for index, item in enumerate(value):
+                    canonical = _canonical_quote(item, draft)
+                    if canonical != item:
+                        value[index] = canonical
+                        repaired += 1
+            else:
+                for item in value:
+                    visit(item, parent_key)
+
+    visit(artifact)
+    return repaired
+
+
 def validate_integrated_review(
     review: dict[str, Any],
     draft: str,
@@ -180,14 +255,28 @@ def selection_policy(
     # path is deliberately narrow: content-level hard failures have already
     # been filtered before semantic scoring, and multiple/low-score failures
     # still require human intervention or a fresh run.
-    revisable_hard = [
-        item
-        for item in candidates
-        if item["classification"] == "HARD_FAIL"
-        and item["scorecard"].get("weighted_score", 0) >= 82
-        and len(item["scorecard"].get("hard_failures", [])) == 1
-        and len(item["scorecard"].get("required_revisions", [])) == 1
-    ]
+    revisable_hard = []
+    for item in candidates:
+        hard_failures = item["scorecard"].get("hard_failures", [])
+        revisions = item["scorecard"].get("required_revisions", [])
+        hard_codes = {
+            failure.get("code")
+            for failure in hard_failures
+            if isinstance(failure, dict)
+        }
+        linked_revisions = [
+            revision
+            for revision in revisions
+            if isinstance(revision, dict) and revision.get("code") in hard_codes
+        ]
+        if (
+            item["classification"] == "HARD_FAIL"
+            and item["scorecard"].get("weighted_score", 0) >= 82
+            and len(hard_failures) == 1
+            and len(linked_revisions) == 1
+            and len(revisions) <= 3
+        ):
+            revisable_hard.append(item)
     revisable_hard.sort(
         key=lambda item: (-item["scorecard"]["weighted_score"], item["identifier"])
     )

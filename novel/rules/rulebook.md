@@ -1,6 +1,6 @@
 # 创作规则全书（权威规则源）
 
-本文件负责正文行为与发布门禁；全书卷结构、里程碑和可伸缩长度以 `novel/plots/series_architecture.md` 为最高设计约束。事实依据以 `novel/knowledge/canon_registry.json` 为准，运行状态以 `novel/state/current.json` 为准，里程碑以 `novel/knowledge/arc_registry.json` 为准，伏笔 ID 与回收边界以 `novel/knowledge/foreshadow_registry.json` 为准；风格参数以 `novel/style/compact_style.yaml` 为准，示例锚点以 `novel/style/style_anchors.txt` 为准。`novel/foreshadow_tracker.md` 是归档草案，不得作为创作指令。
+本文件负责正文行为与发布门禁；全书卷结构、里程碑和可伸缩长度以 `novel/plots/series_architecture.md` 为最高设计约束。事实依据以 `novel/knowledge/canon_registry.json` 为准，运行状态以 `novel/state/current.json` 为准，里程碑以 `novel/knowledge/arc_registry.json` 为准，伏笔 ID 与回收边界以 `novel/knowledge/foreshadow_registry.json` 为准；风格参数以 `novel/style/compact_style.yaml` 为准。`novel/style/style_anchors.txt` 在完成人工逐段核准前不得进入创作上下文；`novel/foreshadow_tracker.md` 是归档草案，不得作为创作指令。
 
 ## 1. 原著一致性（P1）
 
@@ -52,6 +52,7 @@
 - 除非人物口语、史料或情节必须保留，避免单字生僻称谓。优先使用当代读者可直接理解的词；例如以“木栓/门栓”替代孤立的“闩”。替换后若物件仍陌生，仍须完成首次可视化说明。
 - 比喻少而准确，来自人物所处时代和生活经验；不用华丽抒情替代事实。
 - 对话推进目标、暴露隐瞒或改变关系。不同人物不能都用同样短句和故作停顿；在不引入现代组织、技术或严重史实错位的前提下，允许有服务当下读者的口语、吐槽与网络化节奏。
+- 对话默认采用当代读者可自然朗读的口语句式。时代感优先由物件、钱粮、交通、称呼和社会关系承担，不靠全员文绉绉、整齐对偶或书面判断句制造；只有人物身份、情绪和场景确有需要时才保留旧式说法。严谨人物也应说人话：用具体的否定、追问和行动限制表达证据边界，避免反复像在念审案结论。
 - 允许跨时代幽默反差和可复用的角色口头梗，但梗必须来自人物处境或已发生事件，不能在死亡、高压对抗和真相揭露中削弱风险。
 - 结尾钩子由本章因果产生，可以安静但必须改变读者对安全、规则或代价的判断。
 

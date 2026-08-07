@@ -6,8 +6,8 @@
 
 1. **状态唯一**：当前章号、时间、人物、伏笔和已揭示规则只写入 `novel/state/current.json`。
 2. **规则唯一**：正文约束只认 `novel/rules/rulebook.md`。
-3. **风格唯一**：运行参数使用 `novel/style/compact_style.yaml`，示例使用 `novel/style/style_anchors.txt`。
-4. **职责分离**：Planner 只规划，Writer 只写正文，集成 Reviewer 负责四维初筛，专项 Reviewer 按风险触发，Selector 只做匿名比较。
+3. **风格唯一**：运行参数使用 `novel/style/compact_style.yaml`；`style_anchors.txt` 只有完成人工逐段核准后才允许进入运行上下文。
+4. **职责分离**：Planner 维护完整 Constraint Ledger；Writer 只读取精简 Story Brief；Reviewer 使用完整账本审计，Selector 只做匿名比较。
 5. **失败隔离**：未通过门禁的内容只保存在工作区，不修改正式章节和当前状态。
 6. **原子提升**：章节、元数据和状态必须一起成功写入，任何一步失败都回滚。
 
@@ -37,9 +37,10 @@
 
 ### Writer
 
-- 读取核准规划、规则、风格参数和受控上下文。
+- 读取精简故事简报、硬约束、规则、风格参数和受控上下文，不读取场景验证路径、普通解释清单或预设对话推理过程。
 - 输出纯正文，不解释创作过程，不修改状态。
 - 保持第三人称限知、民国语境和人物认知边界。
+- 实际上下文及来源哈希写入各候选的 `writer_context.json`；近期正文尾部会真正进入 Writer，而不只用于统计。
 
 ### 集成、专项 Reviewer 与 Selector
 
@@ -49,6 +50,12 @@
 - 只能引用正文中实际存在的证据，不能用语义判断推翻静态门禁。
 - 不直接改写正文。
 - Selector 只使用候选 A/B 标签做成对比较，输出 `schemas/ballot.schema.json`。
+
+### Blind Reader 与 State Settler
+
+- Blind Reader 不读取规划和隐藏状态，先做连续阅读，再检查可读性、人物可信度、目标情绪、叙事动量、续读意愿与首个弃读点。
+- State Settler 在盲读通过后逐项核对计划中的待提交变化；每条状态、伏笔和里程碑变化都必须引用最终正文的连续原句。
+- 章节摘要和章末钩子从最终正文重新提取，不再把 `chapter_purpose` 和计划钩子直接写入长期记忆。
 
 ## 状态机
 
@@ -85,12 +92,16 @@ Writer 并发生成两份正文
 条件专项复核 → 必要时一次匿名盲选 → 一次定向修订与差分验证
   ├─ 不合格：保留工件，等待人工
   ├─ 边界结果：WAITING_USER
-  └─ 高置信结果：AUTO_PROMOTE
+  └─ 高置信结果：AUTO_PROMOTE 候选
+             ↓
+       无大纲阅读效果门禁
+             ↓
+       最终正文状态证据结算
              ↓
        正文章节 + 元数据 + 当前状态
 ```
 
-平衡模式含 Planner 在内最多 10 次模型调用，最大并发固定为 2；快速模式最多 3 次且必须人工确认。启动 Provider 后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。
+平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次模型调用，最大并发固定为 2；快速模式正文路径最多 3 次且必须人工确认，接受时仍须重新执行最终门禁。启动 Provider 后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。
 
 ## 工作区与原子提升
 
@@ -103,11 +114,14 @@ novel/work/chapter_NNN/attempt_MM/
 ├── context_metrics.json
 ├── candidates/candidate_01..02/
 │   ├── draft.txt
+│   ├── writer_context.json
 │   ├── static_review.json
 │   ├── reviews/
 │   └── scorecard.json
 ├── comparisons/
 ├── revisions/round_01/
+├── reader_review.json
+├── state_settlement.json
 ├── decision.json
 └── decision.md
 ```
@@ -138,6 +152,14 @@ novel/state/current.json
 - P1 问题直接阻断提升。
 - PASS 结论不能伴随低分或要求重写。
 - 审查结论不能覆盖静态检查失败。
+
+### 阅读效果与状态证据门禁
+
+- PASS 必须达到可读性、人物可信度、叙事动量 4/5，目标情绪 3/5，并且普通读者明确愿意继续阅读。
+- 首个弃读点、所有审查问题和状态变化证据都必须逐字存在于当前正文，旧稿报告不能复用。
+- 状态变化候选来自规划，但只有成稿已经演出的候选才可提交；缺一项就进入 `WAITING_USER`。
+- 伏笔不得同章播种并回收；回收必须消费更早章节的播种，里程碑必须满足前置条件、所属卷和到期回收要求。
+- 卷末出口里程碑通过后，当前卷、下一卷入口事件和世界揭示层由配置同步推进。
 
 ### 计分与提升
 

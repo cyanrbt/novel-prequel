@@ -11,7 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-from .artifacts import ChapterWorkspace
+from .artifacts import ChapterWorkspace, canonical_text
 from .audits import due_audits
 from .context_builder import (
     build_chapter_context_pack,
@@ -27,7 +27,7 @@ from .errors import (
     ProviderError,
     QualityGateError,
 )
-from .evaluation import DIMENSIONS, eligible
+from .evaluation import DIMENSIONS, canonicalize_artifact_quotes, eligible
 from .evolution import EvolutionResult, QualityEvolutionEngine
 from .memory import MemoryStore, memory_record
 from .model_calls import ModelCallExecutor
@@ -42,6 +42,13 @@ from .reader_review import (
 )
 from .run_manifest import RunManifest, fingerprint
 from .state_store import load_state, validate_state
+from .state_settlement import (
+    build_state_settlement_packet,
+    build_state_settlement_prompt,
+    canonicalize_missing_change_paths,
+    expected_state_changes,
+    validate_state_settlement,
+)
 
 
 @dataclass(frozen=True)
@@ -247,10 +254,79 @@ def _agent_prompt(project_root: Path, agent: str, packet: dict[str, Any], instru
     )
 
 
+def _plan_committed_by_settlement(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    settlement: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Filter planned mutations down to changes evidenced by the final prose."""
+    committed = copy.deepcopy(plan)
+    if settlement is None:
+        return committed
+    evidenced = {
+        item.get("path")
+        for item in settlement.get("change_evidence", [])
+        if isinstance(item, dict) and isinstance(item.get("path"), str)
+    }
+    original_changes = plan.get("state_changes", {})
+    committed_changes = committed.setdefault("state_changes", {})
+    list_fields = (
+        "protagonist_known_info_add",
+        "protagonist_inventory_add",
+        "protagonist_inventory_remove",
+        "protagonist_body_updates",
+        "ability_updates",
+        "character_updates",
+        "world_confirmed_add",
+        "world_hypotheses_add",
+    )
+    for field in list_fields:
+        committed_changes[field] = [
+            value
+            for index, value in enumerate(original_changes.get(field, []))
+            if f"state_changes.{field}[{index}]" in evidenced
+        ]
+    committed_changes["protagonist_location"] = (
+        original_changes.get("protagonist_location")
+        if "state_changes.protagonist_location" in evidenced
+        else None
+    )
+    committed_changes["timeline_year"] = (
+        original_changes.get("timeline_year")
+        if "state_changes.timeline_year" in evidenced
+        else state.get("timeline", {}).get("current_year")
+    )
+    committed_changes["timeline_elapsed_days"] = (
+        original_changes.get("timeline_elapsed_days")
+        if "state_changes.timeline_elapsed_days" in evidenced
+        else state.get("timeline", {}).get("elapsed_days")
+    )
+    original_foreshadows = plan.get("foreshadow_operations", {})
+    committed_foreshadows = committed.setdefault("foreshadow_operations", {})
+    for operation in ("plant", "recover"):
+        committed_foreshadows[operation] = [
+            value
+            for index, value in enumerate(original_foreshadows.get(operation, []))
+            if f"foreshadow_operations.{operation}[{index}]" in evidenced
+        ]
+    original_milestones = plan.get("milestone_operations", {}).get("complete", [])
+    committed.setdefault("milestone_operations", {})["complete"] = [
+        value
+        for index, value in enumerate(original_milestones)
+        if f"milestone_operations.complete[{index}]" in evidenced
+    ]
+    return committed
+
+
 def _new_state_after_chapter(
-    state: dict[str, Any], plan: dict[str, Any], review: dict[str, Any]
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    review: dict[str, Any],
+    settlement: dict[str, Any] | None = None,
+    config: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     updated = copy.deepcopy(state)
+    committed_plan = _plan_committed_by_settlement(state, plan, settlement)
     number = plan["chapter_number"]
     updated["machine_state"] = "IDLE"
     updated["last_updated"] = datetime.now().isoformat(timespec="seconds")
@@ -262,7 +338,7 @@ def _new_state_after_chapter(
             "last_title": plan["title"],
         }
     )
-    changes = plan.get("state_changes", {})
+    changes = committed_plan.get("state_changes", {})
     known = updated["protagonist"].setdefault("known_info", [])
     known.extend(item for item in changes.get("protagonist_known_info_add", []) if item not in known)
     inventory = updated["protagonist"].setdefault("inventory", [])
@@ -289,14 +365,25 @@ def _new_state_after_chapter(
     ):
         current = updated["world_lore"].setdefault(target, [])
         current.extend(item for item in changes.get(source, []) if item not in current)
+    summary_core = (
+        settlement["reader_visible_summary"]["core"]
+        if settlement is not None
+        else plan["chapter_purpose"][:120]
+    )
+    settled_hook = settlement.get("hook") if settlement is not None else None
+    hook = (
+        {"type": settled_hook["type"], "content": settled_hook["content"]}
+        if isinstance(settled_hook, dict)
+        else plan["hook"]
+    )
     updated["chapter_summaries"]["summaries"][str(number)] = {
         "title": plan["title"],
-        "core": plan["chapter_purpose"][:120],
+        "core": summary_core,
         "irreversible_changes": _material_change_keys(changes, state),
     }
-    updated["recent_hooks"].append({"chapter": number, **plan["hook"]})
+    updated["recent_hooks"].append({"chapter": number, **hook})
     updated["recent_hooks"] = updated["recent_hooks"][-5:]
-    foreshadows = plan.get("foreshadow_operations", {})
+    foreshadows = committed_plan.get("foreshadow_operations", {})
     for item in foreshadows.get("plant", []):
         item_id = _foreshadow_id(item)
         updated["active_foreshadows"][item_id] = {"status": "已播种", "plant_chapter": number}
@@ -305,9 +392,54 @@ def _new_state_after_chapter(
         if item_id in updated["active_foreshadows"]:
             updated["active_foreshadows"][item_id].update({"status": "已回收", "recover_chapter": number})
     completed = updated.setdefault("completed_milestones", [])
-    for item in plan.get("milestone_operations", {}).get("complete", []):
+    for item in committed_plan.get("milestone_operations", {}).get("complete", []):
         if item not in completed:
             completed.append(item)
+    if config is not None:
+        volume_structure = config.get("volume_structure", [])
+        current_volume = updated["chapter"].get("current_volume")
+        current_entry = next(
+            (
+                item
+                for item in volume_structure
+                if isinstance(item, dict) and item.get("volume") == current_volume
+            ),
+            None,
+        )
+        completed_now = set(
+            committed_plan.get("milestone_operations", {}).get("complete", [])
+        )
+        if (
+            isinstance(current_entry, dict)
+            and current_entry.get("exit_milestone") in completed_now
+        ):
+            next_entry = next(
+                (
+                    item
+                    for item in volume_structure
+                    if isinstance(item, dict)
+                    and item.get("volume") == current_volume + 1
+                ),
+                None,
+            )
+            if isinstance(next_entry, dict):
+                updated["chapter"]["current_volume"] = next_entry["volume"]
+                updated["chapter"]["current_volume_name"] = next_entry["name"]
+                if next_entry.get("entry_event"):
+                    updated["chapter"]["current_event"] = next_entry["entry_event"]
+                if next_entry.get("entry_event_name"):
+                    updated["chapter"]["current_event_name"] = next_entry[
+                        "entry_event_name"
+                    ]
+        reveal_layer = updated.get("world_lore", {}).get("reveal_layer", 1)
+        for layer in config.get("world_reveal_layers", []):
+            if (
+                isinstance(layer, dict)
+                and layer.get("after") in completed
+                and isinstance(layer.get("layer"), int)
+            ):
+                reveal_layer = max(reveal_layer, layer["layer"])
+        updated.setdefault("world_lore", {})["reveal_layer"] = reveal_layer
     updated["last_review"] = {
         "chapter": number,
         "grade": review["grade"],
@@ -324,9 +456,33 @@ def _serialize_json(value: Any) -> bytes:
     return (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
 
 
-def _chapter_meta(plan: dict[str, Any], static_review: dict[str, Any], review: dict[str, Any]) -> str:
-    changes = "\n".join(f"- {key}: {value}" for key, value in plan["state_changes"].items())
+def _chapter_meta(
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    static_review: dict[str, Any],
+    review: dict[str, Any],
+    settlement: dict[str, Any] | None = None,
+) -> str:
+    memory_plan = _plan_committed_by_settlement(state, plan, settlement)
+    changes = "\n".join(
+        f"- {key}: {value}"
+        for key, value in memory_plan["state_changes"].items()
+    )
     evidence = "\n".join(f"- {item['finding']}：{item['quote']}" for item in review["evidence"])
+    settlement_section = (
+        "\n\n## 正文状态结算\n```json\n"
+        + json.dumps(settlement, ensure_ascii=False, indent=2)
+        + "\n```"
+        if settlement is not None
+        else ""
+    )
+    if settlement is not None:
+        memory_plan["chapter_purpose"] = settlement["reader_visible_summary"]["core"]
+        if isinstance(settlement.get("hook"), dict):
+            memory_plan["hook"] = {
+                "type": settlement["hook"]["type"],
+                "content": settlement["hook"]["content"],
+            }
     return (
         f"# 第{plan['chapter_number']}章元数据\n\n"
         f"- 标题: {plan['title']}\n"
@@ -336,7 +492,8 @@ def _chapter_meta(plan: dict[str, Any], static_review: dict[str, Any], review: d
         f"## 不可逆变化\n{changes}\n\n"
         f"## 审查证据\n{evidence}\n\n"
         f"## 静态指标\n```json\n{json.dumps(static_review['metrics'], ensure_ascii=False, indent=2)}\n```\n\n"
-        f"## Memory Record\n```json\n{json.dumps(memory_record(plan), ensure_ascii=False, indent=2)}\n```\n"
+        f"## Memory Record\n```json\n{json.dumps(memory_record(memory_plan), ensure_ascii=False, indent=2)}\n```"
+        f"{settlement_section}\n"
     )
 
 
@@ -478,7 +635,15 @@ def accept_dry_run(
     allowed_foreshadow_ids = set(planner_context.get("foreshadow_registry", {}).get("entries", {}))
     allowed_milestone_ids = set(planner_context.get("arc_registry", {}).get("milestones", {}))
     require_no_p1(
-        validate_plan(plan, state, allowed_canon_ids, allowed_foreshadow_ids, allowed_milestone_ids),
+        validate_plan(
+            plan,
+            state,
+            allowed_canon_ids,
+            allowed_foreshadow_ids,
+            allowed_milestone_ids,
+            planner_context.get("foreshadow_registry"),
+            planner_context.get("arc_registry"),
+        ),
         "待接受规划",
     )
     recent_limit = load_config(project_root).get("quality_gates", {}).get(
@@ -511,14 +676,16 @@ def accept_dry_run(
         ),
         "待接受审查",
     )
-    reader_gate = load_config(project_root).get("quality_gates", {}).get(
+    acceptance_config = load_config(project_root)
+    reader_gate = acceptance_config.get("quality_gates", {}).get(
         "blind_reader_gate", {}
     )
+    router: StageModelRouter | None = None
     if reader_gate.get("enabled", False):
         # Acceptance may follow a targeted edit of a candidate. Always obtain
         # a fresh blind read here so a report for an earlier text cannot be
         # reused merely because it lives in the same workspace.
-        router = StageModelRouter.from_config(load_config(project_root), project_root)
+        router = StageModelRouter.from_config(acceptance_config, project_root)
         raw = router.provider_for("blind_reader_reviewer").generate(
             build_blind_reader_prompt(
                 project_root,
@@ -528,6 +695,7 @@ def accept_dry_run(
         )
         try:
             reader_review = parse_json_artifact(raw, "accept-blind-reader")
+            canonicalize_artifact_quotes(reader_review, draft)
             workspace.write_json("reader_review.json", reader_review)
         except ArtifactValidationError:
             workspace.write_raw_text("reader_review.invalid.txt", raw)
@@ -538,6 +706,62 @@ def accept_dry_run(
         )
         if reader_review.get("verdict") != "PASS":
             raise QualityGateError("接受前盲读者审查未通过")
+    state_settlement: dict[str, Any] | None = None
+    state_gate = acceptance_config.get("quality_gates", {}).get(
+        "state_evidence_gate", {}
+    )
+    if state_gate.get("enabled", False):
+        if not reader_gate.get("enabled", False):
+            raise QualityGateError("state_evidence_gate要求同时启用blind_reader_gate")
+        router = router or StageModelRouter.from_config(
+            acceptance_config, project_root
+        )
+        settlement_raw = router.provider_for("state_settler").generate(
+            build_state_settlement_prompt(
+                project_root,
+                build_state_settlement_packet(
+                    state,
+                    plan,
+                    draft,
+                    planner_context.get("foreshadow_registry"),
+                    planner_context.get("arc_registry"),
+                ),
+            ),
+            project_root / "schemas/state_settlement.schema.json",
+        )
+        try:
+            state_settlement = parse_json_artifact(
+                settlement_raw, "accept-state-settlement"
+            )
+            canonicalize_artifact_quotes(state_settlement, draft)
+            canonicalize_missing_change_paths(
+                state_settlement,
+                expected_state_changes(
+                    state,
+                    plan,
+                    planner_context.get("foreshadow_registry"),
+                    planner_context.get("arc_registry"),
+                ),
+            )
+            workspace.write_json("state_settlement.json", state_settlement)
+        except ArtifactValidationError:
+            workspace.write_raw_text(
+                "state_settlement.invalid.txt", settlement_raw
+            )
+            raise
+        require_no_p1(
+            validate_state_settlement(
+                state_settlement,
+                state,
+                plan,
+                draft,
+                planner_context.get("foreshadow_registry"),
+                planner_context.get("arc_registry"),
+            ),
+            "接受前正文状态结算",
+        )
+        if state_settlement.get("verdict") != "PASS":
+            raise QualityGateError("接受前正文状态证据不足")
     promote_atomically(
         project_root,
         state,
@@ -546,6 +770,7 @@ def accept_dry_run(
         static_review,
         semantic_review,
         workspace,
+        state_settlement,
     )
     mark_due_audits(project_root, load_config(project_root), number, workspace)
     return PipelineResult(
@@ -561,6 +786,7 @@ def promote_atomically(
     static_review: dict[str, Any],
     semantic_review: dict[str, Any],
     workspace: ChapterWorkspace,
+    settlement: dict[str, Any] | None = None,
 ) -> None:
     number = plan["chapter_number"]
     volume = state["chapter"]["current_volume"]
@@ -569,10 +795,18 @@ def promote_atomically(
     state_target = project_root / "novel/state/current.json"
     if chapter_target.exists() or meta_target.exists():
         raise AtomicWriteError(f"拒绝覆盖已存在的正式第{number}章；请先归档或使用专用重整流程")
-    new_state = _new_state_after_chapter(state, plan, semantic_review)
+    new_state = _new_state_after_chapter(
+        state,
+        plan,
+        semantic_review,
+        settlement,
+        load_config(project_root),
+    )
     payloads = {
         chapter_target: (draft.rstrip() + "\n").encode("utf-8"),
-        meta_target: _chapter_meta(plan, static_review, semantic_review).encode("utf-8"),
+        meta_target: _chapter_meta(
+            state, plan, static_review, semantic_review, settlement
+        ).encode("utf-8"),
         state_target: _serialize_json(new_state),
     }
     temporary = {target: _write_temp(target, data) for target, data in payloads.items()}
@@ -609,7 +843,15 @@ def promote_atomically(
     derived_warnings: list[str] = []
     try:
         memory = MemoryStore(project_root)
-        memory.record_promoted_chapter(number, chapter_target, plan)
+        memory_plan = _plan_committed_by_settlement(state, plan, settlement)
+        if settlement is not None:
+            memory_plan["chapter_purpose"] = settlement["reader_visible_summary"]["core"]
+            if isinstance(settlement.get("hook"), dict):
+                memory_plan["hook"] = {
+                    "type": settlement["hook"]["type"],
+                    "content": settlement["hook"]["content"],
+                }
+        memory.record_promoted_chapter(number, chapter_target, memory_plan)
         findings: list[dict[str, Any]] = []
         if workspace.exists("decision.json"):
             decision = workspace.read_json("decision.json")
@@ -833,13 +1075,22 @@ class WritingPipeline:
             self.project_root / "novel/work", number, attempt
         )
         resuming_workspace = resume and workspace.exists("run_manifest.json")
-        call_limit = 4 if mode == "fast" else self.config.get(
-            "quality_evolution", {}
-        ).get("call_limit", 11)
         reader_gate_enabled = bool(
             self.config.get("quality_gates", {})
             .get("blind_reader_gate", {})
             .get("enabled", False)
+        )
+        state_gate_enabled = bool(
+            self.config.get("quality_gates", {})
+            .get("state_evidence_gate", {})
+            .get("enabled", False)
+        )
+        if state_gate_enabled and not reader_gate_enabled:
+            raise QualityGateError("state_evidence_gate要求同时启用blind_reader_gate")
+        call_limit = (
+            5 if mode == "fast" and state_gate_enabled
+            else 4 if mode == "fast"
+            else self.config.get("quality_evolution", {}).get("call_limit", 11)
         )
         if workspace.exists("run_manifest.json"):
             manifest = RunManifest.load(workspace)
@@ -884,6 +1135,17 @@ class WritingPipeline:
             }
         )
         reader_reservation = None
+        state_reservation = None
+
+        def cancel_final_gates() -> None:
+            for reservation in (reader_reservation, state_reservation):
+                if reservation is None:
+                    continue
+                try:
+                    caller.cancel_before_provider(reservation)
+                except ArtifactValidationError:
+                    pass
+
         try:
             if manifest.can_reuse("plan", plan_input_hash, route_fingerprint):
                 caller.stage_reused("plan")
@@ -909,7 +1171,15 @@ class WritingPipeline:
                     "plan",
                 )
                 require_no_p1(
-                    validate_plan(plan, state, allowed_canon_ids, allowed_foreshadow_ids, allowed_milestone_ids),
+                    validate_plan(
+                        plan,
+                        state,
+                        allowed_canon_ids,
+                        allowed_foreshadow_ids,
+                        allowed_milestone_ids,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
+                    ),
                     "规划",
                 )
                 workspace.write_json("plan.json", plan)
@@ -924,12 +1194,16 @@ class WritingPipeline:
                         "route_fingerprint": route_fingerprint,
                     },
                 )
-            # Reserve the blind reader before candidate evolution so the existing
-            # generation budget cannot consume the mandatory final gate.
+            # Reserve mandatory final gates before candidate evolution so the
+            # adaptive generation budget cannot consume them.
             if reader_gate_enabled:
-                reader_reservation = caller.reserve_many(
-                    [("blind_reader_reviewer", "BLIND_READER_GATE")]
-                )[0]
+                gate_requests = [("blind_reader_reviewer", "BLIND_READER_GATE")]
+                if state_gate_enabled:
+                    gate_requests.append(("state_settler", "STATE_EVIDENCE_GATE"))
+                gate_reservations = caller.reserve_many(gate_requests)
+                reader_reservation = gate_reservations[0]
+                if state_gate_enabled:
+                    state_reservation = gate_reservations[1]
             engine_result = QualityEvolutionEngine(
                 self.project_root,
                 self.router,
@@ -946,11 +1220,7 @@ class WritingPipeline:
                 manifest=manifest,
             )
         except (ArtifactValidationError, ProviderError, QualityGateError, CallBudgetExceeded) as exc:
-            if reader_reservation is not None:
-                try:
-                    caller.cancel_before_provider(reader_reservation)
-                except ArtifactValidationError:
-                    pass
+            cancel_final_gates()
             stage = manifest.data.get("current_stage", "pipeline")
             manifest.fail(stage, str(exc))
             status = (
@@ -967,7 +1237,7 @@ class WritingPipeline:
                 "best_available_artifact": None,
                 "safe_actions": ["查看已有规划和运行清单"],
                 "new_budget_actions": ["显式创建新的预算化运行"],
-                "resume_warning": "--resume只恢复现有预算，不会把上限扩展到第11次",
+                "resume_warning": "--resume只恢复现有预算，不会突破运行清单的调用上限",
                 "exhausted_stage": stage if status == "BUDGET_EXHAUSTED" else None,
             }
             workspace.write_json("decision.json", decision)
@@ -975,8 +1245,7 @@ class WritingPipeline:
             return PipelineResult(number, workspace.path, False, None, None, status)
 
         if engine_result.draft is None or engine_result.static_review is None:
-            if reader_reservation is not None:
-                caller.cancel_before_provider(reader_reservation)
+            cancel_final_gates()
             return PipelineResult(
                 number, workspace.path, False, None, None, engine_result.status
             )
@@ -995,8 +1264,7 @@ class WritingPipeline:
                 "质量演进汇总审查",
             )
         except (ArtifactValidationError, QualityGateError) as exc:
-            if reader_reservation is not None:
-                caller.cancel_before_provider(reader_reservation)
+            cancel_final_gates()
             manifest.set_status("WAITING_USER", valid_candidates=manifest.data["valid_candidates"], waiting_reason=str(exc))
             return PipelineResult(
                 number,
@@ -1007,8 +1275,7 @@ class WritingPipeline:
                 "WAITING_USER",
             )
         if engine_result.status != "AUTO_PROMOTE":
-            if reader_reservation is not None:
-                caller.cancel_before_provider(reader_reservation)
+            cancel_final_gates()
             return PipelineResult(
                 number,
                 workspace.path,
@@ -1070,6 +1337,7 @@ class WritingPipeline:
                 reader_raw,
                 "blind-reader-review",
             )
+            canonicalize_artifact_quotes(reader_review, engine_result.draft)
             require_no_p1(
                 validate_blind_reader_review(reader_review, engine_result.draft, number),
                 "盲读者审查结构",
@@ -1087,6 +1355,11 @@ class WritingPipeline:
                 },
             )
         except (ArtifactValidationError, ProviderError, QualityGateError) as exc:
+            if state_reservation is not None:
+                try:
+                    caller.cancel_before_provider(state_reservation)
+                except ArtifactValidationError:
+                    pass
             if reader_raw:
                 workspace.write_raw_text("reader_review.invalid.txt", reader_raw)
             manifest.fail("blind_reader_review", str(exc))
@@ -1104,6 +1377,8 @@ class WritingPipeline:
                 "WAITING_USER",
             )
         if reader_review["verdict"] != "PASS":
+            if state_reservation is not None:
+                caller.cancel_before_provider(state_reservation)
             decision = {
                 "chapter_number": number,
                 "status": "WAITING_USER",
@@ -1129,6 +1404,119 @@ class WritingPipeline:
                 "WAITING_USER",
             )
 
+        state_settlement: dict[str, Any] | None = None
+        if state_gate_enabled:
+            if state_reservation is None:
+                raise QualityGateError("状态证据门禁未预留调用")
+            settlement_packet = build_state_settlement_packet(
+                state,
+                plan,
+                engine_result.draft,
+                planner_context.get("foreshadow_registry"),
+                planner_context.get("arc_registry"),
+            )
+            settlement_input_hash = fingerprint(settlement_packet)
+            settlement_settings = caller._settings_for("state_settler")
+            settlement_route_fingerprint = fingerprint(
+                {
+                    "profile": settlement_settings.profile,
+                    "model": settlement_settings.model,
+                    "reasoning_effort": settlement_settings.reasoning_effort,
+                    "prompt_version": "text-grounded-state",
+                }
+            )
+            settlement_raw: str | None = None
+            try:
+                manifest.begin("state_settlement")
+                settlement_raw = caller.call_reserved(
+                    state_reservation,
+                    build_state_settlement_prompt(
+                        self.project_root, settlement_packet
+                    ),
+                    self.project_root / "schemas/state_settlement.schema.json",
+                )
+                state_settlement = parse_json_artifact(
+                    settlement_raw, "state-settlement"
+                )
+                canonicalize_artifact_quotes(
+                    state_settlement, engine_result.draft
+                )
+                canonicalize_missing_change_paths(
+                    state_settlement,
+                    expected_state_changes(
+                        state,
+                        plan,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
+                    ),
+                )
+                require_no_p1(
+                    validate_state_settlement(
+                        state_settlement,
+                        state,
+                        plan,
+                        engine_result.draft,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
+                    ),
+                    "正文状态结算",
+                )
+                workspace.write_json("state_settlement.json", state_settlement)
+                manifest.complete(
+                    "state_settlement",
+                    settlement_input_hash,
+                    ["state_settlement.json"],
+                    {
+                        "model_profile": settlement_settings.profile,
+                        "prompt_version": "text-grounded-state",
+                        "call_count": 1,
+                        "route_fingerprint": settlement_route_fingerprint,
+                    },
+                )
+            except (ArtifactValidationError, ProviderError, QualityGateError) as exc:
+                if settlement_raw:
+                    workspace.write_raw_text(
+                        "state_settlement.invalid.txt", settlement_raw
+                    )
+                manifest.fail("state_settlement", str(exc))
+                manifest.set_status(
+                    "WAITING_USER",
+                    valid_candidates=manifest.data["valid_candidates"],
+                    waiting_reason=f"正文状态结算无效: {exc}",
+                )
+                return PipelineResult(
+                    number,
+                    workspace.path,
+                    False,
+                    engine_result.static_review,
+                    semantic_review,
+                    "WAITING_USER",
+                )
+            if state_settlement["verdict"] != "PASS":
+                decision = {
+                    "chapter_number": number,
+                    "status": "WAITING_USER",
+                    "reasons": ["最终正文没有充分演出全部待提交状态变化"],
+                    "state_settlement": "state_settlement.json",
+                    "missing_changes": state_settlement["missing_changes"],
+                    "safe_actions": ["查看缺失变化及其正文证据"],
+                    "new_budget_actions": ["定向修订正文后重新进行盲读和状态结算"],
+                }
+                workspace.write_json("decision.json", decision)
+                manifest.set_status(
+                    "WAITING_USER",
+                    valid_candidates=manifest.data["valid_candidates"],
+                    waiting_reason="最终正文状态证据不足",
+                )
+                return PipelineResult(
+                    number,
+                    workspace.path,
+                    False,
+                    engine_result.static_review,
+                    semantic_review,
+                    "WAITING_USER",
+                )
+
         promoted = not dry_run
         status = engine_result.status
         if promoted:
@@ -1140,6 +1528,7 @@ class WritingPipeline:
                 engine_result.static_review,
                 semantic_review,
                 workspace,
+                state_settlement,
             )
             manifest.set_status(
                 "COMPLETED", valid_candidates=manifest.data["valid_candidates"]
@@ -1197,7 +1586,15 @@ class WritingPipeline:
                         "plan",
                     )
                     require_no_p1(
-                        validate_plan(plan, state, allowed_canon_ids, allowed_foreshadow_ids, allowed_milestone_ids), "规划"
+                        validate_plan(
+                            plan,
+                            state,
+                            allowed_canon_ids,
+                            allowed_foreshadow_ids,
+                            allowed_milestone_ids,
+                            planner_context.get("foreshadow_registry"),
+                            planner_context.get("arc_registry"),
+                        ), "规划"
                     )
                     saved_plan = copy.deepcopy(plan)
                 else:
@@ -1205,7 +1602,25 @@ class WritingPipeline:
                 workspace.write_json("plan.json", plan)
 
                 writer_packet = build_writer_packet(
-                    state, plan, recent, planner_context, revision_context
+                    state,
+                    plan,
+                    recent,
+                    planner_context,
+                    revision_context,
+                    project_root=self.project_root,
+                )
+                workspace.write_json(
+                    "writer_context.json",
+                    {
+                        key: writer_packet[key]
+                        for key in (
+                            "story_brief",
+                            "hard_constraints",
+                            "authoritative_context",
+                            "context_trace",
+                        )
+                        if key in writer_packet
+                    },
                 )
                 writer_instruction = (
                     "按revision_context定向修订上一稿并输出完整章节纯文本。只输出正文，不读写项目文件。"
@@ -1218,7 +1633,7 @@ class WritingPipeline:
                     writer_packet,
                     writer_instruction,
                 )
-                draft = self.provider.generate(draft_prompt, None)
+                draft = canonical_text(self.provider.generate(draft_prompt, None))
                 workspace.write_text("draft.txt", draft)
 
                 static_review = scan_draft(

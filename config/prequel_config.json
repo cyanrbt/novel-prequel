@@ -31,7 +31,8 @@
     "planner": "agents/planner.md",
     "writer": "agents/writer.md",
     "reviewer": "agents/reviewer.md",
-    "blind_reader_reviewer": "agents/reader_reviewer.md"
+    "blind_reader_reviewer": "agents/reader_reviewer.md",
+    "state_settler": "agents/state_settler.md"
   },
 
   "provider": {
@@ -60,6 +61,7 @@
     "craft_reviewer": "terra_high",
     "anti_slop_reviewer": "terra_high",
     "blind_reader_reviewer": "terra_high",
+    "state_settler": "terra_high",
     "selector": "sol_medium",
     "reviser": "sol_high",
     "verifier": "luna_high",
@@ -68,7 +70,7 @@
   },
 
   "quality_evolution": {
-    "call_limit": 11,
+    "call_limit": 12,
     "candidate_count": 2,
     "max_workers": 2,
     "selector_score_gap": 4,
@@ -86,6 +88,7 @@
 
   "quality_gates": {
     "blind_reader_gate": {"enabled": true},
+    "state_evidence_gate": {"enabled": true},
     "recent_chapters_for_repetition": 5,
     "exact_paragraph_min_chars": 30,
     "repeated_long_sentence_limit": 3,
@@ -96,11 +99,11 @@
   "git": {"auto_commit": false},
 
   "volume_structure": [
-    {"volume": 1, "name": "大汉市", "estimated_chapters": [65, 95], "years": "1908-1911", "exit_milestone": "M1-CITY-EXIT"},
-    {"volume": 2, "name": "乱世觉醒", "estimated_chapters": [70, 110], "years": "1912-1927", "exit_milestone": "M2-COOPERATION-ANCHOR"},
-    {"volume": 3, "name": "七老集结", "estimated_chapters": [130, 190], "years": "1930-1940", "exit_milestone": "M3-SEVEN-FORMED"},
-    {"volume": 4, "name": "黑暗降临", "estimated_chapters": [115, 165], "years": "1937-1945", "exit_milestone": "M4-SYSTEM-FAILURE"},
-    {"volume": 5, "name": "终极抉择", "estimated_chapters": [110, 160], "years": "1945-1950", "exit_milestone": "M5-FINAL-SEAL"}
+    {"volume": 1, "name": "大汉市", "entry_event": "event_1", "entry_event_name": "大汉市疑棺", "estimated_chapters": [65, 95], "years": "1908-1911", "exit_milestone": "M1-CITY-EXIT"},
+    {"volume": 2, "name": "乱世觉醒", "entry_event": "event_2", "entry_event_name": "鬼邮局初现", "estimated_chapters": [70, 110], "years": "1912-1927", "exit_milestone": "M2-COOPERATION-ANCHOR"},
+    {"volume": 3, "name": "七老集结", "entry_event": "event_3", "entry_event_name": "凯撒大酒店", "estimated_chapters": [130, 190], "years": "1930-1940", "exit_milestone": "M3-SEVEN-FORMED"},
+    {"volume": 4, "name": "黑暗降临", "entry_event": "event_7", "entry_event_name": "黑暗时期", "estimated_chapters": [115, 165], "years": "1937-1945", "exit_milestone": "M4-SYSTEM-FAILURE"},
+    {"volume": 5, "name": "终极抉择", "entry_event": "event_8", "entry_event_name": "终局", "estimated_chapters": [110, 160], "years": "1945-1950", "exit_milestone": "M5-FINAL-SEAL"}
   ],
 
   "world_reveal_layers": [

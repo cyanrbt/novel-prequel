@@ -12,7 +12,25 @@ def _valid_plan():
         "event_id": "event_1",
         "phase": "征兆",
         "chapter_purpose": "建立第一次异常",
-        "scenes": [{"goal": "检查门板", "conflict": "纸灰进入门内", "function": "升级", "pressure_change": "张洞不再相信院门安全", "irreversible_change": "纸灰进入门内"}],
+        "scenes": [{
+            "location": "张家院",
+            "characters": ["张洞"],
+            "goal": "检查门板",
+            "conflict": "纸灰进入门内",
+            "function": "升级",
+            "initial_state": "门从内上栓，张洞站在屋内。",
+            "discovery_path": "张洞开灯后看见门板内侧的纸灰。",
+            "knowledge_limits": "张洞只知道门栓未动，不知道纸灰何时出现。",
+            "ordinary_explanations": {
+                "considered": ["灶灰被风吹入"],
+                "excluded": [],
+                "remaining": ["纸灰早已留在门缝"]
+            },
+            "choice_reason": "张洞要先确认门况再决定是否叫醒家人。",
+            "end_state": "门仍上栓，纸灰留在门内，张洞没有开门。",
+            "pressure_change": "张洞不再相信院门安全",
+            "irreversible_change": "纸灰进入门内"
+        }],
         "new_information": ["纸灰会移动"],
         "state_changes": {
             "protagonist_known_info_add": ["纸灰会移动"],
@@ -79,6 +97,63 @@ class QualityGateTests(unittest.TestCase):
             {"UNKNOWN_FORESHADOW", "UNKNOWN_MILESTONE"},
             {item.code for item in issues if item.code.startswith("UNKNOWN_")} - {"UNKNOWN_CANON_EVIDENCE"},
         )
+
+    def test_plan_requires_reconstructable_scene_model(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        del plan["scenes"][0]["initial_state"]
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("SCENE_MODEL_MISSING", {item.code for item in issues})
+
+    def test_plan_rejects_malformed_ordinary_explanations(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["scenes"][0]["ordinary_explanations"] = {"considered": "灶灰"}
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("SCENE_BAD_ALTERNATIVES", {item.code for item in issues})
+
+    def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["foreshadow_operations"]["recover"] = ["F-A01"]
+        issues = validate_plan(
+            plan, state, {"CANON-RULE-001"}, {"F-A01"}, set(),
+            {"entries": {"F-A01": {}}}, {"milestones": {}},
+        )
+        self.assertIn("FORESHADOW_NOT_PLANTED", {item.code for item in issues})
+
+    def test_milestone_requires_prior_milestone_and_current_volume(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["milestone_operations"]["complete"] = ["M2-ACTIVE-PRICE"]
+        registry = {
+            "milestones": {
+                "M2-ACTIVE-PRICE": {"volume": 2, "after": ["M1-CITY-EXIT"]}
+            }
+        }
+        issues = validate_plan(
+            plan, state, {"CANON-RULE-001"}, set(), {"M2-ACTIVE-PRICE"},
+            {"entries": {}}, registry,
+        )
+        codes = {item.code for item in issues}
+        self.assertIn("MILESTONE_PREREQUISITE_MISSING", codes)
+        self.assertIn("MILESTONE_WRONG_VOLUME", codes)
+
+    def test_due_foreshadow_blocks_exit_milestone(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["active_foreshadows"] = {
+            "F-A01": {"status": "已播种", "plant_chapter": 1}
+        }
+        state["chapter"]["next_chapter"] = 2
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["milestone_operations"]["complete"] = ["M1-CITY-EXIT"]
+        issues = validate_plan(
+            plan, state, {"CANON-RULE-001"}, {"F-A01"}, {"M1-CITY-EXIT"},
+            {"entries": {"F-A01": {"recover_by": "M1-CITY-EXIT"}}},
+            {"milestones": {"M1-CITY-EXIT": {"volume": 1}}},
+        )
+        self.assertIn("FORESHADOW_RECOVERY_OVERDUE", {item.code for item in issues})
 
     def test_review_evidence_must_exist_in_draft(self):
         review = _valid_review()

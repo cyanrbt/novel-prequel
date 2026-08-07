@@ -1,0 +1,229 @@
+{
+  "schema": "novel-prequel-state",
+  "last_updated": "2026-08-03T20:17:54",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 3,
+    "next_chapter": 4,
+    "current_volume": 1,
+    "current_volume_name": "大汉市",
+    "current_event": "event_1",
+    "current_event_name": "双桥镇疑棺",
+    "current_phase": "逃离受阻",
+    "last_title": "开门的人"
+  },
+  "timeline": {
+    "current_year": 1908,
+    "era": "清末",
+    "year_label": "清末（辛亥革命前三年）",
+    "elapsed_days": 2
+  },
+  "protagonist": {
+    "name": "张洞",
+    "age": 18,
+    "location": "大汉市·双桥镇·季三渡口",
+    "erosion": 0,
+    "abilities": {
+      "灵异感知": {
+        "status": "未形成",
+        "unlock_after": [
+          "M1-DUAL-EXPOSURE"
+        ]
+      },
+      "规则洞察": {
+        "status": "未形成",
+        "unlock_after": [
+          "M1B-PATH-RECORD"
+        ]
+      },
+      "抹除灵异": {
+        "status": "未觉醒",
+        "unlock_after": [
+          "M2-ACTIVE-PRICE"
+        ]
+      },
+      "威势压制": {
+        "status": "未形成",
+        "unlock_after": [
+          "M3-SEVEN-FORMED"
+        ]
+      }
+    },
+    "known_info": [
+      "双桥镇近五天已有三户人家在夜间异响后出事；传言均涉及三下敲门和熟人名字，但样本尚不足以确认规律。",
+      "镇民已尝试封窗、守夜、走陆路与搭船；铁门栓只是一项未被证实的民间措施。",
+      "季三渡船的底舱门从外插销并缠麻绳，阿顺本人在船头时，门后却传出了阿顺的声音。",
+      "张洞阻止阿顺触碰插销；插销与缠绕的麻绳始终在众人眼前，舱板门未开，门缝下却被推出一张浸水黄表纸，纸上有小孩手印。",
+      "父亲留在渡口附近准备走陆路筹钱；叔公去祠堂换锁，并因张家后门曾自内落闩、院内无人，要求张洞若误船便去木匠铺或渡口借宿。",
+      "张洞取得一条可复核记录：封闭且受看守的底舱门后，仍有声音并能推出物件。",
+      "渡船停航造成的借宿争夺已使一家人失去一处当夜退路。",
+      "祠堂方向出现过与底舱相同的三下敲击。",
+      "已核对的样本显示，未知事物未必需要撞破门板；该户住户是因听见熟人求助而主动开门。",
+      "门未被撞坏不等于不开门就绝对安全，现有样本不足以确认完整触发条件。",
+      "一户出事人家的门板内侧留有不该在室内出现的细纸灰。",
+      "渡船底舱的插销仍在原位，但缠门麻绳少了一股，季三否认开过舱。"
+    ],
+    "body": {
+      "状态": "正常"
+    },
+    "inventory": [
+      "午前渡船木牌两块（已失去当日通行效力）"
+    ]
+  },
+  "characters": {
+    "active": {
+      "张洞父亲": {
+        "status": "参与查验",
+        "note": "要求只按可见事实记录，仍主张另寻现实离镇路线。"
+      },
+      "张洞母亲": {
+        "status": "当夜安置进一步受阻",
+        "note": "张洞未能赶上她争取的陆路合车名额。"
+      },
+      "张家叔公": {
+        "status": "前往张氏祠堂",
+        "note": "选择封好祠堂后门和旧物，不拦家人离镇；已说明张家后门出现门闩自内落下、院内无人的异常。"
+      },
+      "季三": {
+        "status": "继续停船并保留底舱",
+        "note": "拒绝开舱，也同意在众人见证下核对舱门与货物。"
+      },
+      "阿顺": {
+        "status": "在渡船上",
+        "note": "季三之子，声音被底舱内未知事物模仿。"
+      },
+      "刘婶": {
+        "status": "在渡船客舱",
+        "note": "逃离镇子的乘客，知晓此前渡船上有人开货舱的传言。"
+      },
+      "李二": {
+        "status": "与张洞风险绑定",
+        "note": "共同取得开门证词，不再能把镇上异响只当闲谈。"
+      },
+      "木匠老李": {
+        "status": "经营木匠铺",
+        "note": "只相信自己看见的损坏痕迹。"
+      },
+      "张洞": {
+        "status": "失去当夜陆路离镇机会",
+        "note": "为核对出事人家的证词错过最后一个陆路合车名额。"
+      }
+    },
+    "pending": {
+      "罗文松": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "李庆之": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "孟小董": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张幼红": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "罗千": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张伯华": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "秦老": {
+        "birth_year_range": [
+          1905,
+          1915
+        ],
+        "appearance_after": "M3-CORE-MEMBERS-MET",
+        "status": "尚未出场"
+      }
+    },
+    "deceased": []
+  },
+  "world_lore": {
+    "reveal_layer": 1,
+    "confirmed": [],
+    "hypotheses": [
+      "未知事物可能借用活人的声音，并以敲门或要求开门的方式逼人行动；现有观察不足以确认触发条件。",
+      "封闭底舱中的异响与镇上夜间死亡事件可能有关，也可能是另一件事。",
+      "封闭底舱中的异常可能不依赖打开舱门便能将物件送到门外；现有样本不足以说明其条件。",
+      "渡船底舱异响与祠堂方向的三下敲击可能相关，但尚无证据证明它们来自同一异常。",
+      "未知事物可能借熟人声音制造求助理由，诱使活人自行开门；这仍不足以说明沉默或门栓是否安全。",
+      "门板内侧的纸灰可能与祠堂或渡船底舱的异常有关，但尚无证据证明同源。"
+    ],
+    "gold_known": false,
+    "post_office_status": "不存在线索",
+    "ancient_house_status": "不存在线索"
+  },
+  "active_foreshadows": {
+    "F-A01": {
+      "status": "已播种",
+      "plant_chapter": 3
+    }
+  },
+  "completed_milestones": [],
+  "revealed_rules": [],
+  "recent_hooks": [
+    {
+      "chapter": 1,
+      "type": "行动受阻与未解问题",
+      "content": "底舱未开，里面却出现了与阿顺相同的声音和浸水黄表纸上的湿手印；渡船停航，张洞必须决定如何在天黑前找到新的离镇方法。"
+    },
+    {
+      "chapter": 2,
+      "type": "未解问题",
+      "content": "张洞一家失去借宿退路后，祠堂方向传来与封闭底舱完全相同的三下敲击，迫使他们决定是否把渡船记录带往祠堂查证。"
+    },
+    {
+      "chapter": 3,
+      "type": "未解问题",
+      "content": "张洞回到渡船复核时，插销仍在原位，缠在底舱门上的麻绳却少了一股；季三发誓无人开过舱。"
+    }
+  ],
+  "chapter_summaries": {
+    "compression_level": 0,
+    "summaries": {
+      "1": {
+        "title": "渡船不开",
+        "core": "张洞和母亲的出逃船只被底舱异响逼停，父亲和叔公则分别留在岸上承担不同选择。",
+        "irreversible_changes": [
+          "逃离计划受阻",
+          "家庭分离",
+          "异常首次直接观察"
+        ]
+      },
+      "2": {
+        "title": "不开的舱门",
+        "core": "张洞以失去当夜借宿机会为代价，把渡船异响从传言变成可复核记录，并将一家人的逃离分歧推入现实选择。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "protagonist_location",
+          "character_updates",
+          "world_hypotheses_add"
+        ]
+      },
+      "3": {
+        "title": "开门的人",
+        "core": "张洞以失去最后一条当夜离镇资源为代价，取得可核对的开门证词，并与李二形成共同承担风险的关系。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "protagonist_location",
+          "timeline_elapsed_days",
+          "character_updates",
+          "world_hypotheses_add"
+        ]
+      }
+    }
+  },
+  "last_review": {
+    "chapter": 3,
+    "grade": "A",
+    "verdict": "PASS",
+    "timestamp": "2026-08-03T20:17:54"
+  }
+}

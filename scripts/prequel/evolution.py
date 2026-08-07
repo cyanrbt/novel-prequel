@@ -7,7 +7,7 @@ from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
-from .artifacts import ChapterWorkspace
+from .artifacts import ChapterWorkspace, canonical_text
 from .context_builder import (
     build_ballot_packet,
     build_candidate_packet,
@@ -24,6 +24,7 @@ from .errors import (
 )
 from .evaluation import (
     DIMENSIONS,
+    canonicalize_artifact_quotes,
     classify_candidate,
     merge_specialist_review,
     promotion_decision,
@@ -285,12 +286,20 @@ class QualityEvolutionEngine:
         identifier = f"candidate_{index + 1:02d}"
         prefix = f"candidates/{identifier}"
         stage = f"generate_{identifier}"
-        packet = build_candidate_packet(state, plan, recent, planner_context, index)
+        packet = build_candidate_packet(
+            state,
+            plan,
+            recent,
+            planner_context,
+            index,
+            project_root=self.project_root,
+        )
         input_hash = fingerprint(packet)
         outputs = [
             f"{prefix}/draft.txt",
             f"{prefix}/generation.json",
             f"{prefix}/static_review.json",
+            f"{prefix}/writer_context.json",
         ]
         if manifest.can_reuse(
             stage, input_hash, self._route_fingerprint("candidate_writer")
@@ -305,16 +314,31 @@ class QualityEvolutionEngine:
             return None
         manifest.begin(stage)
         try:
-            draft = caller.call(
-                "candidate_writer",
-                _prompt(
-                    self.project_root,
-                    "writer",
-                    packet,
-                    "生成一个独立完整章节。只输出正文，不读写项目文件。",
-                ),
-                None,
-                f"GENERATE_{identifier.upper()}",
+            workspace.write_json(
+                outputs[3],
+                {
+                    key: packet[key]
+                    for key in (
+                        "story_brief",
+                        "hard_constraints",
+                        "authoritative_context",
+                        "context_trace",
+                    )
+                    if key in packet
+                },
+            )
+            draft = canonical_text(
+                caller.call(
+                    "candidate_writer",
+                    _prompt(
+                        self.project_root,
+                        "writer",
+                        packet,
+                        "生成一个独立完整章节。只输出正文，不读写项目文件。",
+                    ),
+                    None,
+                    f"GENERATE_{identifier.upper()}",
+                )
             )
             static = scan_draft(
                 draft,
@@ -410,9 +434,49 @@ class QualityEvolutionEngine:
                 card,
                 classify_candidate(card, self.floors),
             )
+        diagnostic_path = (
+            f"{prefix}/diagnostics/integrated_review.invalid.txt"
+        )
         if manifest.stage_failed(stage):
             card = workspace.read_json(score_path)
             invalid = card.get("evaluation_status") == "INVALID"
+            if invalid and workspace.exists(diagnostic_path):
+                try:
+                    recovered = _parse_json(
+                        workspace.read_text(diagnostic_path),
+                        f"{generated.identifier}-integrated-recovery",
+                    )
+                    canonicalize_artifact_quotes(recovered, generated.draft)
+                    recovery_issues = validate_integrated_review(
+                        recovered,
+                        generated.draft,
+                        plan["chapter_number"],
+                        set(packet["allowed_fact_ids"]),
+                    )
+                    if not _p1_messages(recovery_issues):
+                        recovered_card = scorecard_from_integrated(
+                            recovered, self.weights
+                        )
+                        workspace.write_json(review_path, recovered)
+                        workspace.write_json(score_path, recovered_card)
+                        manifest.complete(
+                            stage,
+                            input_hash,
+                            [review_path, score_path],
+                            self._metadata("integrated_reviewer"),
+                        )
+                        caller.stage_reused(stage)
+                        return EvaluatedDraft(
+                            generated.identifier,
+                            generated.draft,
+                            generated.static_review,
+                            recovered,
+                            {},
+                            recovered_card,
+                            classify_candidate(recovered_card, self.floors),
+                        )
+                except ArtifactValidationError:
+                    pass
             failure = _failure_from_scorecard(card, stage) if invalid else None
             return EvaluatedDraft(
                 generated.identifier,
@@ -427,10 +491,6 @@ class QualityEvolutionEngine:
                 review_failure=failure,
             )
         manifest.begin(stage)
-
-        diagnostic_path = (
-            f"{prefix}/diagnostics/integrated_review.invalid.txt"
-        )
 
         def invalid_result(
             failure_kind: str,
@@ -496,6 +556,7 @@ class QualityEvolutionEngine:
         except ArtifactValidationError as exc:
             return invalid_result("PARSE_ERROR", str(exc), raw)
 
+        canonicalize_artifact_quotes(integrated, generated.draft)
         issues = validate_integrated_review(
             integrated,
             generated.draft,
@@ -693,6 +754,7 @@ class QualityEvolutionEngine:
         except ArtifactValidationError as exc:
             return invalid_result("PARSE_ERROR", str(exc), raw)
 
+        canonicalize_artifact_quotes(review, item.draft)
         issues = validate_specialist_review(
             review, item.draft, plan["chapter_number"], request.dimension
         )
@@ -717,6 +779,34 @@ class QualityEvolutionEngine:
             self._metadata(f"{request.dimension}_reviewer"),
         )
         return SpecialistResult(request, review, None)
+
+    def _specialist_can_reuse(
+        self,
+        request: SpecialistRequest,
+        evaluated: dict[str, EvaluatedDraft],
+        *,
+        state: dict[str, Any],
+        plan: dict[str, Any],
+        planner_context: dict[str, Any],
+        manifest: RunManifest,
+    ) -> bool:
+        item = evaluated[request.candidate_id]
+        packet = build_specialist_packet(
+            state,
+            plan,
+            item.draft,
+            item.static_review,
+            planner_context,
+            request.dimension,
+        )
+        input_hash = fingerprint(
+            {"packet": packet, "reason": request.reason_code}
+        )
+        return manifest.can_reuse(
+            f"specialist_{item.identifier}_{request.dimension}",
+            input_hash,
+            self._route_fingerprint(f"{request.dimension}_reviewer"),
+        )
 
     def _select_once(
         self,
@@ -759,6 +849,17 @@ class QualityEvolutionEngine:
                 ),
                 "ballot",
             )
+            for evidence in ballot.get("evidence", []):
+                if not isinstance(evidence, dict):
+                    continue
+                source = (
+                    left.draft
+                    if evidence.get("candidate") == "A"
+                    else right.draft
+                    if evidence.get("candidate") == "B"
+                    else ""
+                )
+                canonicalize_artifact_quotes(evidence, source)
             failures = _p1_messages(validate_ballot(ballot, left.draft, right.draft))
             if failures:
                 raise ArtifactValidationError("；".join(failures))
@@ -856,6 +957,7 @@ class QualityEvolutionEngine:
             planner_context,
             selected.draft,
             instructions,
+            project_root=self.project_root,
         )
         brief_path = f"{prefix}/brief.json"
         draft_path = f"{prefix}/draft.txt"
@@ -891,15 +993,17 @@ class QualityEvolutionEngine:
             return selected, [], False, True
         manifest.begin("revision_round_01")
         try:
-            revised_draft = caller.call_reserved(
-                reservations[0],
-                _prompt(
-                    self.project_root,
-                    "writer",
-                    packet,
-                    "按限定问题定向修订，输出完整章节纯文本。",
-                ),
-                None,
+            revised_draft = canonical_text(
+                caller.call_reserved(
+                    reservations[0],
+                    _prompt(
+                        self.project_root,
+                        "writer",
+                        packet,
+                        "按限定问题定向修订，输出完整章节纯文本。",
+                    ),
+                    None,
+                )
             )
         except (ArtifactValidationError, ProviderError):
             caller.cancel_before_provider(reservations[1])
@@ -941,6 +1045,7 @@ class QualityEvolutionEngine:
                 ),
                 "revision-verification",
             )
+            canonicalize_artifact_quotes(verification, revised_draft)
             failures = _p1_messages(
                 validate_revision_verification(
                     verification,
@@ -1089,9 +1194,28 @@ class QualityEvolutionEngine:
             if item.review_failure is not None
         ]
 
+        available_specialist_calls = caller.budget.remaining
         requests = self.plan_specialist_calls(
-            list(evaluated.values()), caller.budget.remaining
+            list(evaluated.values()), max(2, available_specialist_calls)
         )
+        if len(requests) > available_specialist_calls:
+            reusable = [
+                request
+                for request in requests
+                if self._specialist_can_reuse(
+                    request,
+                    evaluated,
+                    state=state,
+                    plan=plan,
+                    planner_context=planner_context,
+                    manifest=manifest,
+                )
+            ]
+            fresh = [request for request in requests if request not in reusable]
+            requests = [
+                *reusable,
+                *fresh[:available_specialist_calls],
+            ]
         complete_for_shadow = [
             item for item in evaluated.values() if item.integrated_review is not None
         ]
@@ -1260,16 +1384,41 @@ class QualityEvolutionEngine:
             )
 
         continuity_guard_passed = "continuity" in selected.reviews
+        if (
+            selection_mode == "REVISE"
+            and verification_passed
+            and selected.classification == "ELIGIBLE"
+            and continuity_guard_passed
+            and all(
+                selected.scorecard.get("confidences", {}).get(name, 0) >= 0.85
+                for name in DIMENSIONS
+            )
+        ):
+            # A targeted revision has both an independent continuity review and
+            # a diff-scoped verifier.  The final blind-reader gate remains the
+            # independent reader-facing check before any promotion.
+            selection_confident = True
         if selection_mode == "DIRECT_SELECT_LOW_CONFIDENCE":
-            complete_other = (
+            cohort_accounted_for = (
                 len(items) == self.candidate_count
-                and all(item.integrated_review is not None for item in items)
+                and all(
+                    item.integrated_review is not None
+                    or item.content_status == "HARD_FAIL"
+                    or item.review_status == "INVALID"
+                    for item in items
+                )
             )
             confident_scores = all(
                 selected.scorecard.get("confidences", {}).get(name, 0) >= 0.85
                 for name in DIMENSIONS
             )
-            selection_confident = complete_other and confident_scores and continuity_guard_passed
+            selection_confident = (
+                cohort_accounted_for
+                and selected.classification == "ELIGIBLE"
+                and confident_scores
+                and continuity_guard_passed
+                and verification_passed
+            )
         policy = {
             **self.config.get("auto_promote", {}),
             "manual_floor": self.config.get("manual_floor", 78),
@@ -1483,7 +1632,7 @@ class QualityEvolutionEngine:
                 "不使用 --resume，显式执行 next 创建新的预算化运行",
                 "显式执行独立 audit（使用审计自己的预算）",
             ],
-            "resume_warning": "--resume只恢复现有预算，不会把上限扩展到第11次",
+            "resume_warning": "--resume只恢复现有预算，不会突破运行清单的调用上限",
             "exhausted_stage": (
                 "verifier"
                 if status == "BUDGET_EXHAUSTED" and "修订和验证" in "；".join(reasons)

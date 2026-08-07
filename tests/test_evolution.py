@@ -148,6 +148,25 @@ class EvolutionTests(unittest.TestCase):
         )
         self.assertEqual((action.kind, action.selected_id), ("REVISE", "candidate_01"))
 
+    def test_local_hard_failure_can_revise_with_additional_soft_edit(self):
+        action = selection_policy(
+            [
+                {
+                    "identifier": "candidate_01",
+                    "classification": "HARD_FAIL",
+                    "scorecard": {
+                        "weighted_score": 93,
+                        "hard_failures": [{"code": "KNOWLEDGE_SOURCE"}],
+                        "required_revisions": [
+                            {"code": "TRIM_EXPOSITION"},
+                            {"code": "KNOWLEDGE_SOURCE"},
+                        ],
+                    },
+                }
+            ]
+        )
+        self.assertEqual((action.kind, action.selected_id), ("REVISE", "candidate_01"))
+
     def test_passing_verification_cannot_hide_a_large_score_regression(self):
         issues = validate_revision_verification(
             {
@@ -316,6 +335,123 @@ class EvolutionTests(unittest.TestCase):
             self.assertFalse(result.decision["evaluation_degraded"])
             self.assertTrue(result.decision["automatic_retry_skipped_reason"])
             self.assertTrue(result.decision["recommended_actions"])
+
+    def test_failed_review_can_recover_from_revalidated_raw_without_new_call(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            bad = integrated(
+                {"continuity": 95, "character": 90, "craft": 92, "anti_slop": 90}
+            ).replace("门板上的灰", "正文里没有的尘")
+            _, manifest, workspace, providers = self.setup_run(
+                root,
+                writer_outputs=[valid_draft(), valid_draft()],
+                triage_outputs=[bad, bad],
+                specialist_outputs=[specialist("continuity", 94)],
+            )
+            self.assertEqual(providers["triage"].calls, 2)
+            workspace.write_raw_text(
+                "candidates/candidate_02/diagnostics/integrated_review.invalid.txt",
+                integrated(
+                    {
+                        "continuity": 95,
+                        "character": 90,
+                        "craft": 92,
+                        "anti_slop": 90,
+                    }
+                ),
+            )
+            routes = {
+                "planner": "planner",
+                "candidate_writer": "prose",
+                "integrated_reviewer": "triage",
+                "continuity_reviewer": "specialist",
+                "character_reviewer": "specialist",
+                "craft_reviewer": "specialist",
+                "anti_slop_reviewer": "specialist",
+                "selector": "selector",
+                "reviser": "prose",
+                "verifier": "verifier",
+                "verifier_complex": "verifier",
+            }
+            router = StageModelRouter(providers, routes)
+            caller = ModelCallExecutor(router, manifest)
+            config = {
+                "quality_evolution": {
+                    "weights": {
+                        "continuity": 0.3,
+                        "character": 0.25,
+                        "craft": 0.3,
+                        "anti_slop": 0.15,
+                    },
+                    "candidate_floors": {
+                        "continuity": 85,
+                        "character": 75,
+                        "craft": 75,
+                        "anti_slop": 80,
+                    },
+                    "auto_promote": {
+                        "weighted_score": 85,
+                        "continuity": 90,
+                        "character": 82,
+                        "craft": 82,
+                        "anti_slop": 82,
+                        "ballot_votes": 1,
+                    },
+                    "manual_floor": 78,
+                    "selector_score_gap": 4,
+                }
+            }
+            engine = QualityEvolutionEngine(root, router, config, caller)
+            state = json.loads(
+                (root / "novel/state/current.json").read_text(encoding="utf-8")
+            )
+            result = engine.run(
+                state=state,
+                plan=json.loads(valid_plan_json()),
+                recent=[],
+                planner_context={
+                    "canon_facts": [],
+                    "era_bans": {"characters": ["周正"], "terms": ["负责人"]},
+                },
+                workspace=workspace,
+                manifest=manifest,
+            )
+            self.assertEqual(providers["triage"].calls, 2)
+            self.assertEqual(result.selected_id, "candidate_02")
+            self.assertTrue(
+                workspace.exists("candidates/candidate_02/integrated_review.json")
+            )
+
+    def test_invalid_alternative_does_not_block_guarded_high_confidence_candidate(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            bad = integrated(
+                {
+                    "continuity": 95,
+                    "character": 90,
+                    "craft": 92,
+                    "anti_slop": 90,
+                }
+            ).replace("门板上的灰", "正文里不存在的句子")
+            result, _, _, _ = self.setup_run(
+                root,
+                writer_outputs=[valid_draft(), valid_draft()],
+                triage_outputs=[
+                    bad,
+                    integrated(
+                        {
+                            "continuity": 95,
+                            "character": 90,
+                            "craft": 92,
+                            "anti_slop": 90,
+                        }
+                    ),
+                ],
+                specialist_outputs=[specialist("continuity", 95)],
+            )
+            self.assertEqual(result.status, "AUTO_PROMOTE")
+            self.assertTrue(result.decision["selection_confident"])
+            self.assertTrue(result.decision["evaluation_degraded"])
 
     def test_static_hard_fail_is_content_degraded_not_review_invalid(self):
         with tempfile.TemporaryDirectory() as tmp:

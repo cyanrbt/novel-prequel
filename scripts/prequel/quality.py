@@ -33,6 +33,15 @@ STATE_CHANGE_REQUIRED = {
     "world_hypotheses_add",
 }
 
+SCENE_MODEL_REQUIRED = {
+    "initial_state",
+    "discovery_path",
+    "knowledge_limits",
+    "ordinary_explanations",
+    "choice_reason",
+    "end_state",
+}
+
 FORBIDDEN_POV = ["他不知道的是", "她不知道的是", "与此同时", "在另一边", "另一边却"]
 ACTION_PATTERNS = {
     "停步不回头": r"停下来.{0,10}没有回头",
@@ -64,6 +73,8 @@ def validate_plan(
     allowed_canon_ids: set[str] | None = None,
     allowed_foreshadow_ids: set[str] | None = None,
     allowed_milestone_ids: set[str] | None = None,
+    foreshadow_registry: dict[str, Any] | None = None,
+    arc_registry: dict[str, Any] | None = None,
 ) -> list[Issue]:
     issues: list[Issue] = []
     if not isinstance(plan, dict):
@@ -116,7 +127,59 @@ def validate_plan(
                 issues.append(Issue("SCENE_NO_FUNCTION", "P1", f"场景{index}缺少场景功能", repr(scene)[:160]))
             if not scene.get("pressure_change") and not scene.get("irreversible_change"):
                 issues.append(Issue("SCENE_NO_PRESSURE_CHANGE", "P1", f"场景{index}没有压力变化", repr(scene)[:160]))
+            missing_model = sorted(SCENE_MODEL_REQUIRED - scene.keys())
+            if missing_model:
+                issues.append(Issue(
+                    "SCENE_MODEL_MISSING",
+                    "P1",
+                    f"场景{index}缺少可复原场景字段",
+                    ", ".join(missing_model),
+                ))
+                continue
+            for field in (
+                "initial_state",
+                "discovery_path",
+                "knowledge_limits",
+                "choice_reason",
+                "end_state",
+            ):
+                if not isinstance(scene.get(field), str) or not scene[field].strip():
+                    issues.append(Issue(
+                        "SCENE_MODEL_EMPTY",
+                        "P1",
+                        f"场景{index}的{field}不得为空",
+                        repr(scene.get(field)),
+                    ))
+            explanations = scene.get("ordinary_explanations")
+            if not isinstance(explanations, dict):
+                issues.append(Issue(
+                    "SCENE_BAD_ALTERNATIVES",
+                    "P1",
+                    f"场景{index}的普通解释必须是object",
+                    repr(explanations),
+                ))
+            else:
+                required_alternatives = {"considered", "excluded", "remaining"}
+                if set(explanations) != required_alternatives:
+                    issues.append(Issue(
+                        "SCENE_BAD_ALTERNATIVES",
+                        "P1",
+                        f"场景{index}的普通解释字段不完整",
+                        repr(explanations),
+                    ))
+                elif not all(
+                    isinstance(explanations[field], list)
+                    and all(isinstance(item, str) and item.strip() for item in explanations[field])
+                    for field in required_alternatives
+                ):
+                    issues.append(Issue(
+                        "SCENE_BAD_ALTERNATIVES",
+                        "P1",
+                        f"场景{index}的普通解释必须是字符串数组",
+                        repr(explanations),
+                    ))
     foreshadows = plan.get("foreshadow_operations")
+    planned_foreshadows: dict[str, set[str]] = {"plant": set(), "recover": set()}
     if not isinstance(foreshadows, dict):
         issues.append(Issue("BAD_FORESHADOW_OPS", "P1", "伏笔操作必须是object", repr(foreshadows)))
     else:
@@ -130,8 +193,11 @@ def validate_plan(
                     issues.append(Issue("BAD_FORESHADOW_ID", "P1", "伏笔必须以稳定ID开头，如F-A01", repr(value)))
                     continue
                 matched = re.match(r"^(F-[A-Z]-?\d+)", value.strip())
-                if matched and allowed_foreshadow_ids is not None and matched.group(1) not in allowed_foreshadow_ids:
-                    issues.append(Issue("UNKNOWN_FORESHADOW", "P1", "伏笔未在登记表中定义", matched.group(1)))
+                if matched:
+                    item_id = matched.group(1)
+                    planned_foreshadows[operation].add(item_id)
+                    if allowed_foreshadow_ids is not None and item_id not in allowed_foreshadow_ids:
+                        issues.append(Issue("UNKNOWN_FORESHADOW", "P1", "伏笔未在登记表中定义", item_id))
     milestones = plan.get("milestone_operations")
     if not isinstance(milestones, dict) or not isinstance(milestones.get("complete"), list):
         issues.append(Issue("BAD_MILESTONE_OPS", "P1", "里程碑操作必须包含complete数组", repr(milestones)))
@@ -141,12 +207,58 @@ def validate_plan(
         if allowed_milestone_ids is not None:
             for item in sorted(planned_milestones - allowed_milestone_ids):
                 issues.append(Issue("UNKNOWN_MILESTONE", "P1", "里程碑未在登记表中定义", item))
+    completed_before = set(state.get("completed_milestones", []))
+    active_foreshadows = state.get("active_foreshadows", {})
+    overlap = planned_foreshadows["plant"] & planned_foreshadows["recover"]
+    for item_id in sorted(overlap):
+        issues.append(Issue("FORESHADOW_SAME_CHAPTER_RECOVERY", "P1", "伏笔不得在同章播种并回收", item_id))
+    for item_id in sorted(planned_foreshadows["plant"]):
+        if item_id in active_foreshadows:
+            issues.append(Issue("FORESHADOW_ALREADY_PLANTED", "P1", "伏笔已经播种，不得重复播种", item_id))
+    for item_id in sorted(planned_foreshadows["recover"]):
+        runtime = active_foreshadows.get(item_id)
+        if not isinstance(runtime, dict) or runtime.get("status") != "已播种":
+            issues.append(Issue("FORESHADOW_NOT_PLANTED", "P1", "伏笔必须在更早章节播种后才能回收", item_id))
+        elif runtime.get("plant_chapter", expected) >= expected:
+            issues.append(Issue("FORESHADOW_NOT_MATURE", "P1", "伏笔不能在播种章立即回收", item_id))
+    registry_entries = (foreshadow_registry or {}).get("entries", {})
+    for item_id in sorted(planned_foreshadows["plant"]):
+        entry = registry_entries.get(item_id, {})
+        prerequisites = entry.get("plant_after", []) if isinstance(entry, dict) else []
+        missing = [item for item in prerequisites if item not in completed_before]
+        if missing:
+            issues.append(Issue("FORESHADOW_PREREQUISITE_MISSING", "P1", "伏笔播种前置里程碑未完成", f"{item_id}: {', '.join(missing)}"))
+    for milestone in planned_milestones:
+        for item_id, runtime in active_foreshadows.items():
+            entry = registry_entries.get(item_id, {})
+            if (
+                isinstance(entry, dict)
+                and entry.get("recover_by") == milestone
+                and isinstance(runtime, dict)
+                and runtime.get("status") == "已播种"
+                and item_id not in planned_foreshadows["recover"]
+            ):
+                issues.append(Issue("FORESHADOW_RECOVERY_OVERDUE", "P1", "完成该里程碑前必须回收已到期伏笔", f"{item_id} -> {milestone}"))
+
+    milestone_entries = (arc_registry or {}).get("milestones", {})
+    current_volume = state.get("chapter", {}).get("current_volume")
+    for milestone in sorted(planned_milestones):
+        if milestone in completed_before:
+            issues.append(Issue("MILESTONE_ALREADY_COMPLETED", "P1", "里程碑已经完成，不得重复提交", milestone))
+        entry = milestone_entries.get(milestone, {})
+        if not isinstance(entry, dict):
+            continue
+        missing = [item for item in entry.get("after", []) if item not in completed_before]
+        if missing:
+            issues.append(Issue("MILESTONE_PREREQUISITE_MISSING", "P1", "里程碑前置条件未完成", f"{milestone}: {', '.join(missing)}"))
+        if entry.get("volume") is not None and entry.get("volume") != current_volume:
+            issues.append(Issue("MILESTONE_WRONG_VOLUME", "P1", "里程碑不属于当前卷", f"{milestone}: volume {entry.get('volume')}"))
     abilities = state.get("protagonist", {}).get("abilities", {})
     rendered = repr({
         key: plan.get(key)
         for key in ("scenes", "new_information", "state_changes", "rule_hypotheses")
     })
-    completed_milestones = set(state.get("completed_milestones", [])) | planned_milestones
+    completed_milestones = completed_before | planned_milestones
     for name, ability in abilities.items():
         unlock_after = ability.get("unlock_after")
         if isinstance(unlock_after, list) and name in rendered:

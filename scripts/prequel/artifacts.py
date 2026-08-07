@@ -19,15 +19,23 @@ ALLOWED_ARTIFACTS = {
     "semantic_review.json",
     "reader_review.json",
     "reader_review.invalid.txt",
+    "state_settlement.json",
+    "state_settlement.invalid.txt",
     "promotion_manifest.json",
     "run_manifest.json",
     "decision.json",
     "decision.md",
     "context_metrics.json",
+    "writer_context.json",
 }
 
+
+def canonical_text(content: str) -> str:
+    """Return the exact representation used for persisted text artifacts."""
+    return content.rstrip() + "\n"
+
 NESTED_PATTERNS = (
-    re.compile(r"^candidates/candidate_\d{2}/(?:draft\.txt|generation\.json|static_review\.json|scorecard\.json|integrated_review\.json|manual_review\.json)$"),
+    re.compile(r"^candidates/candidate_\d{2}/(?:draft\.txt|generation\.json|static_review\.json|scorecard\.json|integrated_review\.json|manual_review\.json|writer_context\.json)$"),
     re.compile(r"^candidates/candidate_\d{2}/reviews/(?:continuity|character|craft|anti_slop)\.json$"),
     re.compile(
         r"^candidates/candidate_\d{2}/diagnostics/"
@@ -81,7 +89,7 @@ class ChapterWorkspace:
         target = self._target(name)
         if not isinstance(content, str) or not content.strip():
             raise ArtifactValidationError(f"工件为空: {name}")
-        target.write_text(content.rstrip() + "\n", encoding="utf-8")
+        target.write_text(canonical_text(content), encoding="utf-8")
         return target
 
     def write_raw_text(self, name: str, content: str) -> Path:

@@ -3,9 +3,10 @@
   "$id": "reader_review.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "verdict", "reader_recap", "blocking_issues", "warnings", "evidence", "revision_instructions"],
+  "required": ["chapter_number", "draft_sha256", "verdict", "reader_recap", "adversarial_checks", "reading_experience", "blocking_issues", "warnings", "evidence", "revision_instructions"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
+    "draft_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "verdict": {"type": "string", "enum": ["PASS", "REVISE", "REPLAN"]},
     "reader_recap": {
       "type": "object",
@@ -17,6 +18,45 @@
         "spatial_map": {"type": "string"},
         "causal_chain": {"type": "string"},
         "next_question": {"type": "string"}
+      }
+    },
+    "adversarial_checks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinary_explanations", "missing_preconditions", "knowledge_or_behavior_gaps", "physical_or_spatial_gaps", "unsupported_recap_claims"],
+      "properties": {
+        "ordinary_explanations": {"type": "array", "items": {"type": "string"}},
+        "missing_preconditions": {"type": "array", "items": {"type": "string"}},
+        "knowledge_or_behavior_gaps": {"type": "array", "items": {"type": "string"}},
+        "physical_or_spatial_gaps": {"type": "array", "items": {"type": "string"}},
+        "unsupported_recap_claims": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "reading_experience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prose_accessibility", "character_believability", "target_emotion_effect", "narrative_momentum", "continue_reading", "first_drop_point", "friction_reasons"],
+      "properties": {
+        "prose_accessibility": {"type": "integer", "minimum": 1, "maximum": 5},
+        "character_believability": {"type": "integer", "minimum": 1, "maximum": 5},
+        "target_emotion_effect": {"type": "integer", "minimum": 1, "maximum": 5},
+        "narrative_momentum": {"type": "integer", "minimum": 1, "maximum": 5},
+        "continue_reading": {"type": "boolean"},
+        "first_drop_point": {
+          "anyOf": [
+            {"type": "null"},
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["quote", "explanation"],
+              "properties": {
+                "quote": {"type": "string"},
+                "explanation": {"type": "string"}
+              }
+            }
+          ]
+        },
+        "friction_reasons": {"type": "array", "items": {"type": "string"}}
       }
     },
     "blocking_issues": {
