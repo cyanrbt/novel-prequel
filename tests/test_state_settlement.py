@@ -49,6 +49,14 @@ class StateSettlementTests(unittest.TestCase):
         self.assertNotIn("state_changes", packet)
         self.assertIn("没有逐字证据的变化不得结算", packet["instruction_boundary"])
 
+    def test_protagonist_known_information_is_required_for_promotion(self):
+        expected = expected_state_changes(self.state, self.plan)
+        known = next(
+            item for item in expected
+            if item["path"] == "state_changes.protagonist_known_info_add[0]"
+        )
+        self.assertTrue(known["required_for_promotion"])
+
     def test_complete_text_grounded_settlement_passes(self):
         self.assertEqual(
             validate_state_settlement(self.report, self.state, self.plan, self.draft),

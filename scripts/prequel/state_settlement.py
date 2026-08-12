@@ -44,7 +44,12 @@ def expected_state_changes(
     known = set(state.get("protagonist", {}).get("known_info", []))
     for index, value in enumerate(changes.get("protagonist_known_info_add", [])):
         if value not in known:
-            add(f"state_changes.protagonist_known_info_add[{index}]", value, "主角实际获得的新信息")
+            add(
+                f"state_changes.protagonist_known_info_add[{index}]",
+                value,
+                "主角实际获得的新信息",
+                required_for_promotion=True,
+            )
     inventory = set(state.get("protagonist", {}).get("inventory", []))
     for index, value in enumerate(changes.get("protagonist_inventory_add", [])):
         if value not in inventory:
