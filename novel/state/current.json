@@ -1,16 +1,16 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-12T14:14:13",
+  "last_updated": "2026-08-12T17:15:31",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 1,
-    "next_chapter": 2,
+    "last_chapter": 2,
+    "next_chapter": 3,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
     "current_phase": "日常边界",
-    "last_title": "门上的灰"
+    "last_title": "不止一个人能开门"
   },
   "timeline": {
     "current_year": 1908,
@@ -21,7 +21,7 @@
   "protagonist": {
     "name": "张洞",
     "age": 18,
-    "location": "大汉市·双桥镇·张家院",
+    "location": "大汉市·双桥镇·张家院外厢",
     "erosion": 0,
     "abilities": {
       "灵异感知": {
@@ -56,12 +56,18 @@
       "张洞亲眼看见倒扣饭碗里的纸灰，普通来源未能当场查清。",
       "张洞听见门外声音模仿孙周氏的口音，并用母亲的赊米私事诱她开门；声音身份与来源未明。",
       "张家正门未遭外力撞撬；未开门只说明这次边界仍关闭，不能证明门外无人。",
-      "本班直达大汉市的十二块客牌已发尽，张洞因未本人到场失去木行引荐对应的客位。"
+      "本班直达大汉市的十二块客牌已发尽，张洞因未本人到场失去木行引荐对应的客位。",
+      "孙有田退开门栓后，门外没有再敲，声音却改叫张洞母亲。",
+      "孙有田辨认出门外曾借用其亡父的私人称呼。",
+      "孙有田已将未完成殓衣交给张洞。"
     ],
     "body": {
       "状态": "正常"
     },
-    "inventory": []
+    "inventory": [
+      "孙周氏未完成殓衣（暂代修补）",
+      "母亲限借的细针、相容线与小剪"
+    ]
   },
   "characters": {
     "active": {
@@ -134,7 +140,9 @@
     "confirmed": [
       "孙周氏已经死亡，孙家设灵；死亡原因和开门经过尚未由张洞核对。"
     ],
-    "hypotheses": [],
+    "hypotheses": [
+      "门外借声会依据同一关闭边界内仍能开门的活人转移目标。"
+    ],
     "gold_known": false,
     "post_office_status": "不存在线索",
     "ancient_house_status": "不存在线索"
@@ -152,6 +160,11 @@
       "chapter": 1,
       "type": "代价展示",
       "content": "张洞为守住门而失去行囊与客牌，母亲更将是否让他继续住下作为天亮后的问题。"
+    },
+    {
+      "chapter": 2,
+      "type": "代价展示",
+      "content": "母亲独自去警告陈婶；她若一人返家，张洞即使看见她身后有人也不能开栓，而他还须在日落前补好殓衣。"
     }
   ],
   "chapter_summaries": {
@@ -163,13 +176,23 @@
         "irreversible_changes": [
           "protagonist_known_info_add"
         ]
+      },
+      "2": {
+        "title": "不止一个人能开门",
+        "core": "孙家门外声音在孙有田退开后转叫张洞母亲；张洞接下未完殓衣，独自留在外厢修补并面对日落前交衣的追责。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "protagonist_inventory_add",
+          "protagonist_location",
+          "world_hypotheses_add"
+        ]
       }
     }
   },
   "last_review": {
-    "chapter": 1,
+    "chapter": 2,
     "grade": "A",
     "verdict": "PASS",
-    "timestamp": "2026-08-12T13:07:37"
+    "timestamp": "2026-08-12T17:15:31"
   }
 }

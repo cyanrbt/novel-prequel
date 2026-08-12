@@ -27,6 +27,35 @@
       "chapter": 1,
       "source_path": "novel/chapters/vol_01/chapter_001.txt",
       "source_sha256": "a4578c988e7a7920b0c8967f28985e23475dbaaa042b040662f9a10ff04fde3b"
+    },
+    {
+      "characters": [
+        "两名帮丧者",
+        "孙有田",
+        "张洞",
+        "张洞母亲",
+        "木匠老李"
+      ],
+      "locations": [
+        "东巷孙家外院、内屋门帘外与关闭的街门内侧",
+        "孙家外院至张家外厢",
+        "张家院正屋、正门内侧与外厢"
+      ],
+      "event_id": "event_1",
+      "foreshadows": [],
+      "irreversible_changes": [
+        "protagonist_known_info_add",
+        "protagonist_inventory_add",
+        "protagonist_location",
+        "timeline_year",
+        "timeline_elapsed_days",
+        "world_hypotheses_add"
+      ],
+      "hook_type": "代价展示",
+      "summary": "孙家门外声音在孙有田退开后转叫张洞母亲；张洞接下未完殓衣，独自留在外厢修补并面对日落前交衣的追责。",
+      "chapter": 2,
+      "source_path": "novel/chapters/vol_01/chapter_002.txt",
+      "source_sha256": "bb7a95255edce194d150d23b10434d913794d6e53bf1d5081088e4dd3a3f71d3"
     }
   ]
 }
