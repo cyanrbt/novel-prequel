@@ -126,6 +126,13 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_QUESTION_PROGRESSION", {item.code for item in issues})
 
+    def test_plan_rejects_removal_of_untracked_inventory(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["state_changes"]["protagonist_inventory_remove"] = ["未登记的船钱"]
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("INVENTORY_REMOVE_MISSING", {item.code for item in issues})
+
     def test_plan_rejects_malformed_ordinary_explanations(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()

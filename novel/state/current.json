@@ -1,15 +1,16 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-04T18:55:46+08:00",
+  "last_updated": "2026-08-12T10:52:37",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 0,
-    "next_chapter": 1,
+    "last_chapter": 1,
+    "next_chapter": 2,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
-    "current_phase": "日常边界"
+    "current_phase": "日常边界",
+    "last_title": "蒸笼里的灰"
   },
   "timeline": {
     "current_year": 1908,
@@ -51,7 +52,9 @@
     "known_info": [
       "东巷孙周氏昨夜死亡，孙家已经挂白；张洞只听到互相矛盾的开门传言，尚未核对现场。",
       "三日后有一班直达大汉市的渡船，张洞原计划搭船去木行找学徒活。",
-      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。"
+      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。",
+      "张家蒸笼中的淡纸灰至少两次出现，第二次未随新米或灶火进入。",
+      "孙周氏死亡已实际切断张家赊米担保。"
     ],
     "body": {
       "状态": "正常"
@@ -134,12 +137,37 @@
     "post_office_status": "不存在线索",
     "ancient_house_status": "不存在线索"
   },
-  "active_foreshadows": {},
+  "active_foreshadows": {
+    "F-A01": {
+      "status": "已播种",
+      "plant_chapter": 1
+    }
+  },
   "completed_milestones": [],
   "revealed_rules": [],
-  "recent_hooks": [],
+  "recent_hooks": [
+    {
+      "chapter": 1,
+      "type": "隐藏规则发现",
+      "content": "清洗、倒扣并罩住的空蒸笼再现纸灰，令纸灰的来处成为待查的异常。"
+    }
+  ],
   "chapter_summaries": {
     "compression_level": 0,
-    "summaries": {}
+    "summaries": {
+      "1": {
+        "title": "蒸笼里的灰",
+        "core": "张洞用全部船钱买米后，发现清洗封住的空蒸笼再现纸灰；父子将灰封存上锁，决定次日查八年前守祠记录。",
+        "irreversible_changes": [
+          "protagonist_known_info_add"
+        ]
+      }
+    }
+  },
+  "last_review": {
+    "chapter": 1,
+    "grade": "A",
+    "verdict": "PASS",
+    "timestamp": "2026-08-12T10:52:37"
   }
 }

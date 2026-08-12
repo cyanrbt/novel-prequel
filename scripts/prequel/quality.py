@@ -157,6 +157,21 @@ def validate_plan(
         material = material or changes.get("timeline_elapsed_days") != state.get("timeline", {}).get("elapsed_days")
         if not material:
             issues.append(Issue("NO_STATE_CHANGE", "P1", "本章状态字段没有任何真实变化", repr(changes)[:200]))
+        inventory = set(state.get("protagonist", {}).get("inventory", []))
+        unknown_removals = [
+            item
+            for item in changes.get("protagonist_inventory_remove", [])
+            if item not in inventory
+        ]
+        if unknown_removals:
+            issues.append(
+                Issue(
+                    "INVENTORY_REMOVE_MISSING",
+                    "P1",
+                    "规划不能移除当前状态中不存在的物品；请改为可结算的新信息或先登记资源",
+                    repr(unknown_removals),
+                )
+            )
     evidence_ids = plan.get("canon_evidence_ids")
     if not isinstance(evidence_ids, list) or not evidence_ids:
         issues.append(Issue("NO_CANON_EVIDENCE", "P1", "规划没有声明原著/前传依据", repr(evidence_ids)))
