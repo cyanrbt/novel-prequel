@@ -342,6 +342,22 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
                 "第二章关键选择必须让张洞本人新承担一项已发生的责任、损失或关系风险；母亲失去针线钱不能独自替代主角代价",
                 cost_rendered[:480],
             ))
+        scene_threats = "\n".join(
+            str(scene.get("threat_action", ""))
+            for scene in plan.get("scenes", [])
+            if isinstance(scene, dict)
+        )
+        if not re.search(
+            r"(?:三次|三下|敲击|敲门|门外响起|门外传来).{0,36}(?:死者|死人|已死|亡父|亡母|亡妻|声音|称呼)"
+            r"|(?:死者|死人|已死|亡父|亡母|亡妻).{0,24}(?:声音|称呼).{0,24}(?:响起|叫门|敲)",
+            scene_threats,
+        ):
+            issues.append(Issue(
+                "CORE_ANOMALY_NOT_ACTING_ON_PAGE",
+                "P1",
+                "第二章不能只转述另一户证词；借用死者声音的威胁必须在本章当前场景短暂行动，并立即改变一个活人的选择或孙家丧事资源",
+                scene_threats[:640],
+            ))
     if (
         "孙有田" in rendered
         and re.search(
