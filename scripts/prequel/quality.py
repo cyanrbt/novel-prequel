@@ -288,6 +288,19 @@ def validate_plan(
         for field in ("protagonist_contradiction", "threat_in_motion"):
             if not isinstance(investment.get(field), str) or not investment[field].strip():
                 issues.append(Issue("EMPTY_READER_INVESTMENT", "P1", f"reader_investment.{field}不得为空", repr(investment.get(field))))
+        threat_in_motion = investment.get("threat_in_motion", "")
+        if isinstance(threat_in_motion, str) and re.search(
+            r"(?:异常|危险|对手|门外(?:客|之物)?).{0,10}(?:尚未|并未|没有|未曾|暂未).{0,6}(?:再现|出现|行动|逼近|到来)",
+            threat_in_motion,
+        ):
+            issues.append(
+                Issue(
+                    "INACTIVE_THREAT_ADMITTED",
+                    "P1",
+                    "threat_in_motion不能承认核心威胁本章没有行动；请让异常、对手或错误选择在本章内主动改变活人处境",
+                    threat_in_motion,
+                )
+            )
         attachment = investment.get("attachment_anchor")
         if (
             not isinstance(attachment, dict)

@@ -195,6 +195,15 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("HIGH_COINCIDENCE_CLUE", {item.code for item in issues})
 
+    def test_plan_rejects_threat_field_that_admits_no_current_action(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["threat_in_motion"] = (
+            "门外之物尚未再现，先前死亡造成的议论让家人花钱修门。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("INACTIVE_THREAT_ADMITTED", {item.code for item in issues})
+
     def test_plan_rejects_superficial_attachment_label(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()
