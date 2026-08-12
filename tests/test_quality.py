@@ -293,6 +293,18 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
 
+    def test_second_chapter_accepts_protagonist_personally_taking_the_garment(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["choice_cost"] = "他把殓衣责任记到自己名下。"
+        plan["dramatic_spine"]["cost_realization"] = (
+            "孙有田把未完殓衣交给张洞；张洞亲手接下，母亲不替他落针。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
+
     def test_second_chapter_requires_the_core_anomaly_to_act_on_page(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
