@@ -364,8 +364,8 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
             threat_context,
         ))
         current_boundary_action = bool(re.search(
-            r"(?:街门|院门|侧门|门外|关闭边界).{0,30}(?:借声|声音|称呼).{0,24}(?:诱使|叫门|敲|响起)"
-            r"|(?:借声|声音).{0,24}(?:街门|院门|侧门|门外|关闭边界).{0,24}(?:诱使|叫门|敲|响起)",
+            r"(?:街门|院门|侧门|门外|关闭边界).{0,40}(?:三次|三下|敲击|敲门|借声|声音|称呼|叫门|响起)"
+            r"|(?:三次|三下|敲击|敲门|借声|声音|称呼|叫门|响起).{0,40}(?:街门|院门|侧门|门外|关闭边界)",
             scene_threats,
         ))
         immediate_human_effect = bool(re.search(
