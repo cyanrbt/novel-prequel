@@ -33,6 +33,12 @@ class BlindReaderReviewTests(unittest.TestCase):
                 "character_believability": 4,
                 "target_emotion_effect": 4,
                 "narrative_momentum": 4,
+                "opening_pull": 4,
+                "protagonist_ownership": 4,
+                "question_progression": 4,
+                "ending_compulsion": 4,
+                "competitive_readiness": "NEAR",
+                "next_click_reason": "张洞必须确认纸灰如何越过关闭的门。",
                 "continue_reading": True,
                 "first_drop_point": None,
                 "friction_reasons": [],
@@ -100,6 +106,12 @@ class BlindReaderReviewTests(unittest.TestCase):
             "explanation": "场面没有继续变化。",
         }
         self.report["reading_experience"]["friction_reasons"] = ["推进停滞"]
+        codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
+        self.assertIn("READER_PASS_WITHOUT_PULL", codes)
+
+    def test_pass_rejects_merely_competent_chapter(self):
+        self.report["reading_experience"]["opening_pull"] = 3
+        self.report["reading_experience"]["competitive_readiness"] = "BELOW"
         codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
         self.assertIn("READER_PASS_WITHOUT_PULL", codes)
 

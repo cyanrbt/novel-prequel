@@ -125,13 +125,17 @@ CANDIDATE_FOCUSES = (
         "name": "atmospheric_precision",
         "instruction": "优先强化克制的感官证据、空间变化和节奏；避免解释未知与模板化惊吓。",
     },
+    {
+        "name": "serial_compulsion",
+        "instruction": "优先强化首屏处境、主角不可替代的选择和问题升级；结尾必须改变下一步行动条件，让读者有具体理由立刻点开下一章。",
+    },
 )
 
 
 FOCUS_PAIRS = (
-    ("causal_tension", "character_pressure"),
-    ("causal_tension", "atmospheric_precision"),
-    ("character_pressure", "atmospheric_precision"),
+    ("serial_compulsion", "character_pressure"),
+    ("serial_compulsion", "causal_tension"),
+    ("serial_compulsion", "atmospheric_precision"),
 )
 
 
@@ -143,6 +147,7 @@ def select_candidate_focuses(
             key: plan.get(key)
             for key in (
                 "chapter_purpose",
+                "dramatic_spine",
                 "phase",
                 "scenes",
                 "rule_hypotheses",
@@ -156,6 +161,7 @@ def select_candidate_focuses(
         "causal_tension": ("调查", "规则", "证据", "试错", "异常", "因果", "线索"),
         "character_pressure": ("关系", "人物", "争执", "对话", "利益", "亲缘", "选择"),
         "atmospheric_precision": ("空间", "声音", "气味", "黑暗", "夜", "门", "压迫", "恐惧"),
+        "serial_compulsion": ("选择", "代价", "问题", "立刻", "失去", "风险", "不得不", "下一步"),
     }
     scores = {
         name: sum(rendered.count(keyword) for keyword in keywords)
@@ -206,6 +212,7 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
             "event_id",
             "phase",
             "chapter_purpose",
+            "dramatic_spine",
             "new_information",
             "rule_hypotheses",
             "hook",

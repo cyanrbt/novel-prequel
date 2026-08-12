@@ -35,12 +35,18 @@
     "reading_experience": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["prose_accessibility", "character_believability", "target_emotion_effect", "narrative_momentum", "continue_reading", "first_drop_point", "friction_reasons"],
+      "required": ["prose_accessibility", "character_believability", "target_emotion_effect", "narrative_momentum", "opening_pull", "protagonist_ownership", "question_progression", "ending_compulsion", "competitive_readiness", "next_click_reason", "continue_reading", "first_drop_point", "friction_reasons"],
       "properties": {
         "prose_accessibility": {"type": "integer", "minimum": 1, "maximum": 5},
         "character_believability": {"type": "integer", "minimum": 1, "maximum": 5},
         "target_emotion_effect": {"type": "integer", "minimum": 1, "maximum": 5},
         "narrative_momentum": {"type": "integer", "minimum": 1, "maximum": 5},
+        "opening_pull": {"type": "integer", "minimum": 1, "maximum": 5},
+        "protagonist_ownership": {"type": "integer", "minimum": 1, "maximum": 5},
+        "question_progression": {"type": "integer", "minimum": 1, "maximum": 5},
+        "ending_compulsion": {"type": "integer", "minimum": 1, "maximum": 5},
+        "competitive_readiness": {"type": "string", "enum": ["BELOW", "NEAR", "MATCH"]},
+        "next_click_reason": {"type": "string"},
         "continue_reading": {"type": "boolean"},
         "first_drop_point": {
           "anyOf": [

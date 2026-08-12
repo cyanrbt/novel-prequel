@@ -20,11 +20,19 @@
 - `character_believability`：人物是否像在争取自己的东西，而不是配合作者核验线索；
 - `target_emotion_effect`：正文实际制造出的紧张、担忧、好奇或其他目标情绪；
 - `narrative_momentum`：场景是否不断改变选择、关系或危险，而非程序化走访与复述；
+- `opening_pull`：开篇是否很快让一个具体愿望受阻，或让人物处境出现必须处理的偏差；
+- `protagonist_ownership`：张洞是否亲自作出有后果的选择，而不是只观察、检查、记录长辈的决定；
+- `question_progression`：最初问题是否获得局部答案、反例或后果，并升级成不同且更贴身的问题；
+- `ending_compulsion`：结尾是否改变下一步行动条件，而不只是留下静物、怪声或“以后再查”；
+- `competitive_readiness`：与成熟热门悬疑/灵异网文开篇的结构吸引力相比，只能填写 `BELOW`、`NEAR` 或 `MATCH`；
+- `next_click_reason`：不用空泛的“想知道后续”，写出读者必须立刻确认的具体行动、选择或后果；
 - `continue_reading`：作为普通读者是否真愿意立刻读下一章；
 - `first_drop_point`：第一次明显失去阅读投入的位置，必须为 `null` 或 `{quote, explanation}`；
 - `friction_reasons`：所有降低投入感的具体原因。
 
-四个评分均为 1—5。尤其警惕：调查写成逐项验收、叙述替人物解释每个选择、对话只为确认事实、人物在危险中做不符合现实利益的动作、场景完成了大纲功能却没有情绪效果。这些问题即使逻辑自洽，也不能获得高分。
+八个评分均为 1—5，并使用同一校准：5分是少见的、足以作为成熟商业连载开篇标杆的效果；4分是强而稳定、会让读者立即追读；3分只是合格顺畅但容易放下，不能通过；2分存在明显机械感；1分失效。没有逻辑漏洞、语言顺畅或信息完整本身最多只能证明3分。尤其警惕：调查写成逐项验收、叙述替人物解释每个选择、对话只为确认事实、人物在危险中做不符合现实利益的动作、场景完成了大纲功能却没有情绪效果。这些问题即使逻辑自洽，也不能获得高分。
+
+判断 `competitive_readiness` 时比较的是叙事机制，不是模仿具体作品文字：成熟开篇通常会让人物的身体、安全、身份、关系或迫切愿望尽早进入不确定状态；现实细节连接金钱、亲缘、职业和损失；问题在章内变形；章末让人物不得不行动。若正文主要价值仍是“交代清楚、没有漏洞”，必须填 `BELOW`。
 
 在决定结论前，必须主动做五类反证检查，并将结果分别写入 `adversarial_checks`：
 
@@ -38,7 +46,7 @@
 
 ## 结论规则
 
-- `PASS`：目标、空间、人物与因果都可从正文自行理解；除可被正文诚实保留的普通解释外，没有阻断继续阅读的前置、知识、空间或复述缺口；`prose_accessibility`、`character_believability`、`narrative_momentum` 均至少 4，`target_emotion_effect` 至少 3，`continue_reading` 为 true，且没有弃读点或摩擦原因。`PASS` 可以包含非阻断 warning，但 `blocking_issues` 与 `revision_instructions` 必须为空。
+- `PASS`：目标、空间、人物与因果都可从正文自行理解；除可被正文诚实保留的普通解释外，没有阻断继续阅读的前置、知识、空间或复述缺口；八项体验分均至少4，`competitive_readiness` 为 `NEAR` 或 `MATCH`，`continue_reading` 为 true，`next_click_reason` 具体，且没有弃读点或摩擦原因。`PASS` 可以包含非阻断 warning，但 `blocking_issues` 与 `revision_instructions` 必须为空。
 - `REVISE`：主线仍成立，但存在会令普通读者停下来发问的关键缺口。
 - `REPLAN`：目标、人物动机、场景因果或异常机制无法建立，局部修句不能解决。
 

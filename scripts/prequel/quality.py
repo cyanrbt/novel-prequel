@@ -15,7 +15,7 @@ class Issue:
 
 
 PLAN_REQUIRED = {
-    "chapter_number", "title", "event_id", "phase", "chapter_purpose", "scenes",
+    "chapter_number", "title", "event_id", "phase", "chapter_purpose", "dramatic_spine", "scenes",
     "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids",
     "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements",
 }
@@ -40,6 +40,19 @@ SCENE_MODEL_REQUIRED = {
     "ordinary_explanations",
     "choice_reason",
     "end_state",
+}
+
+DRAMATIC_SPINE_REQUIRED = {
+    "opening_pressure",
+    "protagonist_immediate_want",
+    "personal_stake",
+    "destabilizing_event",
+    "protagonist_choice",
+    "choice_cost",
+    "relationship_friction",
+    "question_progression",
+    "emotional_turn",
+    "serial_promise",
 }
 
 FORBIDDEN_POV = ["他不知道的是", "她不知道的是", "与此同时", "在另一边", "另一边却"]
@@ -86,6 +99,42 @@ def validate_plan(
         issues.append(Issue("PLAN_CHAPTER_MISMATCH", "P1", f"规划章号应为{expected}", str(plan.get("chapter_number"))))
     if plan.get("event_id") != state.get("chapter", {}).get("current_event"):
         issues.append(Issue("PLAN_EVENT_MISMATCH", "P1", "规划事件与状态不一致", str(plan.get("event_id"))))
+    spine = plan.get("dramatic_spine")
+    if not isinstance(spine, dict) or set(spine) != DRAMATIC_SPINE_REQUIRED:
+        issues.append(
+            Issue(
+                "BAD_DRAMATIC_SPINE",
+                "P1",
+                "规划必须完整定义人物欲望、选择、代价与问题升级",
+                repr(spine)[:240],
+            )
+        )
+    else:
+        for field in DRAMATIC_SPINE_REQUIRED - {"question_progression"}:
+            if not isinstance(spine.get(field), str) or not spine[field].strip():
+                issues.append(
+                    Issue(
+                        "EMPTY_DRAMATIC_SPINE",
+                        "P1",
+                        f"dramatic_spine.{field}不得为空",
+                        repr(spine.get(field)),
+                    )
+                )
+        progression = spine.get("question_progression")
+        if (
+            not isinstance(progression, list)
+            or not 3 <= len(progression) <= 4
+            or not all(isinstance(item, str) and item.strip() for item in progression)
+            or len(set(progression)) != len(progression)
+        ):
+            issues.append(
+                Issue(
+                    "BAD_QUESTION_PROGRESSION",
+                    "P1",
+                    "问题链必须包含3到4个互不重复的具体问题",
+                    repr(progression),
+                )
+            )
     changes = plan.get("state_changes")
     if not isinstance(changes, dict):
         issues.append(Issue("NO_STATE_CHANGE", "P1", "本章没有不可逆状态变化", "state_changes"))

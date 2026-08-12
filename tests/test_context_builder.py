@@ -44,6 +44,7 @@ class ContextBuilderTests(unittest.TestCase):
             "event_id": "event_1",
             "phase": "setup",
             "chapter_purpose": "张洞被迫做选择",
+            "dramatic_spine": {"protagonist_choice": "张洞留下"},
             "new_information": ["门后有声音"],
             "rule_hypotheses": ["声音会借名"],
             "hook": {"type": "choice", "content": "他没有回家"},
@@ -101,14 +102,15 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertIn("周正", context["era_bans"]["characters"])
         self.assertIn("负责人", context["era_bans"]["terms"])
 
-    def test_three_focus_library_is_retained_but_chapter_selects_two(self):
+    def test_focus_library_prioritizes_serial_compulsion_and_selects_two(self):
         self.assertEqual(
             {item["name"] for item in CANDIDATE_FOCUSES},
-            {"causal_tension", "character_pressure", "atmospheric_precision"},
+            {"causal_tension", "character_pressure", "atmospheric_precision", "serial_compulsion"},
         )
         plan = {
             "chapter_number": 3,
             "chapter_purpose": "调查异常规则和门后的证据",
+            "dramatic_spine": {"protagonist_choice": "张洞选择承担代价"},
             "scenes": [],
             "rule_hypotheses": ["规则需要试错"],
         }

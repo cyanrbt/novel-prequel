@@ -12,6 +12,18 @@ def _valid_plan():
         "event_id": "event_1",
         "phase": "征兆",
         "chapter_purpose": "建立第一次异常",
+        "dramatic_spine": {
+            "opening_pressure": "张洞准备离家时发现院门异常。",
+            "protagonist_immediate_want": "赶上三日后的渡船。",
+            "personal_stake": "错过木行学徒机会。",
+            "destabilizing_event": "纸灰越过关闭的门。",
+            "protagonist_choice": "张洞留下检查并阻止家人开门。",
+            "choice_cost": "他冒着错过渡船安排的风险。",
+            "relationship_friction": "母亲催他离开，张洞坚持先保住家人。",
+            "question_progression": ["灰从哪里来？", "关闭的门是否还安全？", "张洞还能否按时离镇？"],
+            "emotional_turn": "离镇期待转成对家门失效的担忧。",
+            "serial_promise": "张洞下一章必须在离镇与守家之间行动。",
+        },
         "scenes": [{
             "location": "张家院",
             "characters": ["张洞"],
@@ -104,6 +116,13 @@ class QualityGateTests(unittest.TestCase):
         del plan["scenes"][0]["initial_state"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("SCENE_MODEL_MISSING", {item.code for item in issues})
+
+    def test_plan_requires_distinct_question_progression(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["dramatic_spine"]["question_progression"] = ["灰是什么？"] * 3
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("BAD_QUESTION_PROGRESSION", {item.code for item in issues})
 
     def test_plan_rejects_malformed_ordinary_explanations(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

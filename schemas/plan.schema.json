@@ -3,13 +3,35 @@
   "$id": "plan.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
+  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "dramatic_spine", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
     "title": {"type": "string"},
     "event_id": {"type": "string"},
     "phase": {"type": "string"},
     "chapter_purpose": {"type": "string"},
+    "dramatic_spine": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["opening_pressure", "protagonist_immediate_want", "personal_stake", "destabilizing_event", "protagonist_choice", "choice_cost", "relationship_friction", "question_progression", "emotional_turn", "serial_promise"],
+      "properties": {
+        "opening_pressure": {"type": "string"},
+        "protagonist_immediate_want": {"type": "string"},
+        "personal_stake": {"type": "string"},
+        "destabilizing_event": {"type": "string"},
+        "protagonist_choice": {"type": "string"},
+        "choice_cost": {"type": "string"},
+        "relationship_friction": {"type": "string"},
+        "question_progression": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 4,
+          "items": {"type": "string"}
+        },
+        "emotional_turn": {"type": "string"},
+        "serial_promise": {"type": "string"}
+      }
+    },
     "scenes": {
       "type": "array",
       "minItems": 1,

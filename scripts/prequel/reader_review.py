@@ -34,6 +34,12 @@ READING_EXPERIENCE_FIELDS = {
     "character_believability",
     "target_emotion_effect",
     "narrative_momentum",
+    "opening_pull",
+    "protagonist_ownership",
+    "question_progression",
+    "ending_compulsion",
+    "competitive_readiness",
+    "next_click_reason",
     "continue_reading",
     "first_drop_point",
     "friction_reasons",
@@ -42,8 +48,12 @@ READING_EXPERIENCE_FIELDS = {
 PASS_EXPERIENCE_FLOORS = {
     "prose_accessibility": 4,
     "character_believability": 4,
-    "target_emotion_effect": 3,
+    "target_emotion_effect": 4,
     "narrative_momentum": 4,
+    "opening_pull": 4,
+    "protagonist_ownership": 4,
+    "question_progression": 4,
+    "ending_compulsion": 4,
 }
 
 
@@ -142,6 +152,12 @@ def validate_blind_reader_review(
         if not isinstance(experience.get("continue_reading"), bool):
             issues.append(Issue("READER_BAD_EXPERIENCE", "P1", "continue_reading必须是布尔值", repr(experience.get("continue_reading"))))
             experience_valid = False
+        if experience.get("competitive_readiness") not in {"BELOW", "NEAR", "MATCH"}:
+            issues.append(Issue("READER_BAD_EXPERIENCE", "P1", "competitive_readiness必须是BELOW、NEAR或MATCH", repr(experience.get("competitive_readiness"))))
+            experience_valid = False
+        if not isinstance(experience.get("next_click_reason"), str) or not experience["next_click_reason"].strip():
+            issues.append(Issue("READER_BAD_EXPERIENCE", "P1", "next_click_reason不得为空", repr(experience.get("next_click_reason"))))
+            experience_valid = False
         friction = experience.get("friction_reasons")
         if not isinstance(friction, list) or not all(
             isinstance(item, str) and item.strip() for item in friction
@@ -212,6 +228,7 @@ def validate_blind_reader_review(
             not experience["continue_reading"]
             or experience["first_drop_point"] is not None
             or experience["friction_reasons"]
+            or experience["competitive_readiness"] == "BELOW"
             or low_scores
         ):
             issues.append(
