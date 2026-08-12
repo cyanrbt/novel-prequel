@@ -284,6 +284,31 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("CORE_ANOMALY_NOT_ACTING_ON_PAGE", {item.code for item in issues})
 
+    def test_second_chapter_accepts_named_responsibility_and_current_dead_voice(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["choice_cost"] = (
+            "张洞把日落归还殓衣的责任记到自己名下。"
+        )
+        plan["dramatic_spine"]["cost_realization"] = (
+            "孙有田交出殓衣，张洞收下亡者衣物。"
+        )
+        plan["reader_investment"]["core_threat_continuation"]["prior_hook"] = (
+            "上一章借用死者声音叫门的威胁仍未结束。"
+        )
+        plan["reader_investment"]["core_threat_continuation"]["current_effect"] = (
+            "门外借用孙有田亡父声音叫门，正在诱使他开门。"
+        )
+        plan["scenes"][0]["threat_action"] = (
+            "关闭的街门外借声响起并诱使孙有田开门，抬棺人当场退出。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        codes = {item.code for item in issues}
+        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", codes)
+        self.assertNotIn("CORE_ANOMALY_NOT_ACTING_ON_PAGE", codes)
+
     def test_plan_rejects_superficial_attachment_label(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()

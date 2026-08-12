@@ -333,6 +333,8 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
         ) if isinstance(spine, dict) else ""
         if not re.search(
             r"张洞(?:当场|公开|亲自|因此|也|将)?(?:失去|交出|承担|接下|背上|负责|被拒|被逐|受损|受牵连)"
+            r"|张洞.{0,40}(?:责任|追责|风险).{0,16}(?:自己|名下)"
+            r"|张洞.{0,24}(?:收下|接过).{0,16}(?:殓衣|亡者衣物)"
             r"|(?:责任|代价|追责|风险).{0,12}(?:落在|记在|压到|由).{0,8}张洞",
             cost_rendered,
         ):
@@ -347,11 +349,31 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
             for scene in plan.get("scenes", [])
             if isinstance(scene, dict)
         )
-        if not re.search(
-            r"(?:三次|三下|敲击|敲门|门外响起|门外传来).{0,36}(?:死者|死人|已死|亡父|亡母|亡妻|声音|称呼)"
-            r"|(?:死者|死人|已死|亡父|亡母|亡妻).{0,24}(?:声音|称呼).{0,24}(?:响起|叫门|敲)",
+        investment = plan.get("reader_investment", {})
+        core_thread = investment.get("core_threat_continuation", {}) if isinstance(investment, dict) else {}
+        threat_parts = [
+            str(investment.get("threat_in_motion", "")) if isinstance(investment, dict) else "",
             scene_threats,
-        ):
+        ]
+        if isinstance(core_thread, dict):
+            threat_parts.extend(str(value) for value in core_thread.values())
+        threat_context = "\n".join(threat_parts)
+        dead_voice_identified = bool(re.search(
+            r"(?:死者|死人|已死|亡父|亡母|亡妻).{0,20}(?:声音|称呼|叫门)"
+            r"|(?:声音|称呼).{0,20}(?:死者|死人|已死|亡父|亡母|亡妻)",
+            threat_context,
+        ))
+        current_boundary_action = bool(re.search(
+            r"(?:街门|院门|侧门|门外|关闭边界).{0,30}(?:借声|声音|称呼).{0,24}(?:诱使|叫门|敲|响起)"
+            r"|(?:借声|声音).{0,24}(?:街门|院门|侧门|门外|关闭边界).{0,24}(?:诱使|叫门|敲|响起)",
+            scene_threats,
+        ))
+        immediate_human_effect = bool(re.search(
+            r"(?:当场|立即|随即).{0,20}(?:退出|撤走|离开|拒绝|改口|放下|失去)"
+            r"|(?:帮丧|抬棺|邻里|家人).{0,20}(?:退出|撤走|离开|拒绝|改口|失去)",
+            scene_threats,
+        ))
+        if not (dead_voice_identified and current_boundary_action and immediate_human_effect):
             issues.append(Issue(
                 "CORE_ANOMALY_NOT_ACTING_ON_PAGE",
                 "P1",
