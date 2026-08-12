@@ -1,4 +1,32 @@
 {
   "schema": "novel-memory-index",
-  "entries": []
+  "entries": [
+    {
+      "characters": [
+        "张洞",
+        "张洞母亲",
+        "张洞父亲",
+        "李二"
+      ],
+      "locations": [
+        "大汉市双桥镇·张家院正屋与正门内侧",
+        "大汉市双桥镇·张家院正屋，渡口发牌后",
+        "大汉市双桥镇·张家院正门内外"
+      ],
+      "event_id": "event_1",
+      "foreshadows": [
+        "F-A01"
+      ],
+      "irreversible_changes": [
+        "protagonist_known_info_add",
+        "timeline_year",
+        "timeline_elapsed_days"
+      ],
+      "hook_type": "代价展示",
+      "summary": "张洞发现倒扣饭碗中出现纸灰，阻止母亲为门外冒充孙周氏的声音开门，并毁坏木样错失渡船客牌，母子因此决裂",
+      "chapter": 1,
+      "source_path": "novel/chapters/vol_01/chapter_001.txt",
+      "source_sha256": "a4578c988e7a7920b0c8967f28985e23475dbaaa042b040662f9a10ff04fde3b"
+    }
+  ]
 }

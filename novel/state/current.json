@@ -1,15 +1,16 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-12T12:38:30+08:00",
+  "last_updated": "2026-08-12T13:07:37",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 0,
-    "next_chapter": 1,
+    "last_chapter": 1,
+    "next_chapter": 2,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
-    "current_phase": "日常边界"
+    "current_phase": "日常边界",
+    "last_title": "门上的灰"
   },
   "timeline": {
     "current_year": 1908,
@@ -25,27 +26,38 @@
     "abilities": {
       "灵异感知": {
         "status": "未形成",
-        "unlock_after": ["M1-DUAL-EXPOSURE"]
+        "unlock_after": [
+          "M1-DUAL-EXPOSURE"
+        ]
       },
       "规则洞察": {
         "status": "未形成",
-        "unlock_after": ["M1B-PATH-RECORD"]
+        "unlock_after": [
+          "M1B-PATH-RECORD"
+        ]
       },
       "抹除灵异": {
         "status": "未觉醒",
-        "unlock_after": ["M2-ACTIVE-PRICE"]
+        "unlock_after": [
+          "M2-ACTIVE-PRICE"
+        ]
       },
       "威势压制": {
         "status": "未形成",
-        "unlock_after": ["M3-SEVEN-FORMED"]
+        "unlock_after": [
+          "M3-SEVEN-FORMED"
+        ]
       }
     },
     "known_info": [
       "东巷孙周氏昨夜死亡，孙家已经挂白；张洞只听到互相矛盾的开门传言，尚未核对现场。",
       "下一班直达大汉市的渡船明晨开行，十二块客牌在今晚发放；张洞原计划凭木行引荐搭船去做学徒。",
-      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。"
+      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。",
+      "本班直达大汉市的十二块客牌已发尽，张洞因未本人到场失去木行引荐对应的客位。"
     ],
-    "body": {"状态": "正常"},
+    "body": {
+      "状态": "正常"
+    },
     "inventory": []
   },
   "characters": {
@@ -76,34 +88,85 @@
       }
     },
     "pending": {
-      "罗文松": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "罗文松": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "李庆之": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "孟小董": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张幼红": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "罗千": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张伯华": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
       "秦老": {
-        "birth_year_range": [1905, 1915],
+        "birth_year_range": [
+          1905,
+          1915
+        ],
         "appearance_after": "M3-CORE-MEMBERS-MET",
         "status": "尚未出场"
       }
     },
-    "deceased": ["孙周氏", "张大成"]
+    "deceased": [
+      "孙周氏",
+      "张大成"
+    ]
   },
   "world_lore": {
     "reveal_layer": 1,
-    "confirmed": ["孙周氏已经死亡，孙家设灵；死亡原因和开门经过尚未由张洞核对。"],
+    "confirmed": [
+      "孙周氏已经死亡，孙家设灵；死亡原因和开门经过尚未由张洞核对。"
+    ],
     "hypotheses": [],
     "gold_known": false,
     "post_office_status": "不存在线索",
     "ancient_house_status": "不存在线索"
   },
-  "active_foreshadows": {},
+  "active_foreshadows": {
+    "F-A01": {
+      "status": "已播种",
+      "plant_chapter": 1
+    }
+  },
   "completed_milestones": [],
   "revealed_rules": [],
-  "recent_hooks": [],
+  "recent_hooks": [
+    {
+      "chapter": 1,
+      "type": "代价展示",
+      "content": "张洞为守住门而失去行囊与客牌，母亲更将是否让他继续住下作为天亮后的问题。"
+    }
+  ],
   "chapter_summaries": {
     "compression_level": 0,
-    "summaries": {}
+    "summaries": {
+      "1": {
+        "title": "门上的灰",
+        "core": "张洞发现倒扣饭碗中出现纸灰，阻止母亲为门外冒充孙周氏的声音开门，并毁坏木样错失渡船客牌，母子因此决裂。",
+        "irreversible_changes": [
+          "protagonist_known_info_add"
+        ]
+      }
+    }
+  },
+  "last_review": {
+    "chapter": 1,
+    "grade": "A",
+    "verdict": "PASS",
+    "timestamp": "2026-08-12T13:07:37"
   }
 }
