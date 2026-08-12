@@ -29,6 +29,31 @@
       "chapter": 1,
       "source_path": "novel/chapters/vol_01/chapter_001.txt",
       "source_sha256": "6d4fc0bd89313c7136285eed904b16680315d7b98d4e6a9d283fdca884b6dd19"
+    },
+    {
+      "characters": [
+        "张家叔公",
+        "张洞",
+        "张洞母亲",
+        "张洞父亲"
+      ],
+      "locations": [
+        "大汉市·双桥镇·张家院正屋与灶间",
+        "大汉市·双桥镇·张家院正屋门槛",
+        "大汉市·双桥镇·张氏祠堂正门、后侧工作门与防火夹巷"
+      ],
+      "event_id": "event_1",
+      "foreshadows": [],
+      "irreversible_changes": [
+        "protagonist_known_info_add",
+        "timeline_year",
+        "timeline_elapsed_days"
+      ],
+      "hook_type": "未解问题",
+      "summary": "张洞撬开祠堂工作门取出张大成守位簿残页，父亲据页抄录并收走他誊工票权限，后侧门的复检内容仍未明。",
+      "chapter": 2,
+      "source_path": "novel/chapters/vol_01/chapter_002.txt",
+      "source_sha256": "7d4ac9a9d8594a5d98e7babe8d7102bff3c32501e2e59bcbe4f1d65781a67349"
     }
   ]
 }

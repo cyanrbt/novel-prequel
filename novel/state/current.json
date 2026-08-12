@@ -1,16 +1,16 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-12T10:52:37",
+  "last_updated": "2026-08-12T11:20:04",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 1,
-    "next_chapter": 2,
+    "last_chapter": 2,
+    "next_chapter": 3,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
     "current_phase": "日常边界",
-    "last_title": "蒸笼里的灰"
+    "last_title": "守位簿的缺页"
   },
   "timeline": {
     "current_year": 1908,
@@ -54,7 +54,10 @@
       "三日后有一班直达大汉市的渡船，张洞原计划搭船去木行找学徒活。",
       "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。",
       "张家蒸笼中的淡纸灰至少两次出现，第二次未随新米或灶火进入。",
-      "孙周氏死亡已实际切断张家赊米担保。"
+      "孙周氏死亡已实际切断张家赊米担保。",
+      "张大成守夜记录中存在“子时复检后侧工作门”的记号。",
+      "叔公在查档当日试图转移守位相关账箱。",
+      "父亲因张洞撬门取档，已收走其代记零工账的权限。"
     ],
     "body": {
       "状态": "正常"
@@ -150,6 +153,11 @@
       "chapter": 1,
       "type": "隐藏规则发现",
       "content": "清洗、倒扣并罩住的空蒸笼再现纸灰，令纸灰的来处成为待查的异常。"
+    },
+    {
+      "chapter": 2,
+      "type": "未解问题",
+      "content": "张大成在子时复检后侧工作门时，究竟看见了什么？"
     }
   ],
   "chapter_summaries": {
@@ -161,13 +169,20 @@
         "irreversible_changes": [
           "protagonist_known_info_add"
         ]
+      },
+      "2": {
+        "title": "守位簿的缺页",
+        "core": "张洞撬开祠堂工作门取出张大成守位簿残页，父亲据页抄录并收走他誊工票权限，后侧门的复检内容仍未明。",
+        "irreversible_changes": [
+          "protagonist_known_info_add"
+        ]
       }
     }
   },
   "last_review": {
-    "chapter": 1,
+    "chapter": 2,
     "grade": "A",
     "verdict": "PASS",
-    "timestamp": "2026-08-12T10:52:37"
+    "timestamp": "2026-08-12T11:20:04"
   }
 }
