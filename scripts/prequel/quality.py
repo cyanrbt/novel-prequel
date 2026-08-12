@@ -404,7 +404,7 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
     if (
         "孙有田" in rendered
         and re.search(
-            r"孙有田.{0,100}(?:向米铺说明旧债|追讨旧债|核认.{0,12}赊米|以.{0,20}赊米.{0,20}要求)",
+            r"孙有田[^。；\n]{0,100}(?:向米铺说明旧债|追讨旧债|核认[^。；\n]{0,12}赊米|以[^。；\n]{0,20}赊米[^。；\n]{0,20}要求)",
             rendered,
         )
     ):

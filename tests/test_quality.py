@@ -498,6 +498,15 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("UNSUPPORTED_DEBT_AUTHORITY", {item.code for item in issues})
 
+    def test_plan_does_not_assign_a_later_speakers_request_to_sun(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["scenes"][0]["discovery_path"] = (
+            "孙有田辨出亡父旧称而退开；门外改以孙周氏口音提张家赊米私事，张母要求众人退离门栓。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertNotIn("UNSUPPORTED_DEBT_AUTHORITY", {item.code for item in issues})
+
     def test_plan_rejects_normal_funeral_privacy_as_active_ending_threat(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()
