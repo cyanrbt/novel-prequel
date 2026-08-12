@@ -351,13 +351,18 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
             str(spine.get(field, ""))
             for field in ("choice_cost", "cost_realization")
         ) if isinstance(spine, dict) else ""
-        if not re.search(
+        explicit_named_cost = bool(re.search(
             r"张洞(?:当场|公开|亲自|亲手|本人|因此|也|将)?(?:失去|交出|承担|承接|接下|背上|负责|被拒|被逐|受损|受牵连)"
             r"|张洞.{0,40}(?:责任|追责|风险).{0,16}(?:自己|名下)"
             r"|张洞.{0,24}(?:收下|接过|接下).{0,16}(?:殓衣|亡者衣物)"
             r"|(?:责任|代价|追责|风险).{0,12}(?:落在|记在|压到|由).{0,8}张洞",
             cost_rendered,
-        ):
+        ))
+        split_receipt_cost = bool(
+            re.search(r"张洞.{0,16}(?:当场|亲手)?(?:收下|接过|接下)", cost_rendered)
+            and re.search(r"(?:殓衣|亡者衣物)", cost_rendered)
+        )
+        if not (explicit_named_cost or split_receipt_cost):
             issues.append(Issue(
                 "PROTAGONIST_COST_NOT_REALIZED",
                 "P1",

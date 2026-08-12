@@ -305,6 +305,20 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
 
+    def test_second_chapter_accepts_split_delivery_and_named_receipt(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["choice_cost"] = (
+            "他成为日落前补好并送回殓衣的具名责任人。"
+        )
+        plan["dramatic_spine"]["cost_realization"] = (
+            "孙有田把殓衣交到张洞手中；张洞当场收下，母亲不替他落第一针。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
+
     def test_second_chapter_requires_the_core_anomaly_to_act_on_page(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
