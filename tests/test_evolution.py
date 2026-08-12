@@ -205,6 +205,14 @@ class EvolutionTests(unittest.TestCase):
             with self.assertRaises(ArtifactValidationError):
                 workspace.write_text("../escaped.invalid.txt", "x")
 
+    def test_rejected_plan_diagnostic_is_narrowly_whitelisted(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = ChapterWorkspace.create(Path(tmp), 2, 1)
+            workspace.write_json("plan.invalid.json", {"chapter_number": 2})
+            self.assertTrue(workspace.exists("plan.invalid.json"))
+            with self.assertRaises(ArtifactValidationError):
+                workspace.write_json("arbitrary.invalid.json", {})
+
     def setup_run(
         self,
         root,

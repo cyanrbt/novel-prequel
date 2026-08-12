@@ -1170,18 +1170,18 @@ class WritingPipeline:
                     ),
                     "plan",
                 )
-                require_no_p1(
-                    validate_plan(
-                        plan,
-                        state,
-                        allowed_canon_ids,
-                        allowed_foreshadow_ids,
-                        allowed_milestone_ids,
-                        planner_context.get("foreshadow_registry"),
-                        planner_context.get("arc_registry"),
-                    ),
-                    "规划",
+                plan_issues = validate_plan(
+                    plan,
+                    state,
+                    allowed_canon_ids,
+                    allowed_foreshadow_ids,
+                    allowed_milestone_ids,
+                    planner_context.get("foreshadow_registry"),
+                    planner_context.get("arc_registry"),
                 )
+                if any(issue.severity == "P1" for issue in plan_issues):
+                    workspace.write_json("plan.invalid.json", plan)
+                require_no_p1(plan_issues, "规划")
                 workspace.write_json("plan.json", plan)
                 manifest.complete(
                     "plan",
@@ -1587,17 +1587,18 @@ class WritingPipeline:
                         ),
                         "plan",
                     )
-                    require_no_p1(
-                        validate_plan(
-                            plan,
-                            state,
-                            allowed_canon_ids,
-                            allowed_foreshadow_ids,
-                            allowed_milestone_ids,
-                            planner_context.get("foreshadow_registry"),
-                            planner_context.get("arc_registry"),
-                        ), "规划"
+                    plan_issues = validate_plan(
+                        plan,
+                        state,
+                        allowed_canon_ids,
+                        allowed_foreshadow_ids,
+                        allowed_milestone_ids,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
                     )
+                    if any(issue.severity == "P1" for issue in plan_issues):
+                        workspace.write_json("plan.invalid.json", plan)
+                    require_no_p1(plan_issues, "规划")
                     saved_plan = copy.deepcopy(plan)
                 else:
                     plan = copy.deepcopy(saved_plan)

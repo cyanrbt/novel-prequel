@@ -14,6 +14,7 @@ from .state_store import atomic_save_json, atomic_save_text
 ALLOWED_ARTIFACTS = {
     "context.json",
     "plan.json",
+    "plan.invalid.json",
     "draft.txt",
     "static_review.json",
     "semantic_review.json",
