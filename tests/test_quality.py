@@ -13,13 +13,23 @@ def _valid_plan():
         "phase": "征兆",
         "chapter_purpose": "建立第一次异常",
         "reader_investment": {
-            "attachment_anchor": "张洞想赶船离镇，也不愿把母亲独自留在欠债的家里。",
+            "attachment_anchor": {
+                "focus": "张洞凭木工手艺得到的学徒身份和母亲对他的信任。",
+                "on_page_moment": "母亲试坐他亲手修好的针线凳，并替他包好进木行要交的样榫。",
+                "private_meaning": "样榫证明他不是靠父母求人才能离镇，针线凳则是他第一次让母亲少受一点累。",
+                "threatened_loss": "错过木行期限会使他的手艺仍只是家中零活，强行锁门又会让母亲不再相信他的照料。",
+            },
             "protagonist_contradiction": "他口头上要赶船，遇到可核对的异常却会借调查拖延离开。",
             "threat_in_motion": "纸灰正在越过家门，使母亲当晚仍住在家中的选择变危险。",
             "revelation_shift": {
                 "from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY",
             },
-            "emotional_afterimage": "读者担心张洞越想查清，母亲越可能被留在失效的家门内。",
+            "emotional_afterimage": {
+                "person": "张洞与母亲。",
+                "immediate_wound": "张洞已经失去学徒期限，母亲也因他强行控制门栓而不再接受他的保护。",
+                "unresolved_choice": "他必须在不再替母亲作主的前提下保护她，母亲也必须决定是否仍把自己的退路押在儿子身上。",
+                "mystery_subordinate_to": "门外是谁只在它继续撕裂母子信任和离镇身份时才重要。",
+            },
             "clue_delivery": {"method": "张洞放弃赶船时间亲手验证", "resistance": "母亲催他离开且异常持续扩大", "coincidence_risk": "LOW"},
         },
         "dramatic_spine": {
@@ -178,6 +188,20 @@ class QualityGateTests(unittest.TestCase):
         plan["reader_investment"]["clue_delivery"]["coincidence_risk"] = "HIGH"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("HIGH_COINCIDENCE_CLUE", {item.code for item in issues})
+
+    def test_plan_rejects_superficial_attachment_label(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["attachment_anchor"] = "母亲很重要"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("BAD_ATTACHMENT_ANCHOR", {item.code for item in issues})
+
+    def test_plan_requires_human_afterimage_beyond_mystery(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["emotional_afterimage"] = "想知道门外是谁"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("BAD_EMOTIONAL_AFTERIMAGE", {item.code for item in issues})
 
     def test_plan_requires_question_to_change_kind(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

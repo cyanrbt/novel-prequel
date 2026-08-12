@@ -57,6 +57,18 @@ READER_INVESTMENT_REQUIRED = {
 
 REVELATION_SHIFT_REQUIRED = {"from", "to", "changes"}
 CLUE_DELIVERY_REQUIRED = {"method", "resistance", "coincidence_risk"}
+ATTACHMENT_ANCHOR_REQUIRED = {
+    "focus",
+    "on_page_moment",
+    "private_meaning",
+    "threatened_loss",
+}
+EMOTIONAL_AFTERIMAGE_REQUIRED = {
+    "person",
+    "immediate_wound",
+    "unresolved_choice",
+    "mystery_subordinate_to",
+}
 
 DRAMATIC_SPINE_REQUIRED = {
     "opening_pressure",
@@ -129,14 +141,39 @@ def validate_plan(
             )
         )
     else:
-        for field in (
-            "attachment_anchor",
-            "protagonist_contradiction",
-            "threat_in_motion",
-            "emotional_afterimage",
-        ):
+        for field in ("protagonist_contradiction", "threat_in_motion"):
             if not isinstance(investment.get(field), str) or not investment[field].strip():
                 issues.append(Issue("EMPTY_READER_INVESTMENT", "P1", f"reader_investment.{field}不得为空", repr(investment.get(field))))
+        attachment = investment.get("attachment_anchor")
+        if (
+            not isinstance(attachment, dict)
+            or set(attachment) != ATTACHMENT_ANCHOR_REQUIRED
+            or not all(
+                isinstance(attachment.get(field), str) and attachment[field].strip()
+                for field in ATTACHMENT_ANCHOR_REQUIRED
+            )
+        ):
+            issues.append(Issue(
+                "BAD_ATTACHMENT_ANCHOR",
+                "P1",
+                "依恋锚点必须分别说明对象、危险前的当场体验、私人意义和将被夺走的内容",
+                repr(attachment),
+            ))
+        afterimage = investment.get("emotional_afterimage")
+        if (
+            not isinstance(afterimage, dict)
+            or set(afterimage) != EMOTIONAL_AFTERIMAGE_REQUIRED
+            or not all(
+                isinstance(afterimage.get(field), str) and afterimage[field].strip()
+                for field in EMOTIONAL_AFTERIMAGE_REQUIRED
+            )
+        ):
+            issues.append(Issue(
+                "BAD_EMOTIONAL_AFTERIMAGE",
+                "P1",
+                "情绪余震必须落到具体活人、已发生的伤口、未决选择，并让谜题服从人物处境",
+                repr(afterimage),
+            ))
         shift = investment.get("revelation_shift")
         if (
             not isinstance(shift, dict)

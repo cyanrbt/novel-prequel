@@ -15,7 +15,17 @@
       "additionalProperties": false,
       "required": ["attachment_anchor", "protagonist_contradiction", "threat_in_motion", "revelation_shift", "emotional_afterimage", "clue_delivery"],
       "properties": {
-        "attachment_anchor": {"type": "string"},
+        "attachment_anchor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["focus", "on_page_moment", "private_meaning", "threatened_loss"],
+          "properties": {
+            "focus": {"type": "string"},
+            "on_page_moment": {"type": "string"},
+            "private_meaning": {"type": "string"},
+            "threatened_loss": {"type": "string"}
+          }
+        },
         "protagonist_contradiction": {"type": "string"},
         "threat_in_motion": {"type": "string"},
         "revelation_shift": {
@@ -28,7 +38,17 @@
             "changes": {"type": "string", "enum": ["IDENTITY", "RELATIONSHIP", "SAFETY", "ACTION_RULE", "MORAL_CHOICE"]}
           }
         },
-        "emotional_afterimage": {"type": "string"},
+        "emotional_afterimage": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["person", "immediate_wound", "unresolved_choice", "mystery_subordinate_to"],
+          "properties": {
+            "person": {"type": "string"},
+            "immediate_wound": {"type": "string"},
+            "unresolved_choice": {"type": "string"},
+            "mystery_subordinate_to": {"type": "string"}
+          }
+        },
         "clue_delivery": {
           "type": "object",
           "additionalProperties": false,

@@ -44,7 +44,12 @@ class ContextBuilderTests(unittest.TestCase):
             "event_id": "event_1",
             "phase": "setup",
             "chapter_purpose": "张洞被迫做选择",
-            "reader_investment": {"attachment_anchor": "母亲替他装好行李"},
+            "reader_investment": {"attachment_anchor": {
+                "focus": "母子关系",
+                "on_page_moment": "母亲替他装好行李",
+                "private_meaning": "两人都不肯说舍不得",
+                "threatened_loss": "离镇或留下都会伤害信任",
+            }},
             "dramatic_spine": {
                 "protagonist_choice": "张洞留下",
                 "cost_realization": "审计字段不应进入精简故事简报",
@@ -77,7 +82,7 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertNotIn("cost_realization", rendered)
         self.assertNotIn('"dramatic_spine"', rendered)
         self.assertEqual(
-            packet["story_brief"]["narrative_engine"]["attachment_anchor"],
+            packet["story_brief"]["narrative_engine"]["attachment_anchor"]["on_page_moment"],
             "母亲替他装好行李",
         )
         self.assertEqual(

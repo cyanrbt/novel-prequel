@@ -34,11 +34,21 @@ def valid_plan_json() -> str:
             "phase": "征兆",
             "chapter_purpose": "纸灰从祠堂进入张洞家中，日常安全边界第一次失效",
             "reader_investment": {
-                "attachment_anchor": "张洞想赶船离镇，也不愿把母亲独自留在欠债的家里。",
+                "attachment_anchor": {
+                    "focus": "张洞凭木工手艺得到的学徒身份和母亲对他的信任。",
+                    "on_page_moment": "母亲试坐他修好的针线凳，并包好他进木行要交的样榫。",
+                    "private_meaning": "样榫证明他不是只会替父亲誊账的孩子。",
+                    "threatened_loss": "错过期限会失去学徒身份，强行锁门会失去母亲信任。",
+                },
                 "protagonist_contradiction": "他想离开，却习惯用查清异常拖延承认自己正在离开母亲。",
                 "threat_in_motion": "纸灰正在越过关闭家门，直接改变母亲能否留下。",
                 "revelation_shift": {"from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY"},
-                "emotional_afterimage": "读者担心张洞的调查会让母亲错过撤离。",
+                "emotional_afterimage": {
+                    "person": "张洞与母亲。",
+                    "immediate_wound": "张洞失去学徒期限，母亲不再接受他替自己决定。",
+                    "unresolved_choice": "两人必须在不互相控制的前提下共同面对家门危险。",
+                    "mystery_subordinate_to": "纸灰来源只在它继续伤害母子去留时才重要。",
+                },
                 "clue_delivery": {"method": "张洞以船钱和时间换取现场确认", "resistance": "母亲反对且异常继续逼近", "coincidence_risk": "LOW"},
             },
             "dramatic_spine": {
