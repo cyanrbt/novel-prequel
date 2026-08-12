@@ -254,6 +254,20 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("CORE_HOOK_RECEDES_IN_PLAN", {item.code for item in issues})
 
+    def test_second_chapter_requires_a_new_cost_on_the_protagonist(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["choice_cost"] = (
+            "张洞支持母亲离开，导致她失去孙家针线工钱。"
+        )
+        plan["dramatic_spine"]["cost_realization"] = (
+            "孙有田当场取消母亲的工钱和后续委托。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
+
     def test_plan_rejects_superficial_attachment_label(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()

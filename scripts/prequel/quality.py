@@ -325,6 +325,23 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
         "scenes": plan.get("scenes"),
     })
     issues: list[Issue] = []
+    if plan.get("chapter_number") == 2:
+        spine = plan.get("dramatic_spine", {})
+        cost_rendered = "\n".join(
+            str(spine.get(field, ""))
+            for field in ("choice_cost", "cost_realization")
+        ) if isinstance(spine, dict) else ""
+        if not re.search(
+            r"张洞(?:当场|公开|亲自|因此|也|将)?(?:失去|交出|承担|接下|背上|负责|被拒|被逐|受损|受牵连)"
+            r"|(?:责任|代价|追责|风险).{0,12}(?:落在|记在|压到|由).{0,8}张洞",
+            cost_rendered,
+        ):
+            issues.append(Issue(
+                "PROTAGONIST_COST_NOT_REALIZED",
+                "P1",
+                "第二章关键选择必须让张洞本人新承担一项已发生的责任、损失或关系风险；母亲失去针线钱不能独自替代主角代价",
+                cost_rendered[:480],
+            ))
     if (
         "孙有田" in rendered
         and re.search(
