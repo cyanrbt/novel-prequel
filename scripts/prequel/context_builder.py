@@ -229,12 +229,18 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
             key: spine.get(key)
             for key in (
                 "opening_pressure",
+                "opening_genre_signal",
                 "protagonist_immediate_want",
+                "personal_stake",
+                "destabilizing_event",
                 "protagonist_choice",
                 "choice_cost",
+                "cost_realization",
                 "relationship_friction",
+                "question_progression",
                 "emotional_turn",
                 "serial_promise",
+                "ending_leverage",
             )
             if spine.get(key)
         },

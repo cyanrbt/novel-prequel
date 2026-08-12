@@ -264,6 +264,24 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("DAMAGED_OBJECT_STATE_ERASED", {item.code for item in issues})
 
+    def test_plan_rejects_ending_resource_not_established_in_scenes(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["dramatic_spine"]["ending_leverage"] = (
+            "张洞凭空成为孙家铁栓的安装人，因此可以进入孙家。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("UNSUPPORTED_ENDING_LEVERAGE", {item.code for item in issues})
+
+    def test_plan_rejects_sun_husband_claiming_rice_shop_debt_authority(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["threat_in_motion"] = (
+            "孙有田以亡妻替张母赊米担保为由要求张母当天认账。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("UNSUPPORTED_DEBT_AUTHORITY", {item.code for item in issues})
+
     def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()

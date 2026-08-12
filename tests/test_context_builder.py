@@ -52,7 +52,8 @@ class ContextBuilderTests(unittest.TestCase):
             }},
             "dramatic_spine": {
                 "protagonist_choice": "张洞留下",
-                "cost_realization": "审计字段不应进入精简故事简报",
+                "cost_realization": "张洞当场交出船钱",
+                "ending_leverage": "张洞拿着唯一钥匙守住正门",
             },
             "new_information": ["门后有声音"],
             "rule_hypotheses": ["声音会借名"],
@@ -79,8 +80,15 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertNotIn("discovery_path", rendered)
         self.assertNotIn("choice_reason", rendered)
         self.assertNotIn("end_state", rendered)
-        self.assertNotIn("cost_realization", rendered)
         self.assertNotIn('"dramatic_spine"', rendered)
+        self.assertEqual(
+            packet["story_brief"]["dramatic_contract"]["cost_realization"],
+            "张洞当场交出船钱",
+        )
+        self.assertEqual(
+            packet["story_brief"]["dramatic_contract"]["ending_leverage"],
+            "张洞拿着唯一钥匙守住正门",
+        )
         self.assertEqual(
             packet["story_brief"]["narrative_engine"]["attachment_anchor"]["on_page_moment"],
             "母亲替他装好行李",

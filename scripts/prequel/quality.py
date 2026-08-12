@@ -229,6 +229,58 @@ def _validate_immediate_serial_progression(
     return issues
 
 
+def _validate_ending_leverage_support(plan: dict[str, Any]) -> list[Issue]:
+    spine = plan.get("dramatic_spine", {})
+    if not isinstance(spine, dict):
+        return []
+    ending = spine.get("ending_leverage", "")
+    if not isinstance(ending, str) or not ending:
+        return []
+    claims = set(re.findall(
+        r"(?:孙家|张家|祠堂|木匠铺)[\u4e00-\u9fff]{0,3}(?:铁栓|钥匙|账簿|名单|木样|行囊)",
+        ending,
+    ))
+    if not claims:
+        return []
+    rendered = repr({
+        "scenes": plan.get("scenes", []),
+        "state_changes": plan.get("state_changes", {}),
+    })
+    unsupported = sorted(claim for claim in claims if claim not in rendered)
+    if not unsupported:
+        return []
+    return [Issue(
+        "UNSUPPORTED_ENDING_LEVERAGE",
+        "P1",
+        "ending_leverage不能凭空改变资源归属或行动身份；相关物件与关系必须先在场景中建立",
+        "、".join(unsupported),
+    )]
+
+
+def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
+    if plan.get("event_id") != "event_1":
+        return []
+    rendered = repr({
+        "reader_investment": plan.get("reader_investment"),
+        "dramatic_spine": plan.get("dramatic_spine"),
+        "scenes": plan.get("scenes"),
+    })
+    if (
+        "孙有田" in rendered
+        and re.search(
+            r"孙有田.{0,100}(?:向米铺说明旧债|追讨旧债|核认.{0,12}赊米|以.{0,20}赊米.{0,20}要求)",
+            rendered,
+        )
+    ):
+        return [Issue(
+            "UNSUPPORTED_DEBT_AUTHORITY",
+            "P1",
+            "孙有田可以索取丧事人情，但不能把亡妻在米铺的担保当成自己可追讨、撤销或强制核认的债权",
+            "孙有田 / 赊米担保",
+        )]
+    return []
+
+
 def _result(issues: list[Issue], metrics: dict[str, Any]) -> dict[str, Any]:
     return {
         "passed": not any(issue.severity == "P1" for issue in issues),
@@ -257,6 +309,8 @@ def validate_plan(
     if plan.get("event_id") != state.get("chapter", {}).get("current_event"):
         issues.append(Issue("PLAN_EVENT_MISMATCH", "P1", "规划事件与状态不一致", str(plan.get("event_id"))))
     issues.extend(_validate_immediate_serial_progression(plan, state))
+    issues.extend(_validate_ending_leverage_support(plan))
+    issues.extend(_validate_event_specific_authority(plan))
     continuity = plan.get("serial_continuity")
     if (
         not isinstance(continuity, dict)
