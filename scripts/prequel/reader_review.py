@@ -43,6 +43,22 @@ READING_EXPERIENCE_FIELDS = {
     "continue_reading",
     "first_drop_point",
     "friction_reasons",
+    "friction_severity",
+}
+
+BENCHMARK_DIMENSIONS = {
+    "character_attachment",
+    "active_threat",
+    "protagonist_specificity",
+    "revelation_transformation",
+    "emotional_aftereffect",
+}
+
+BENCHMARK_COMPARISON_FIELDS = {
+    *BENCHMARK_DIMENSIONS,
+    "evidence_payoff_mode",
+    "would_choose_over_competent_peer",
+    "major_gaps",
 }
 
 PASS_EXPERIENCE_FLOORS = {
@@ -58,7 +74,8 @@ PASS_EXPERIENCE_FLOORS = {
 
 
 def build_blind_reader_packet(
-    state: dict[str, Any], chapter_number: int, draft: str
+    state: dict[str, Any], chapter_number: int, draft: str,
+    project_root: Path | None = None,
 ) -> dict[str, Any]:
     """Expose only reader-visible prior summaries; never send plans or hidden state."""
     summaries = state.get("chapter_summaries", {}).get("summaries", {})
@@ -74,13 +91,20 @@ def build_blind_reader_packet(
                     "reader_visible_summary": value.get("core", ""),
                 }
             )
-    return {
+    packet = {
         "chapter_number": chapter_number,
         "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "prior_reader_facts": prior[-3:],
         "draft": draft,
         "instruction_boundary": "没有提供的信息不得推断为作者既定设定。",
     }
+    if project_root is not None:
+        benchmark_path = project_root / "novel/benchmarks/opening_compulsion.md"
+        try:
+            packet["benchmark_calibration"] = benchmark_path.read_text(encoding="utf-8")
+        except OSError as exc:
+            raise ArtifactValidationError(f"无法读取开篇追读力标杆卡: {exc}") from exc
+    return packet
 
 
 def build_blind_reader_prompt(project_root: Path, packet: dict[str, Any]) -> str:
@@ -106,6 +130,7 @@ def validate_blind_reader_review(
         "reader_recap",
         "adversarial_checks",
         "reading_experience",
+        "benchmark_comparison",
         "blocking_issues",
         "warnings",
         "evidence",
@@ -164,6 +189,9 @@ def validate_blind_reader_review(
         ):
             issues.append(Issue("READER_BAD_EXPERIENCE", "P1", "friction_reasons必须是非空字符串数组的集合", repr(friction)))
             experience_valid = False
+        if experience.get("friction_severity") not in {"NONE", "MINOR", "MAJOR"}:
+            issues.append(Issue("READER_BAD_EXPERIENCE", "P1", "friction_severity必须是NONE、MINOR或MAJOR", repr(experience.get("friction_severity"))))
+            experience_valid = False
         drop = experience.get("first_drop_point")
         if drop is not None:
             if (
@@ -175,6 +203,39 @@ def validate_blind_reader_review(
                 experience_valid = False
             elif drop["quote"] not in draft:
                 issues.append(Issue("READER_FALSE_DROP_POINT", "P1", "首个弃读点引文不在正文", repr(drop["quote"])))
+
+    benchmark = review.get("benchmark_comparison")
+    benchmark_valid = True
+    if not isinstance(benchmark, dict) or set(benchmark) != BENCHMARK_COMPARISON_FIELDS:
+        issues.append(Issue("READER_BAD_BENCHMARK", "P1", "标杆比较字段不完整", repr(benchmark)))
+        benchmark_valid = False
+    else:
+        for dimension in BENCHMARK_DIMENSIONS:
+            item = benchmark.get(dimension)
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"score", "quote", "assessment"}
+                or isinstance(item.get("score"), bool)
+                or not isinstance(item.get("score"), int)
+                or not 1 <= item["score"] <= 5
+                or not isinstance(item.get("quote"), str)
+                or not item["quote"]
+                or item["quote"] not in draft
+                or not isinstance(item.get("assessment"), str)
+                or not item["assessment"].strip()
+            ):
+                issues.append(Issue("READER_BAD_BENCHMARK", "P1", f"{dimension}必须给出1到5分、正文引文和判断", repr(item)))
+                benchmark_valid = False
+        if benchmark.get("evidence_payoff_mode") not in {"HUMAN_CHANGE", "MIXED", "EVIDENCE_ONLY"}:
+            issues.append(Issue("READER_BAD_BENCHMARK", "P1", "evidence_payoff_mode取值无效", repr(benchmark.get("evidence_payoff_mode"))))
+            benchmark_valid = False
+        if not isinstance(benchmark.get("would_choose_over_competent_peer"), bool):
+            issues.append(Issue("READER_BAD_BENCHMARK", "P1", "would_choose_over_competent_peer必须是布尔值", repr(benchmark.get("would_choose_over_competent_peer"))))
+            benchmark_valid = False
+        gaps = benchmark.get("major_gaps")
+        if not isinstance(gaps, list) or not all(isinstance(item, str) and item.strip() for item in gaps):
+            issues.append(Issue("READER_BAD_BENCHMARK", "P1", "major_gaps必须是非空字符串数组的集合", repr(gaps)))
+            benchmark_valid = False
 
     all_quoted: list[Any] = []
     for field, expected_fields in (
@@ -227,8 +288,8 @@ def validate_blind_reader_review(
         if (
             not experience["continue_reading"]
             or experience["first_drop_point"] is not None
-            or experience["friction_reasons"]
-            or experience["competitive_readiness"] == "BELOW"
+            or experience["friction_severity"] == "MAJOR"
+            or experience["competitive_readiness"] != "MATCH"
             or low_scores
         ):
             issues.append(
@@ -237,6 +298,26 @@ def validate_blind_reader_review(
                     "P1",
                     "PASS必须达到阅读体验下限且读者愿意继续阅读",
                     repr({"low_scores": low_scores, "reading_experience": experience}),
+                )
+            )
+    if verdict == "PASS" and benchmark_valid:
+        low_benchmark_scores = {
+            field: benchmark[field]["score"]
+            for field in BENCHMARK_DIMENSIONS
+            if benchmark[field]["score"] < 4
+        }
+        if (
+            low_benchmark_scores
+            or benchmark["evidence_payoff_mode"] == "EVIDENCE_ONLY"
+            or not benchmark["would_choose_over_competent_peer"]
+            or benchmark["major_gaps"]
+        ):
+            issues.append(
+                Issue(
+                    "READER_PASS_BELOW_BENCHMARK",
+                    "P1",
+                    "正式开篇必须在人物依恋、主动威胁、主角独特性、揭示变形和情绪余震上达到标杆级",
+                    repr({"low_scores": low_benchmark_scores, "benchmark_comparison": benchmark}),
                 )
             )
     if verdict in {"REVISE", "REPLAN"} and (not blockers or not instructions):

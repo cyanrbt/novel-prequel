@@ -3,7 +3,7 @@
   "$id": "reader_review.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "draft_sha256", "verdict", "reader_recap", "adversarial_checks", "reading_experience", "blocking_issues", "warnings", "evidence", "revision_instructions"],
+  "required": ["chapter_number", "draft_sha256", "verdict", "reader_recap", "adversarial_checks", "reading_experience", "benchmark_comparison", "blocking_issues", "warnings", "evidence", "revision_instructions"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
     "draft_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
@@ -35,7 +35,7 @@
     "reading_experience": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["prose_accessibility", "character_believability", "target_emotion_effect", "narrative_momentum", "opening_pull", "protagonist_ownership", "question_progression", "ending_compulsion", "competitive_readiness", "next_click_reason", "continue_reading", "first_drop_point", "friction_reasons"],
+      "required": ["prose_accessibility", "character_believability", "target_emotion_effect", "narrative_momentum", "opening_pull", "protagonist_ownership", "question_progression", "ending_compulsion", "competitive_readiness", "next_click_reason", "continue_reading", "first_drop_point", "friction_reasons", "friction_severity"],
       "properties": {
         "prose_accessibility": {"type": "integer", "minimum": 1, "maximum": 5},
         "character_believability": {"type": "integer", "minimum": 1, "maximum": 5},
@@ -62,7 +62,23 @@
             }
           ]
         },
-        "friction_reasons": {"type": "array", "items": {"type": "string"}}
+        "friction_reasons": {"type": "array", "items": {"type": "string"}},
+        "friction_severity": {"type": "string", "enum": ["NONE", "MINOR", "MAJOR"]}
+      }
+    },
+    "benchmark_comparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["character_attachment", "active_threat", "protagonist_specificity", "revelation_transformation", "emotional_aftereffect", "evidence_payoff_mode", "would_choose_over_competent_peer", "major_gaps"],
+      "properties": {
+        "character_attachment": {"$ref": "#/$defs/benchmarkDimension"},
+        "active_threat": {"$ref": "#/$defs/benchmarkDimension"},
+        "protagonist_specificity": {"$ref": "#/$defs/benchmarkDimension"},
+        "revelation_transformation": {"$ref": "#/$defs/benchmarkDimension"},
+        "emotional_aftereffect": {"$ref": "#/$defs/benchmarkDimension"},
+        "evidence_payoff_mode": {"type": "string", "enum": ["HUMAN_CHANGE", "MIXED", "EVIDENCE_ONLY"]},
+        "would_choose_over_competent_peer": {"type": "boolean"},
+        "major_gaps": {"type": "array", "items": {"type": "string"}}
       }
     },
     "blocking_issues": {
@@ -103,5 +119,17 @@
       }
     },
     "revision_instructions": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "benchmarkDimension": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["score", "quote", "assessment"],
+      "properties": {
+        "score": {"type": "integer", "minimum": 1, "maximum": 5},
+        "quote": {"type": "string"},
+        "assessment": {"type": "string"}
+      }
+    }
   }
 }

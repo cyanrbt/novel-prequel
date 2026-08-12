@@ -150,11 +150,22 @@ def blind_reader_json(draft: str) -> str:
                 "protagonist_ownership": 4,
                 "question_progression": 4,
                 "ending_compulsion": 4,
-                "competitive_readiness": "NEAR",
+                "competitive_readiness": "MATCH",
                 "next_click_reason": "张洞必须在离镇前查清纸灰如何越过门板。",
                 "continue_reading": True,
                 "first_drop_point": None,
                 "friction_reasons": [],
+                "friction_severity": "NONE",
+            },
+            "benchmark_comparison": {
+                "character_attachment": {"score": 4, "quote": "门板上的灰", "assessment": "家门和离镇愿望均受威胁"},
+                "active_threat": {"score": 4, "quote": "到了门内", "assessment": "异常正在越过家门"},
+                "protagonist_specificity": {"score": 4, "quote": "张洞", "assessment": "选择绑定张洞离镇与守家矛盾"},
+                "revelation_transformation": {"score": 4, "quote": "到了门内", "assessment": "问题从灰的位置变成家门失效"},
+                "emotional_aftereffect": {"score": 4, "quote": "天黑前", "assessment": "读者担心活人当夜安全"},
+                "evidence_payoff_mode": "MIXED",
+                "would_choose_over_competent_peer": True,
+                "major_gaps": [],
             },
             "blocking_issues": [],
             "warnings": [],
@@ -204,6 +215,7 @@ def make_project_fixture(root: Path) -> Path:
         "config",
         "novel/state",
         "novel/knowledge",
+        "novel/benchmarks",
         "novel/plots",
         "novel/chapters/vol_01",
         "novel/chapters/meta",
@@ -225,6 +237,9 @@ def make_project_fixture(root: Path) -> Path:
     (root / "novel/knowledge/canon_registry.json").write_text(json.dumps(registry, ensure_ascii=False), encoding="utf-8")
     (root / "novel/plots/event_1.md").write_text("# event_1\n\nCh01 纸灰。", encoding="utf-8")
     (root / "novel/plots/series_architecture.md").write_text("# test architecture\n", encoding="utf-8")
+    (root / "novel/benchmarks/opening_compulsion.md").write_text(
+        "# test benchmark\n\n## 五项硬校准\n", encoding="utf-8"
+    )
     (root / "novel/knowledge/arc_registry.json").write_text(
         json.dumps({"schema": "novel-arc-registry", "milestones": {"M1-TEST": {}}}, ensure_ascii=False),
         encoding="utf-8",

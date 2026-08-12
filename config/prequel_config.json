@@ -24,7 +24,8 @@
     "foreshadow_registry": "novel/knowledge/foreshadow_registry.json",
     "foreshadow_tracker": "novel/foreshadow_tracker.md",
     "setting_whitelist": "novel/rules/setting_whitelist.md",
-    "setting_blacklist": "novel/rules/setting_blacklist.md"
+    "setting_blacklist": "novel/rules/setting_blacklist.md",
+    "opening_benchmarks": "novel/benchmarks/opening_compulsion.md"
   },
 
   "agents": {
@@ -87,7 +88,7 @@
   },
 
   "quality_gates": {
-    "blind_reader_gate": {"enabled": true},
+    "blind_reader_gate": {"enabled": true, "required_competitive_readiness": "MATCH"},
     "state_evidence_gate": {"enabled": true},
     "recent_chapters_for_repetition": 5,
     "exact_paragraph_min_chars": 30,

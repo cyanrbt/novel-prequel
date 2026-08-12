@@ -1,5 +1,6 @@
 import hashlib
 import unittest
+from pathlib import Path
 
 from scripts.prequel.reader_review import (
     build_blind_reader_packet,
@@ -37,11 +38,32 @@ class BlindReaderReviewTests(unittest.TestCase):
                 "protagonist_ownership": 4,
                 "question_progression": 4,
                 "ending_compulsion": 4,
-                "competitive_readiness": "NEAR",
+                "competitive_readiness": "MATCH",
                 "next_click_reason": "张洞必须确认纸灰如何越过关闭的门。",
                 "continue_reading": True,
                 "first_drop_point": None,
                 "friction_reasons": [],
+                "friction_severity": "NONE",
+            },
+            "benchmark_comparison": {
+                "character_attachment": {
+                    "score": 4, "quote": "张洞要上船。", "assessment": "具体愿望已受威胁。",
+                },
+                "active_threat": {
+                    "score": 4, "quote": "纸从门缝里出来。", "assessment": "异常正在越过边界。",
+                },
+                "protagonist_specificity": {
+                    "score": 4, "quote": "张洞要上船。", "assessment": "行动连接个人去向。",
+                },
+                "revelation_transformation": {
+                    "score": 4, "quote": "舱门没有开。", "assessment": "关闭的门失去安全意义。",
+                },
+                "emotional_aftereffect": {
+                    "score": 4, "quote": "张洞要上船。", "assessment": "读者担心愿望被异常夺走。",
+                },
+                "evidence_payoff_mode": "MIXED",
+                "would_choose_over_competent_peer": True,
+                "major_gaps": [],
             },
             "blocking_issues": [],
             "warnings": [],
@@ -64,11 +86,12 @@ class BlindReaderReviewTests(unittest.TestCase):
             "world_lore": {"hidden": "幕后规则"},
             "protagonist": {"known_info": ["作者知道的事"]},
         }
-        packet = build_blind_reader_packet(state, 2, self.draft)
+        packet = build_blind_reader_packet(state, 2, self.draft, Path.cwd())
         self.assertEqual(packet["prior_reader_facts"], [{"chapter": 1, "title": "旧章", "reader_visible_summary": "已发生的事"}])
         self.assertNotIn("world_lore", packet)
         self.assertNotIn("protagonist", packet)
         self.assertEqual(packet["draft_sha256"], self.report["draft_sha256"])
+        self.assertIn("五项硬校准", packet["benchmark_calibration"])
 
     def test_valid_report_requires_reader_visible_evidence(self):
         self.assertEqual(validate_blind_reader_review(self.report, self.draft, 1), [])
@@ -114,6 +137,26 @@ class BlindReaderReviewTests(unittest.TestCase):
         self.report["reading_experience"]["competitive_readiness"] = "BELOW"
         codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
         self.assertIn("READER_PASS_WITHOUT_PULL", codes)
+
+    def test_pass_requires_match_not_near(self):
+        self.report["reading_experience"]["competitive_readiness"] = "NEAR"
+        codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
+        self.assertIn("READER_PASS_WITHOUT_PULL", codes)
+
+    def test_pass_rejects_evidence_only_payoff(self):
+        self.report["benchmark_comparison"]["evidence_payoff_mode"] = "EVIDENCE_ONLY"
+        codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
+        self.assertIn("READER_PASS_BELOW_BENCHMARK", codes)
+
+    def test_pass_rejects_low_attachment_despite_high_legacy_scores(self):
+        self.report["benchmark_comparison"]["character_attachment"]["score"] = 3
+        codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
+        self.assertIn("READER_PASS_BELOW_BENCHMARK", codes)
+
+    def test_pass_allows_minor_friction_when_benchmark_is_met(self):
+        self.report["reading_experience"]["friction_reasons"] = ["一处空间说明稍密"]
+        self.report["reading_experience"]["friction_severity"] = "MINOR"
+        self.assertEqual(validate_blind_reader_review(self.report, self.draft, 1), [])
 
     def test_drop_point_must_quote_current_draft(self):
         self.report["verdict"] = "REVISE"

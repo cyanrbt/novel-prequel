@@ -689,7 +689,7 @@ def accept_dry_run(
         raw = router.provider_for("blind_reader_reviewer").generate(
             build_blind_reader_prompt(
                 project_root,
-                build_blind_reader_packet(state, number, draft),
+                build_blind_reader_packet(state, number, draft, self.project_root),
             ),
             project_root / "schemas/reader_review.schema.json",
         )
@@ -1314,7 +1314,9 @@ class WritingPipeline:
 
         if reader_reservation is None:
             raise QualityGateError("盲读者门禁未预留调用")
-        reader_packet = build_blind_reader_packet(state, number, engine_result.draft)
+        reader_packet = build_blind_reader_packet(
+            state, number, engine_result.draft, self.project_root
+        )
         reader_input_hash = fingerprint(reader_packet)
         reader_settings = caller._settings_for("blind_reader_reviewer")
         reader_route_fingerprint = fingerprint(
