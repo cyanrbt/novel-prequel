@@ -23,7 +23,9 @@ def _valid_plan():
                 "focus": "张洞凭木工手艺得到的学徒身份和母亲对他的信任。",
                 "on_page_moment": "母亲试坐他亲手修好的针线凳，并替他包好进木行要交的样榫。",
                 "private_meaning": "样榫证明他不是靠父母求人才能离镇，针线凳则是他第一次让母亲少受一点累。",
+                "lived_value": "母亲每天靠针线凳接活养家，也坚持由自己决定接谁的活。",
                 "threatened_loss": "错过木行期限会使他的手艺仍只是家中零活，强行锁门又会让母亲不再相信他的照料。",
+                "loss_carrier": "针线凳与样榫承载两人的手艺生活，并会在章末失去原有用途。",
             },
             "protagonist_contradiction": "他口头上要赶船，遇到可核对的异常却会借调查拖延离开。",
             "threat_in_motion": "纸灰正在越过家门，使母亲当晚仍住在家中的选择变危险。",
@@ -31,6 +33,9 @@ def _valid_plan():
                 "prior_hook": "首章将建立关闭家门为何仍出现纸灰的核心疑问。",
                 "current_effect": "纸灰当场污染送行饭并迫使母子改变离镇安排。",
                 "local_answer": "倒扣碗没有隔绝纸灰，单靠关闭生活容器不足以保住原有日常。",
+                "old_defense": "关紧家门并倒扣饭碗。",
+                "defense_failure": "纸灰仍出现在倒扣碗内，证明普通关闭不足以保护母亲。",
+                "replacement_rule": "先让活人离开受污染的饭桌，再保持门与碗原状追查路径。",
                 "forced_change": "张洞必须在赶船前先决定是否保留现场并阻止母亲继续食用。",
                 "human_pressure_link": "母亲要他赶船、父亲要保留证据，纸灰使一家人的现实去留利益直接冲突。",
             },
@@ -40,6 +45,8 @@ def _valid_plan():
             "emotional_afterimage": {
                 "person": "张洞与母亲。",
                 "immediate_wound": "张洞已经失去学徒期限，母亲也因他强行控制门栓而不再接受他的保护。",
+                "material_aftereffect": "送行饭被弃置，张洞错过当日渡船与学徒期限。",
+                "relationship_aftereffect": "母亲不再接受张洞借保护之名替她决定去留。",
                 "unresolved_choice": "他必须在不再替母亲作主的前提下保护她，母亲也必须决定是否仍把自己的退路押在儿子身上。",
                 "mystery_subordinate_to": "门外是谁只在它继续撕裂母子信任和离镇身份时才重要。",
             },
@@ -239,6 +246,14 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("STALLED_CORE_REVELATION", {item.code for item in issues})
 
+    def test_plan_rejects_repeating_the_old_defense_as_a_new_rule(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["core_threat_continuation"]["old_defense"] = "关紧家门，不回应门外声音。"
+        plan["reader_investment"]["core_threat_continuation"]["replacement_rule"] = "关紧家门，不回应门外声音。"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("STALLED_ACTION_RULE", {item.code for item in issues})
+
     def test_second_chapter_cannot_drop_the_dead_voice_core_hook(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
@@ -248,6 +263,9 @@ class QualityGateTests(unittest.TestCase):
             "prior_hook": "上一章留下家门是否安全的问题。",
             "current_effect": "孙家的入殓期限正在损害母亲针线名声。",
             "local_answer": "孙家内部确实有人隐瞒开门先后。",
+            "old_defense": "关紧街门。",
+            "defense_failure": "孙家仍因门外说法发生争执。",
+            "replacement_rule": "让在场者分别作证。",
             "forced_change": "母亲必须决定是否继续缝补。",
             "human_pressure_link": "孙有田为名声阻止母亲离开。",
         }

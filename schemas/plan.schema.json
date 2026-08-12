@@ -29,12 +29,14 @@
         "attachment_anchor": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["focus", "on_page_moment", "private_meaning", "threatened_loss"],
+          "required": ["focus", "on_page_moment", "private_meaning", "lived_value", "threatened_loss", "loss_carrier"],
           "properties": {
             "focus": {"type": "string"},
             "on_page_moment": {"type": "string"},
             "private_meaning": {"type": "string"},
-            "threatened_loss": {"type": "string"}
+            "lived_value": {"type": "string"},
+            "threatened_loss": {"type": "string"},
+            "loss_carrier": {"type": "string"}
           }
         },
         "protagonist_contradiction": {"type": "string"},
@@ -42,11 +44,14 @@
         "core_threat_continuation": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["prior_hook", "current_effect", "local_answer", "forced_change", "human_pressure_link"],
+          "required": ["prior_hook", "current_effect", "local_answer", "old_defense", "defense_failure", "replacement_rule", "forced_change", "human_pressure_link"],
           "properties": {
             "prior_hook": {"type": "string"},
             "current_effect": {"type": "string"},
             "local_answer": {"type": "string"},
+            "old_defense": {"type": "string"},
+            "defense_failure": {"type": "string"},
+            "replacement_rule": {"type": "string"},
             "forced_change": {"type": "string"},
             "human_pressure_link": {"type": "string"}
           }
@@ -64,10 +69,12 @@
         "emotional_afterimage": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["person", "immediate_wound", "unresolved_choice", "mystery_subordinate_to"],
+          "required": ["person", "immediate_wound", "material_aftereffect", "relationship_aftereffect", "unresolved_choice", "mystery_subordinate_to"],
           "properties": {
             "person": {"type": "string"},
             "immediate_wound": {"type": "string"},
+            "material_aftereffect": {"type": "string"},
+            "relationship_aftereffect": {"type": "string"},
             "unresolved_choice": {"type": "string"},
             "mystery_subordinate_to": {"type": "string"}
           }

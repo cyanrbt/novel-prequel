@@ -61,6 +61,9 @@ CORE_THREAT_CONTINUATION_REQUIRED = {
     "prior_hook",
     "current_effect",
     "local_answer",
+    "old_defense",
+    "defense_failure",
+    "replacement_rule",
     "forced_change",
     "human_pressure_link",
 }
@@ -69,11 +72,15 @@ ATTACHMENT_ANCHOR_REQUIRED = {
     "focus",
     "on_page_moment",
     "private_meaning",
+    "lived_value",
     "threatened_loss",
+    "loss_carrier",
 }
 EMOTIONAL_AFTERIMAGE_REQUIRED = {
     "person",
     "immediate_wound",
+    "material_aftereffect",
+    "relationship_aftereffect",
     "unresolved_choice",
     "mystery_subordinate_to",
 }
@@ -155,8 +162,12 @@ def _planned_serial_engine(plan: dict[str, Any]) -> str:
         attachment.get("focus", "") if isinstance(attachment, dict) else "",
         attachment.get("on_page_moment", "") if isinstance(attachment, dict) else "",
         attachment.get("private_meaning", "") if isinstance(attachment, dict) else "",
+        attachment.get("lived_value", "") if isinstance(attachment, dict) else "",
         attachment.get("threatened_loss", "") if isinstance(attachment, dict) else "",
+        attachment.get("loss_carrier", "") if isinstance(attachment, dict) else "",
         afterimage.get("immediate_wound", "") if isinstance(afterimage, dict) else "",
+        afterimage.get("material_aftereffect", "") if isinstance(afterimage, dict) else "",
+        afterimage.get("relationship_aftereffect", "") if isinstance(afterimage, dict) else "",
         delivery.get("method", "") if isinstance(delivery, dict) else "",
     ]
     scenes = plan.get("scenes", [])
@@ -530,6 +541,13 @@ def validate_plan(
                     "P1",
                     "核心局部答案不能只把同一未知改写成证词矛盾或仍待确认；它必须排除一种理解、改变问题种类或形成新的行动边界",
                     local_answer,
+                ))
+            if core_thread["old_defense"].strip() == core_thread["replacement_rule"].strip():
+                issues.append(Issue(
+                    "STALLED_ACTION_RULE",
+                    "P1",
+                    "局部答案必须使旧防法失效、受限或产生新代价；替代规则不能原样重复旧防法",
+                    core_thread["old_defense"],
                 ))
             if plan.get("chapter_number") == 2 and plan.get("event_id") == "event_1":
                 core_rendered = "\n".join(core_thread.values())

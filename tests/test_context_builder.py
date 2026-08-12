@@ -48,7 +48,9 @@ class ContextBuilderTests(unittest.TestCase):
                 "focus": "母子关系",
                 "on_page_moment": "母亲替他装好行李",
                 "private_meaning": "两人都不肯说舍不得",
+                "lived_value": "母亲靠针线活养家并自己选择客户",
                 "threatened_loss": "离镇或留下都会伤害信任",
+                "loss_carrier": "行囊与针线凳承载两人的去留生活",
             }},
             "dramatic_spine": {
                 "protagonist_choice": "张洞留下",
