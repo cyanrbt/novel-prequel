@@ -574,6 +574,29 @@ def validate_plan(
                     repr(duplicate_known),
                 )
             )
+        existing_rendered = "\n".join(existing_known)
+        semantic_duplicates: list[str] = []
+        for item in changes.get("protagonist_known_info_add", []):
+            if not isinstance(item, str) or item in existing_known:
+                continue
+            if (
+                "张家正门" in item
+                and re.search(r"(?:外力|门外|由外向内)", item)
+                and re.search(r"(?:撞|撬)", item)
+                and "张家正门" in existing_rendered
+                and re.search(r"(?:外力|门外|由外向内)", existing_rendered)
+                and re.search(r"(?:撞|撬)", existing_rendered)
+            ):
+                semantic_duplicates.append(item)
+        if semantic_duplicates:
+            issues.append(
+                Issue(
+                    "KNOWN_INFO_SEMANTIC_DUPLICATE",
+                    "P1",
+                    "规划不能把状态中已有事实换成同义措辞再次结算；可在场景中简短复核，但不得当作新认知或章节奖励",
+                    repr(semantic_duplicates),
+                )
+            )
     evidence_ids = plan.get("canon_evidence_ids")
     if not isinstance(evidence_ids, list) or not evidence_ids:
         issues.append(Issue("NO_CANON_EVIDENCE", "P1", "规划没有声明原著/前传依据", repr(evidence_ids)))

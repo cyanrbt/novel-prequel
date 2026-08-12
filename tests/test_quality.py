@@ -172,6 +172,18 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("KNOWN_INFO_ALREADY_PRESENT", {item.code for item in issues})
 
+    def test_plan_rejects_semantic_rewording_of_existing_door_fact(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["protagonist"]["known_info"].append(
+            "张家正门未遭外力撞撬；门仍关闭。"
+        )
+        plan = _valid_plan()
+        plan["state_changes"]["protagonist_known_info_add"] = [
+            "张家正门木槽没有由门外撞裂形成的新痕迹。"
+        ]
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("KNOWN_INFO_SEMANTIC_DUPLICATE", {item.code for item in issues})
+
     def test_plan_rejects_malformed_ordinary_explanations(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()
