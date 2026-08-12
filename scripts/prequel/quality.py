@@ -55,6 +55,7 @@ DRAMATIC_SPINE_REQUIRED = {
     "question_progression",
     "emotional_turn",
     "serial_promise",
+    "ending_leverage",
 }
 
 FORBIDDEN_POV = ["他不知道的是", "她不知道的是", "与此同时", "在另一边", "另一边却"]
@@ -170,6 +171,21 @@ def validate_plan(
                     "P1",
                     "规划不能移除当前状态中不存在的物品；请改为可结算的新信息或先登记资源",
                     repr(unknown_removals),
+                )
+            )
+        existing_known = set(state.get("protagonist", {}).get("known_info", []))
+        duplicate_known = [
+            item
+            for item in changes.get("protagonist_known_info_add", [])
+            if item in existing_known
+        ]
+        if duplicate_known:
+            issues.append(
+                Issue(
+                    "KNOWN_INFO_ALREADY_PRESENT",
+                    "P1",
+                    "规划不能把当前状态已知事实重新当作本章新进展",
+                    repr(duplicate_known),
                 )
             )
     evidence_ids = plan.get("canon_evidence_ids")

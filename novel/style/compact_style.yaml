@@ -64,6 +64,7 @@ pacing:
   cost_realization: "核心选择的代价须在本章由张洞本人实际支付；他人误工和未来可能性不能替代"
   question_progression: "最初问题在章内得到局部回答、反例或后果，并升级为不同且更贴身的问题"
   serial_pull: "结尾改变下一步行动条件；静物、怪声或以后再查本身不构成强钩子"
+  ending_leverage: "章末行动必须能覆盖已建立的路线并实际影响对手、证物或结果；无效守夜和空泛赶去不算钩子"
 
 repetition:
   compare_recent_chapters: 5

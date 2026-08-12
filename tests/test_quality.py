@@ -25,6 +25,7 @@ def _valid_plan():
             "question_progression": ["灰从哪里来？", "关闭的门是否还安全？", "张洞还能否按时离镇？"],
             "emotional_turn": "离镇期待转成对家门失效的担忧。",
             "serial_promise": "张洞下一章必须在离镇与守家之间行动。",
+            "ending_leverage": "张洞持有唯一钥匙，能实际阻止家人误开院门。",
         },
         "scenes": [{
             "location": "张家院",
@@ -132,6 +133,15 @@ class QualityGateTests(unittest.TestCase):
         plan["state_changes"]["protagonist_inventory_remove"] = ["未登记的船钱"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("INVENTORY_REMOVE_MISSING", {item.code for item in issues})
+
+    def test_plan_rejects_known_information_as_new_progress(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        repeated = "张洞已经知道纸灰来自门内"
+        state["protagonist"]["known_info"].append(repeated)
+        plan["state_changes"]["protagonist_known_info_add"] = [repeated]
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("KNOWN_INFO_ALREADY_PRESENT", {item.code for item in issues})
 
     def test_plan_rejects_malformed_ordinary_explanations(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

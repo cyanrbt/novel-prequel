@@ -13,7 +13,7 @@
     "dramatic_spine": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["opening_pressure", "opening_genre_signal", "protagonist_immediate_want", "personal_stake", "destabilizing_event", "protagonist_choice", "choice_cost", "cost_realization", "relationship_friction", "question_progression", "emotional_turn", "serial_promise"],
+      "required": ["opening_pressure", "opening_genre_signal", "protagonist_immediate_want", "personal_stake", "destabilizing_event", "protagonist_choice", "choice_cost", "cost_realization", "relationship_friction", "question_progression", "emotional_turn", "serial_promise", "ending_leverage"],
       "properties": {
         "opening_pressure": {"type": "string"},
         "opening_genre_signal": {"type": "string"},
@@ -31,7 +31,8 @@
           "items": {"type": "string"}
         },
         "emotional_turn": {"type": "string"},
-        "serial_promise": {"type": "string"}
+        "serial_promise": {"type": "string"},
+        "ending_leverage": {"type": "string"}
       }
     },
     "scenes": {

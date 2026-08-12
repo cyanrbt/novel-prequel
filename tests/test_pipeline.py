@@ -46,6 +46,7 @@ def valid_plan_json() -> str:
                 "question_progression": ["灰从哪里来？", "门是否仍安全？", "他还能否按时离镇？"],
                 "emotional_turn": "离镇期待变成守家压力。",
                 "serial_promise": "下一章必须处理失效的家门。",
+                "ending_leverage": "张洞扣住唯一钥匙，使对方不能从后门取走证物。",
             },
             "scenes": [
                 {
