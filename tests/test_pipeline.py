@@ -758,6 +758,46 @@ class PipelineTests(unittest.TestCase):
             self.assertTrue(accepted.promoted)
             self.assertTrue((root / "novel/work/chapter_001/attempt_01/reader_review.json").exists())
 
+    def test_accept_reuses_hash_bound_passing_reader_and_state_reports(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
+            WritingPipeline(root, provider).run_next(dry_run=True)
+
+            config_path = root / "config/prequel_config.json"
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config["quality_gates"].update({
+                "blind_reader_gate": {"enabled": True},
+                "state_evidence_gate": {"enabled": True},
+            })
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+
+            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
+            workspace = root / "novel/work/chapter_001/attempt_01"
+            plan = json.loads((workspace / "plan.json").read_text(encoding="utf-8"))
+            draft = (workspace / "draft.txt").read_text(encoding="utf-8")
+            (workspace / "reader_review.json").write_text(
+                blind_reader_json(draft), encoding="utf-8"
+            )
+            (workspace / "state_settlement.json").write_text(
+                state_settlement_json(state, plan, draft), encoding="utf-8"
+            )
+
+            class NoCallRouter:
+                def provider_for(self, stage):
+                    raise AssertionError(
+                        f"valid bound reports must not call the {stage} model"
+                    )
+
+            with patch(
+                "scripts.prequel.pipeline.StageModelRouter.from_config",
+                return_value=NoCallRouter(),
+            ):
+                accepted = accept_dry_run(root)
+
+            self.assertTrue(accepted.promoted)
+            self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
+
     def test_revision_is_isolated_and_second_attempt_can_promote(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))

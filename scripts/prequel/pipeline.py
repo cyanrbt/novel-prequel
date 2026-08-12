@@ -729,42 +729,76 @@ def accept_dry_run(
     if state_gate.get("enabled", False):
         if not reader_gate.get("enabled", False):
             raise QualityGateError("state_evidence_gate要求同时启用blind_reader_gate")
-        router = router or StageModelRouter.from_config(
-            acceptance_config, project_root
-        )
-        settlement_raw = router.provider_for("state_settler").generate(
-            build_state_settlement_prompt(
-                project_root,
-                build_state_settlement_packet(
+        existing_settlement_path = workspace_path / "state_settlement.json"
+        if existing_settlement_path.exists():
+            try:
+                existing_settlement = json.loads(
+                    existing_settlement_path.read_text(encoding="utf-8")
+                )
+                canonicalize_artifact_quotes(existing_settlement, draft)
+                canonicalize_missing_change_paths(
+                    existing_settlement,
+                    expected_state_changes(
+                        state,
+                        plan,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
+                    ),
+                )
+                settlement_issues = validate_state_settlement(
+                    existing_settlement,
                     state,
                     plan,
                     draft,
                     planner_context.get("foreshadow_registry"),
                     planner_context.get("arc_registry"),
-                ),
-            ),
-            project_root / "schemas/state_settlement.schema.json",
-        )
-        try:
-            state_settlement = parse_json_artifact(
-                settlement_raw, "accept-state-settlement"
+                )
+                if (
+                    not any(issue.severity == "P1" for issue in settlement_issues)
+                    and existing_settlement.get("verdict") == "PASS"
+                ):
+                    state_settlement = existing_settlement
+            except (OSError, json.JSONDecodeError):
+                state_settlement = None
+        if state_settlement is None:
+            router = router or StageModelRouter.from_config(
+                acceptance_config, project_root
             )
-            canonicalize_artifact_quotes(state_settlement, draft)
-            canonicalize_missing_change_paths(
-                state_settlement,
-                expected_state_changes(
-                    state,
-                    plan,
-                    planner_context.get("foreshadow_registry"),
-                    planner_context.get("arc_registry"),
+            settlement_raw = router.provider_for("state_settler").generate(
+                build_state_settlement_prompt(
+                    project_root,
+                    build_state_settlement_packet(
+                        state,
+                        plan,
+                        draft,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
+                    ),
                 ),
+                project_root / "schemas/state_settlement.schema.json",
             )
+            try:
+                state_settlement = parse_json_artifact(
+                    settlement_raw, "accept-state-settlement"
+                )
+                canonicalize_artifact_quotes(state_settlement, draft)
+                canonicalize_missing_change_paths(
+                    state_settlement,
+                    expected_state_changes(
+                        state,
+                        plan,
+                        planner_context.get("foreshadow_registry"),
+                        planner_context.get("arc_registry"),
+                    ),
+                )
+                workspace.write_json("state_settlement.json", state_settlement)
+            except ArtifactValidationError:
+                workspace.write_raw_text(
+                    "state_settlement.invalid.txt", settlement_raw
+                )
+                raise
+        else:
             workspace.write_json("state_settlement.json", state_settlement)
-        except ArtifactValidationError:
-            workspace.write_raw_text(
-                "state_settlement.invalid.txt", settlement_raw
-            )
-            raise
         require_no_p1(
             validate_state_settlement(
                 state_settlement,
