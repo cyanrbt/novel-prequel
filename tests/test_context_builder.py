@@ -44,7 +44,11 @@ class ContextBuilderTests(unittest.TestCase):
             "event_id": "event_1",
             "phase": "setup",
             "chapter_purpose": "张洞被迫做选择",
-            "dramatic_spine": {"protagonist_choice": "张洞留下"},
+            "reader_investment": {"attachment_anchor": "母亲替他装好行李"},
+            "dramatic_spine": {
+                "protagonist_choice": "张洞留下",
+                "cost_realization": "审计字段不应进入精简故事简报",
+            },
             "new_information": ["门后有声音"],
             "rule_hypotheses": ["声音会借名"],
             "hook": {"type": "choice", "content": "他没有回家"},
@@ -58,6 +62,9 @@ class ContextBuilderTests(unittest.TestCase):
                 "ordinary_explanations": {"considered": ["有人"], "excluded": [], "remaining": ["有人"]},
                 "choice_reason": "为了父亲", "end_state": "门仍关闭",
                 "pressure_change": "退路减少", "irreversible_change": "账本被毁",
+                "threat_action": "门后的人继续烧账本",
+                "human_turn": "父亲不再信任张洞",
+                "payoff_type": "MIXED",
             }],
         }
         packet = build_writer_packet(self.state, plan, [], {})
@@ -67,6 +74,16 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertNotIn("discovery_path", rendered)
         self.assertNotIn("choice_reason", rendered)
         self.assertNotIn("end_state", rendered)
+        self.assertNotIn("cost_realization", rendered)
+        self.assertNotIn('"dramatic_spine"', rendered)
+        self.assertEqual(
+            packet["story_brief"]["narrative_engine"]["attachment_anchor"],
+            "母亲替他装好行李",
+        )
+        self.assertEqual(
+            packet["story_brief"]["scenes"][0]["human_turn"],
+            "父亲不再信任张洞",
+        )
         self.assertEqual(packet["story_brief"]["scenes"][0]["goal"], "取账本")
         self.assertEqual(
             packet["hard_constraints"]["knowledge_boundaries"][0]["constraint"],

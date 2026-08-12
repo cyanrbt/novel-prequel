@@ -12,6 +12,16 @@ def _valid_plan():
         "event_id": "event_1",
         "phase": "征兆",
         "chapter_purpose": "建立第一次异常",
+        "reader_investment": {
+            "attachment_anchor": "张洞想赶船离镇，也不愿把母亲独自留在欠债的家里。",
+            "protagonist_contradiction": "他口头上要赶船，遇到可核对的异常却会借调查拖延离开。",
+            "threat_in_motion": "纸灰正在越过家门，使母亲当晚仍住在家中的选择变危险。",
+            "revelation_shift": {
+                "from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY",
+            },
+            "emotional_afterimage": "读者担心张洞越想查清，母亲越可能被留在失效的家门内。",
+            "clue_delivery": {"method": "张洞放弃赶船时间亲手验证", "resistance": "母亲催他离开且异常持续扩大", "coincidence_risk": "LOW"},
+        },
         "dramatic_spine": {
             "opening_pressure": "张洞准备离家时发现院门异常。",
             "opening_genre_signal": "开篇即出现越过关闭院门的纸灰。",
@@ -44,7 +54,10 @@ def _valid_plan():
             "choice_reason": "张洞要先确认门况再决定是否叫醒家人。",
             "end_state": "门仍上栓，纸灰留在门内，张洞没有开门。",
             "pressure_change": "张洞不再相信院门安全",
-            "irreversible_change": "纸灰进入门内"
+            "irreversible_change": "纸灰进入门内",
+            "threat_action": "纸灰从门外移动到门内，夺走一家对门栓的信任。",
+            "human_turn": "母亲从催张洞离开转为要求他交出钥匙，母子第一次不再站在同一边。",
+            "payoff_type": "MIXED",
         }],
         "new_information": ["纸灰会移动"],
         "state_changes": {
@@ -149,6 +162,29 @@ class QualityGateTests(unittest.TestCase):
         plan["scenes"][0]["ordinary_explanations"] = {"considered": "灶灰"}
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("SCENE_BAD_ALTERNATIVES", {item.code for item in issues})
+
+    def test_plan_rejects_evidence_dominated_scenes(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["scenes"][0]["payoff_type"] = "EVIDENCE_ONLY"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        codes = {item.code for item in issues}
+        self.assertIn("EVIDENCE_DOMINATED_PLAN", codes)
+        self.assertIn("EVIDENCE_ONLY_ENDING", codes)
+
+    def test_plan_rejects_high_coincidence_clue_delivery(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["clue_delivery"]["coincidence_risk"] = "HIGH"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("HIGH_COINCIDENCE_CLUE", {item.code for item in issues})
+
+    def test_plan_requires_question_to_change_kind(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["revelation_shift"]["to"] = plan["reader_investment"]["revelation_shift"]["from"]
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("BAD_REVELATION_SHIFT", {item.code for item in issues})
 
     def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

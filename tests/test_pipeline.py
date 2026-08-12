@@ -33,6 +33,14 @@ def valid_plan_json() -> str:
             "event_id": "event_1",
             "phase": "征兆",
             "chapter_purpose": "纸灰从祠堂进入张洞家中，日常安全边界第一次失效",
+            "reader_investment": {
+                "attachment_anchor": "张洞想赶船离镇，也不愿把母亲独自留在欠债的家里。",
+                "protagonist_contradiction": "他想离开，却习惯用查清异常拖延承认自己正在离开母亲。",
+                "threat_in_motion": "纸灰正在越过关闭家门，直接改变母亲能否留下。",
+                "revelation_shift": {"from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY"},
+                "emotional_afterimage": "读者担心张洞的调查会让母亲错过撤离。",
+                "clue_delivery": {"method": "张洞以船钱和时间换取现场确认", "resistance": "母亲反对且异常继续逼近", "coincidence_risk": "LOW"},
+            },
             "dramatic_spine": {
                 "opening_pressure": "张洞即将离镇时家门失效。",
                 "opening_genre_signal": "开篇即出现越过门板的纸灰。",
@@ -67,6 +75,9 @@ def valid_plan_json() -> str:
                     "end_state": "蒸笼纸灰被分碗留存，祠堂钥匙转由母亲贴身保管。",
                     "pressure_change": "张洞必须记录纸灰位置",
                     "irreversible_change": "张洞开始记录纸灰位置",
+                    "threat_action": "纸灰越过关闭的家门，夺走一家对门栓的信任。",
+                    "human_turn": "母亲不再支持张洞留下调查，母子对去留第一次冲突。",
+                    "payoff_type": "MIXED",
                 }
             ],
             "new_information": ["纸灰会离开祠堂"],

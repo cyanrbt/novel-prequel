@@ -3,13 +3,44 @@
   "$id": "plan.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "dramatic_spine", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
+  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "reader_investment", "dramatic_spine", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
     "title": {"type": "string"},
     "event_id": {"type": "string"},
     "phase": {"type": "string"},
     "chapter_purpose": {"type": "string"},
+    "reader_investment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["attachment_anchor", "protagonist_contradiction", "threat_in_motion", "revelation_shift", "emotional_afterimage", "clue_delivery"],
+      "properties": {
+        "attachment_anchor": {"type": "string"},
+        "protagonist_contradiction": {"type": "string"},
+        "threat_in_motion": {"type": "string"},
+        "revelation_shift": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["from", "to", "changes"],
+          "properties": {
+            "from": {"type": "string"},
+            "to": {"type": "string"},
+            "changes": {"type": "string", "enum": ["IDENTITY", "RELATIONSHIP", "SAFETY", "ACTION_RULE", "MORAL_CHOICE"]}
+          }
+        },
+        "emotional_afterimage": {"type": "string"},
+        "clue_delivery": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "resistance", "coincidence_risk"],
+          "properties": {
+            "method": {"type": "string"},
+            "resistance": {"type": "string"},
+            "coincidence_risk": {"type": "string", "enum": ["LOW", "MEDIUM", "HIGH"]}
+          }
+        }
+      }
+    },
     "dramatic_spine": {
       "type": "object",
       "additionalProperties": false,
@@ -41,7 +72,7 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["location", "characters", "goal", "conflict", "function", "initial_state", "discovery_path", "knowledge_limits", "ordinary_explanations", "choice_reason", "end_state", "pressure_change", "irreversible_change"],
+        "required": ["location", "characters", "goal", "conflict", "function", "initial_state", "discovery_path", "knowledge_limits", "ordinary_explanations", "choice_reason", "end_state", "pressure_change", "irreversible_change", "threat_action", "human_turn", "payoff_type"],
         "properties": {
           "location": {"type": "string"},
           "characters": {"type": "array", "items": {"type": "string"}},
@@ -64,7 +95,10 @@
           "choice_reason": {"type": "string"},
           "end_state": {"type": "string"},
           "pressure_change": {"type": "string"},
-          "irreversible_change": {"type": "string"}
+          "irreversible_change": {"type": "string"},
+          "threat_action": {"type": "string"},
+          "human_turn": {"type": "string"},
+          "payoff_type": {"type": "string", "enum": ["HUMAN_CHANGE", "MIXED", "EVIDENCE_ONLY"]}
         }
       }
     },

@@ -103,7 +103,7 @@ def build_planner_context(
 
 
 DEFAULT_CHARACTER_VOICES = {
-    "张洞": "先想去木行当学徒、离开双桥；短句、少解释，只陈述观察、风险和决定，不用完整理论替代试错",
+    "张洞": "十八岁的张洞想凭木工和账目本事离开双桥，又羞于承认这等于把母亲留在债务与旧争执里；他把查清异常当成拖延艰难选择的办法，会过度核对、赌气越界并犯错。说话可以窘迫、顶嘴、说半句，不预演晚年的绝对理性与威势",
     "张家叔公": "知道旧事但有隐瞒和愧疚；少用疑问句，常以整理、修补或收起物件结束谈话，关键时刻必须用选择承担代价",
     "张洞父亲": "曾替木行管账点料，因张大成之死抗拒把旧事拖回家；句子相对完整，会追问证据，也会因恐惧而固执",
     "张洞母亲": "与孙周氏有赊米和人情往来；关注粮食、债务、船费、名声与活人的去处，不承担神秘导师功能",
@@ -119,7 +119,7 @@ CANDIDATE_FOCUSES = (
     },
     {
         "name": "character_pressure",
-        "instruction": "优先强化人物利益、关系压力和现实代价；异常必须落到具体生活选择。",
+        "instruction": "优先让读者先喜欢、心疼或理解一个活人，再让异常伤到这段关系；主角的欲望与缺点必须同时推动选择。",
     },
     {
         "name": "atmospheric_precision",
@@ -127,7 +127,7 @@ CANDIDATE_FOCUSES = (
     },
     {
         "name": "serial_compulsion",
-        "instruction": "优先强化首屏处境、主角不可替代的选择和问题升级；结尾必须改变下一步行动条件，让读者有具体理由立刻点开下一章。",
+        "instruction": "优先强化主动威胁、揭示变形和情绪余震；结尾要让读者惦记活人的命运，而不只是知道人物下一项调查任务。",
     },
 )
 
@@ -147,6 +147,7 @@ def select_candidate_focuses(
             key: plan.get(key)
             for key in (
                 "chapter_purpose",
+                "reader_investment",
                 "dramatic_spine",
                 "phase",
                 "scenes",
@@ -194,6 +195,9 @@ WRITER_SCENE_FIELDS = (
     "function",
     "pressure_change",
     "irreversible_change",
+    "threat_action",
+    "human_turn",
+    "payoff_type",
 )
 
 
@@ -204,6 +208,8 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
     particular, discovery_path / ordinary_explanations / choice_reason would
     otherwise tempt the Writer to turn a validation checklist into dialogue.
     """
+    spine = plan.get("dramatic_spine", {})
+    investment = plan.get("reader_investment", {})
     return {
         key: plan.get(key)
         for key in (
@@ -212,12 +218,25 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
             "event_id",
             "phase",
             "chapter_purpose",
-            "dramatic_spine",
             "new_information",
             "rule_hypotheses",
             "hook",
         )
     } | {
+        "narrative_engine": investment,
+        "dramatic_contract": {
+            key: spine.get(key)
+            for key in (
+                "opening_pressure",
+                "protagonist_immediate_want",
+                "protagonist_choice",
+                "choice_cost",
+                "relationship_friction",
+                "emotional_turn",
+                "serial_promise",
+            )
+            if spine.get(key)
+        },
         "scenes": [
             {key: scene.get(key) for key in WRITER_SCENE_FIELDS}
             for scene in plan.get("scenes", [])
@@ -551,10 +570,12 @@ def build_writer_packet(
         "era_bans": context.get("era_bans", {"characters": [], "terms": []}),
         "event_guardrails": context.get("event_outline", ""),
         "style_principles": [
-            "冷静记录异常事实，不替读者命名恐惧",
-            "规则线在事件内经历观察、假说、试错、后果和临时结论；单章不必机械走完闭环",
-            "使用具体生活代价，不用抽象悲伤动作模板",
-            "章节必须有不可逆转折；场景可承担准备、阻力、升级、关系显影或余波，并改变人物压力",
+            "先让人物值得在乎，再让异常或选择伤到活人的身体、身份、关系或迫切愿望",
+            "规则线在人物求生与犯错中抵达；不要把正文写成验证未知的实验报告",
+            "张洞的理性是尚未成熟的应对方式和缺点，不是永远正确的答案",
+            "每个重要揭示必须改变人物行为、关系或危险种类；只让证据更可靠的场景应压缩",
+            "关键线索必须由选择、交换、对抗或损失换来，避免恰好未锁、恰好掉出、恰好无人看守",
+            "结尾留下针对活人的情绪余震，不把下一项调查任务冒充追读欲",
             "不复制原著标志性句式、段落或对白",
         ],
         "recent_repetition_signatures": _recent_signatures(recent_texts),

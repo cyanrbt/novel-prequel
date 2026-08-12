@@ -18,6 +18,7 @@ PLAN_REQUIRED = {
     "chapter_number", "title", "event_id", "phase", "chapter_purpose", "dramatic_spine", "scenes",
     "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids",
     "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements",
+    "reader_investment",
 }
 
 REVIEW_REQUIRED = {
@@ -40,7 +41,22 @@ SCENE_MODEL_REQUIRED = {
     "ordinary_explanations",
     "choice_reason",
     "end_state",
+    "threat_action",
+    "human_turn",
+    "payoff_type",
 }
+
+READER_INVESTMENT_REQUIRED = {
+    "attachment_anchor",
+    "protagonist_contradiction",
+    "threat_in_motion",
+    "revelation_shift",
+    "emotional_afterimage",
+    "clue_delivery",
+}
+
+REVELATION_SHIFT_REQUIRED = {"from", "to", "changes"}
+CLUE_DELIVERY_REQUIRED = {"method", "resistance", "coincidence_risk"}
 
 DRAMATIC_SPINE_REQUIRED = {
     "opening_pressure",
@@ -102,6 +118,44 @@ def validate_plan(
         issues.append(Issue("PLAN_CHAPTER_MISMATCH", "P1", f"规划章号应为{expected}", str(plan.get("chapter_number"))))
     if plan.get("event_id") != state.get("chapter", {}).get("current_event"):
         issues.append(Issue("PLAN_EVENT_MISMATCH", "P1", "规划事件与状态不一致", str(plan.get("event_id"))))
+    investment = plan.get("reader_investment")
+    if not isinstance(investment, dict) or set(investment) != READER_INVESTMENT_REQUIRED:
+        issues.append(
+            Issue(
+                "BAD_READER_INVESTMENT",
+                "P1",
+                "规划必须定义人物依恋、主角矛盾、主动威胁、揭示变形、情绪余震和线索阻力",
+                repr(investment)[:280],
+            )
+        )
+    else:
+        for field in (
+            "attachment_anchor",
+            "protagonist_contradiction",
+            "threat_in_motion",
+            "emotional_afterimage",
+        ):
+            if not isinstance(investment.get(field), str) or not investment[field].strip():
+                issues.append(Issue("EMPTY_READER_INVESTMENT", "P1", f"reader_investment.{field}不得为空", repr(investment.get(field))))
+        shift = investment.get("revelation_shift")
+        if (
+            not isinstance(shift, dict)
+            or set(shift) != REVELATION_SHIFT_REQUIRED
+            or not all(isinstance(shift.get(field), str) and shift[field].strip() for field in REVELATION_SHIFT_REQUIRED)
+            or shift.get("from") == shift.get("to")
+            or shift.get("changes") not in {"IDENTITY", "RELATIONSHIP", "SAFETY", "ACTION_RULE", "MORAL_CHOICE"}
+        ):
+            issues.append(Issue("BAD_REVELATION_SHIFT", "P1", "揭示必须把问题变成不同种类的人物或行动问题", repr(shift)))
+        delivery = investment.get("clue_delivery")
+        if (
+            not isinstance(delivery, dict)
+            or set(delivery) != CLUE_DELIVERY_REQUIRED
+            or not all(isinstance(delivery.get(field), str) and delivery[field].strip() for field in CLUE_DELIVERY_REQUIRED)
+            or delivery.get("coincidence_risk") not in {"LOW", "MEDIUM", "HIGH"}
+        ):
+            issues.append(Issue("BAD_CLUE_DELIVERY", "P1", "线索取得必须说明方法、阻力和巧合风险", repr(delivery)))
+        elif delivery["coincidence_risk"] == "HIGH":
+            issues.append(Issue("HIGH_COINCIDENCE_CLUE", "P1", "关键线索不能依靠规划已识别的高风险巧合抵达", repr(delivery)))
     spine = plan.get("dramatic_spine")
     if not isinstance(spine, dict) or set(spine) != DRAMATIC_SPINE_REQUIRED:
         issues.append(
@@ -199,6 +253,7 @@ def validate_plan(
     if not isinstance(scenes, list) or not scenes:
         issues.append(Issue("NO_SCENES", "P1", "规划没有场景", "scenes"))
     else:
+        payoff_types: list[str] = []
         for index, scene in enumerate(scenes, 1):
             if not isinstance(scene, dict):
                 issues.append(Issue("SCENE_NOT_OBJECT", "P1", f"场景{index}不是object", repr(scene)[:160]))
@@ -224,6 +279,8 @@ def validate_plan(
                 "knowledge_limits",
                 "choice_reason",
                 "end_state",
+                "threat_action",
+                "human_turn",
             ):
                 if not isinstance(scene.get(field), str) or not scene[field].strip():
                     issues.append(Issue(
@@ -232,6 +289,11 @@ def validate_plan(
                         f"场景{index}的{field}不得为空",
                         repr(scene.get(field)),
                     ))
+            payoff_type = scene.get("payoff_type")
+            if payoff_type not in {"HUMAN_CHANGE", "MIXED", "EVIDENCE_ONLY"}:
+                issues.append(Issue("SCENE_BAD_PAYOFF", "P1", f"场景{index}的payoff_type无效", repr(payoff_type)))
+            else:
+                payoff_types.append(payoff_type)
             explanations = scene.get("ordinary_explanations")
             if not isinstance(explanations, dict):
                 issues.append(Issue(
@@ -260,6 +322,12 @@ def validate_plan(
                         f"场景{index}的普通解释必须是字符串数组",
                         repr(explanations),
                     ))
+        if payoff_types:
+            evidence_only_count = payoff_types.count("EVIDENCE_ONLY")
+            if evidence_only_count * 2 > len(payoff_types):
+                issues.append(Issue("EVIDENCE_DOMINATED_PLAN", "P1", "超过半数场景只奖励证据变可靠，人物处境没有改变", repr(payoff_types)))
+            if payoff_types[-1] == "EVIDENCE_ONLY":
+                issues.append(Issue("EVIDENCE_ONLY_ENDING", "P1", "末场不能只留下更可靠的证据或下一项调查", repr(payoff_types)))
     foreshadows = plan.get("foreshadow_operations")
     planned_foreshadows: dict[str, set[str]] = {"plant": set(), "recover": set()}
     if not isinstance(foreshadows, dict):
