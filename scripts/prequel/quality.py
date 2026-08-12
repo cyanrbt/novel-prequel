@@ -18,7 +18,7 @@ PLAN_REQUIRED = {
     "chapter_number", "title", "event_id", "phase", "chapter_purpose", "dramatic_spine", "scenes",
     "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids",
     "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements",
-    "reader_investment",
+    "reader_investment", "serial_continuity",
 }
 
 REVIEW_REQUIRED = {
@@ -69,6 +69,12 @@ EMOTIONAL_AFTERIMAGE_REQUIRED = {
     "unresolved_choice",
     "mystery_subordinate_to",
 }
+SERIAL_CONTINUITY_REQUIRED = {
+    "prior_human_wound",
+    "opening_consequence",
+    "carried_object_state",
+    "pressure_novelty",
+}
 
 DRAMATIC_SPINE_REQUIRED = {
     "opening_pressure",
@@ -103,6 +109,126 @@ DEFAULT_LENGTH_POLICY = {
 }
 
 
+def _latest_chapter_context(state: dict[str, Any]) -> str:
+    """Render only the immediately preceding chapter's durable consequences."""
+    last_chapter = state.get("chapter", {}).get("last_chapter")
+    parts: list[str] = []
+    for hook in state.get("recent_hooks", []):
+        if isinstance(hook, dict) and hook.get("chapter") == last_chapter:
+            parts.extend(str(hook.get(key, "")) for key in ("type", "content"))
+    summaries = state.get("chapter_summaries", {}).get("summaries", {})
+    summary = summaries.get(str(last_chapter), {}) if isinstance(summaries, dict) else {}
+    if isinstance(summary, dict):
+        parts.extend(str(summary.get(key, "")) for key in ("title", "core"))
+        changes = summary.get("irreversible_changes", [])
+        if isinstance(changes, list):
+            parts.extend(str(item) for item in changes)
+    return "\n".join(part for part in parts if part)
+
+
+def _planned_serial_engine(plan: dict[str, Any]) -> str:
+    """Render fields that define the new chapter's main pressure and payment."""
+    spine = plan.get("dramatic_spine", {})
+    investment = plan.get("reader_investment", {})
+    if not isinstance(spine, dict):
+        spine = {}
+    if not isinstance(investment, dict):
+        investment = {}
+    attachment = investment.get("attachment_anchor", {}) if isinstance(investment, dict) else {}
+    afterimage = investment.get("emotional_afterimage", {}) if isinstance(investment, dict) else {}
+    delivery = investment.get("clue_delivery", {}) if isinstance(investment, dict) else {}
+    parts = [
+        spine.get("opening_genre_signal", ""),
+        spine.get("destabilizing_event", ""),
+        spine.get("protagonist_choice", ""),
+        spine.get("choice_cost", ""),
+        spine.get("cost_realization", ""),
+        investment.get("threat_in_motion", "") if isinstance(investment, dict) else "",
+        attachment.get("focus", "") if isinstance(attachment, dict) else "",
+        attachment.get("on_page_moment", "") if isinstance(attachment, dict) else "",
+        attachment.get("private_meaning", "") if isinstance(attachment, dict) else "",
+        attachment.get("threatened_loss", "") if isinstance(attachment, dict) else "",
+        afterimage.get("immediate_wound", "") if isinstance(afterimage, dict) else "",
+        delivery.get("method", "") if isinstance(delivery, dict) else "",
+    ]
+    scenes = plan.get("scenes", [])
+    if isinstance(scenes, list) and scenes and isinstance(scenes[0], dict):
+        parts.extend(scenes[0].get(key, "") for key in ("goal", "conflict", "threat_action"))
+    return "\n".join(part for part in parts if isinstance(part, str) and part)
+
+
+def _validate_immediate_serial_progression(
+    plan: dict[str, Any],
+    state: dict[str, Any],
+) -> list[Issue]:
+    """Block a new chapter from disguising the previous chapter's engine as escalation."""
+    last_chapter = state.get("chapter", {}).get("last_chapter")
+    next_chapter = state.get("chapter", {}).get("next_chapter")
+    if not isinstance(last_chapter, int) or next_chapter != last_chapter + 1:
+        return []
+
+    prior = _latest_chapter_context(state)
+    planned = _planned_serial_engine(plan)
+    issues: list[Issue] = []
+
+    prior_exit_loss = re.search(
+        r"(?:失去|错过|发尽|未领到).{0,20}(?:客位|客牌|船牌|渡船|离镇|出镇|学徒)"
+        r"|(?:客位|客牌|船牌|渡船|离镇|出镇).{0,20}(?:失去|错过|发尽|未领到)",
+        prior,
+    )
+    planned_exit_loss = re.search(
+        r"(?:不去|错过|失去|放弃|无法|不能|不再).{0,24}(?:车行|车位|客位|船牌|客牌|渡船|离镇|出镇|陆路)"
+        r"|(?:车行|车位|客位|船牌|客牌|渡船|离镇|出镇|陆路).{0,24}(?:不去|错过|失去|放弃|无法|不能|不再)",
+        planned,
+    )
+    if prior_exit_loss and planned_exit_loss:
+        issues.append(
+            Issue(
+                "REPEATED_EXIT_LOSS",
+                "P1",
+                "上一章已经兑现失去离镇机会；下一章必须消费该后果并换一个压力领域，不能改换交通方式再失去一次",
+                planned_exit_loss.group(0),
+            )
+        )
+
+    active_foreshadows = state.get("active_foreshadows", {})
+    paper_ash_just_planted = any(
+        item_id == "F-A01"
+        and isinstance(runtime, dict)
+        and runtime.get("status") == "已播种"
+        and runtime.get("plant_chapter") == last_chapter
+        for item_id, runtime in active_foreshadows.items()
+    ) if isinstance(active_foreshadows, dict) else False
+    if paper_ash_just_planted and "纸灰" in planned:
+        issues.append(
+            Issue(
+                "IMMEDIATE_CLUE_REPETITION",
+                "P1",
+                "纸灰刚在上一章完成播种，不能立刻换一个缝隙或容器继续充当本章开篇、关键发现或主要威胁",
+                next((line for line in planned.splitlines() if "纸灰" in line), "纸灰"),
+            )
+        )
+
+    prior_damaged_sample = re.search(
+        r"(?:毁坏|折断|掰断).{0,10}(?:木样|样榫)|(?:木样|样榫).{0,10}(?:毁坏|折断|掰断)",
+        prior,
+    )
+    sample_state_preserved = re.search(
+        r"(?:断|毁|两截|半截|残).{0,10}(?:木样|样榫)|(?:木样|样榫).{0,10}(?:断|毁|两截|半截|残)",
+        planned,
+    )
+    if prior_damaged_sample and "样榫" in planned and not sample_state_preserved:
+        issues.append(
+            Issue(
+                "DAMAGED_OBJECT_STATE_ERASED",
+                "P1",
+                "上一章已毁坏的样榫不能以完好物件重新入场；规划必须明确保留其断裂状态或不再使用",
+                next((line for line in planned.splitlines() if "样榫" in line), "样榫"),
+            )
+        )
+    return issues
+
+
 def _result(issues: list[Issue], metrics: dict[str, Any]) -> dict[str, Any]:
     return {
         "passed": not any(issue.severity == "P1" for issue in issues),
@@ -130,6 +256,24 @@ def validate_plan(
         issues.append(Issue("PLAN_CHAPTER_MISMATCH", "P1", f"规划章号应为{expected}", str(plan.get("chapter_number"))))
     if plan.get("event_id") != state.get("chapter", {}).get("current_event"):
         issues.append(Issue("PLAN_EVENT_MISMATCH", "P1", "规划事件与状态不一致", str(plan.get("event_id"))))
+    issues.extend(_validate_immediate_serial_progression(plan, state))
+    continuity = plan.get("serial_continuity")
+    if (
+        not isinstance(continuity, dict)
+        or set(continuity) != SERIAL_CONTINUITY_REQUIRED
+        or not all(
+            isinstance(continuity.get(field), str) and continuity[field].strip()
+            for field in SERIAL_CONTINUITY_REQUIRED
+        )
+    ):
+        issues.append(
+            Issue(
+                "BAD_SERIAL_CONTINUITY",
+                "P1",
+                "规划必须明确消费上一章人物伤口、开场后果、关键物件状态，并说明本章压力为何不是换皮重复",
+                repr(continuity)[:320],
+            )
+        )
     investment = plan.get("reader_investment")
     if not isinstance(investment, dict) or set(investment) != READER_INVESTMENT_REQUIRED:
         issues.append(

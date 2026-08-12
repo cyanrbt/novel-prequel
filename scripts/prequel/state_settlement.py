@@ -102,7 +102,12 @@ def expected_state_changes(
     for index, value in enumerate(changes.get("character_updates", [])):
         target = {"status": value.get("status"), "note": value.get("note")}
         if active.get(value.get("name")) != target:
-            add(f"state_changes.character_updates[{index}]", value, "配角章末状态变化")
+            add(
+                f"state_changes.character_updates[{index}]",
+                value,
+                "配角章末状态变化",
+                required_for_promotion=True,
+            )
     confirmed = set(state.get("world_lore", {}).get("confirmed", []))
     for index, value in enumerate(changes.get("world_confirmed_add", [])):
         if value not in confirmed:

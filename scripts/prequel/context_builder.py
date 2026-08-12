@@ -218,6 +218,7 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
             "event_id",
             "phase",
             "chapter_purpose",
+            "serial_continuity",
             "new_information",
             "rule_hypotheses",
             "hook",

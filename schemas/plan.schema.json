@@ -3,13 +3,24 @@
   "$id": "plan.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "reader_investment", "dramatic_spine", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
+  "required": ["chapter_number", "title", "event_id", "phase", "chapter_purpose", "serial_continuity", "reader_investment", "dramatic_spine", "scenes", "new_information", "state_changes", "rule_hypotheses", "canon_evidence_ids", "foreshadow_operations", "milestone_operations", "hook", "prohibited_elements"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
     "title": {"type": "string"},
     "event_id": {"type": "string"},
     "phase": {"type": "string"},
     "chapter_purpose": {"type": "string"},
+    "serial_continuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prior_human_wound", "opening_consequence", "carried_object_state", "pressure_novelty"],
+      "properties": {
+        "prior_human_wound": {"type": "string"},
+        "opening_consequence": {"type": "string"},
+        "carried_object_state": {"type": "string"},
+        "pressure_novelty": {"type": "string"}
+      }
+    },
     "reader_investment": {
       "type": "object",
       "additionalProperties": false,

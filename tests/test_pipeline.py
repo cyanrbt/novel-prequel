@@ -33,6 +33,12 @@ def valid_plan_json() -> str:
             "event_id": "event_1",
             "phase": "征兆",
             "chapter_purpose": "纸灰从祠堂进入张洞家中，日常安全边界第一次失效",
+            "serial_continuity": {
+                "prior_human_wound": "首章无上一章人物伤口。",
+                "opening_consequence": "首章从离镇期限正在逼近开始。",
+                "carried_object_state": "门栓完好，纸灰尚未被发现。",
+                "pressure_novelty": "首章建立纸灰侵入生活边界的威胁。",
+            },
             "reader_investment": {
                 "attachment_anchor": {
                     "focus": "张洞凭木工手艺得到的学徒身份和母亲对他的信任。",

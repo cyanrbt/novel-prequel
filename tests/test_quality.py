@@ -12,6 +12,12 @@ def _valid_plan():
         "event_id": "event_1",
         "phase": "征兆",
         "chapter_purpose": "建立第一次异常",
+        "serial_continuity": {
+            "prior_human_wound": "首章无上一章人物伤口。",
+            "opening_consequence": "首章从离镇期限正在逼近开始。",
+            "carried_object_state": "木样完好，行囊尚在张洞手中。",
+            "pressure_novelty": "首章建立离镇愿望、母子关系和主动借声威胁。",
+        },
         "reader_investment": {
             "attachment_anchor": {
                 "focus": "张洞凭木工手艺得到的学徒身份和母亲对他的信任。",
@@ -209,6 +215,45 @@ class QualityGateTests(unittest.TestCase):
         plan["reader_investment"]["revelation_shift"]["to"] = plan["reader_investment"]["revelation_shift"]["from"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_REVELATION_SHIFT", {item.code for item in issues})
+
+    def test_next_chapter_cannot_repeat_exit_loss_through_another_route(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        state["recent_hooks"] = [{
+            "chapter": 1,
+            "type": "代价展示",
+            "content": "张洞错过渡船客牌，已经失去本班离镇机会。",
+        }]
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["protagonist_choice"] = "张洞不去车行询问陆路车位，留下修门。"
+        plan["dramatic_spine"]["choice_cost"] = "他再次失去离镇车位。"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("REPEATED_EXIT_LOSS", {item.code for item in issues})
+
+    def test_next_chapter_cannot_reuse_just_planted_clue_as_main_engine(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        state["active_foreshadows"] = {
+            "F-A01": {"status": "已播种", "plant_chapter": 1}
+        }
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("IMMEDIATE_CLUE_REPETITION", {item.code for item in issues})
+
+    def test_next_chapter_must_preserve_destroyed_signature_object(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        state["chapter_summaries"]["summaries"]["1"] = {
+            "title": "门上的灰",
+            "core": "张洞毁坏木样后失去学徒客位。",
+            "irreversible_changes": [],
+        }
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("DAMAGED_OBJECT_STATE_ERASED", {item.code for item in issues})
 
     def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

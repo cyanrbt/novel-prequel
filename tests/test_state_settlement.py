@@ -77,6 +77,23 @@ class StateSettlementTests(unittest.TestCase):
             [],
         )
 
+    def test_missing_character_relationship_change_blocks_pass(self):
+        self.plan["state_changes"]["character_updates"] = [{
+            "name": "张洞母亲",
+            "status": "拒绝替张洞作离镇安排",
+            "note": "母子对留下是否算保护发生公开决裂。",
+        }]
+        expected = expected_state_changes(self.state, self.plan)
+        character_path = "state_changes.character_updates[0]"
+        character = next(item for item in expected if item["path"] == character_path)
+        self.assertTrue(character["required_for_promotion"])
+        self.report["missing_changes"] = [character_path]
+        codes = {
+            item.code
+            for item in validate_state_settlement(self.report, self.state, self.plan, self.draft)
+        }
+        self.assertIn("SETTLEMENT_PASS_WITH_GAPS", codes)
+
     def test_annotated_missing_path_is_canonicalized(self):
         expected = expected_state_changes(self.state, self.plan)
         self.report["missing_changes"] = [
