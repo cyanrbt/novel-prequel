@@ -396,6 +396,72 @@ class PipelineTests(unittest.TestCase):
                 "张洞检查门板纸灰，发现它最终越过门板进入屋内。",
             )
 
+    def test_invalid_blind_read_overwrites_stale_auto_promote_decision(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            config_path = root / "config/prequel_config.json"
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config["quality_evolution"] = {"call_limit": 12}
+            config["quality_gates"] = {
+                "recent_chapters_for_repetition": 5,
+                "blind_reader_gate": {"enabled": True},
+                "state_evidence_gate": {"enabled": True},
+            }
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            (root / "agents/reader_reviewer.md").write_text("盲读。", encoding="utf-8")
+            (root / "agents/state_settler.md").write_text("结算。", encoding="utf-8")
+            (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
+            (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
+            MemoryStore(root)
+            plan = json.loads(valid_plan_json())
+            draft = valid_draft()
+            static = scan_draft(draft, [], {"characters": ["周正"], "terms": ["负责人"]}, plan)
+            reviews = {
+                dimension: {
+                    "summary": f"{dimension}通过",
+                    "evidence": [
+                        {"quote": "门板上的灰", "finding": "具体异常"},
+                        {"quote": "没有落到底", "finding": "观察成立"},
+                        {"quote": "到了门内", "finding": "边界改变"},
+                    ],
+                    "warnings": [],
+                }
+                for dimension in ("continuity", "character", "craft", "anti_slop")
+            }
+            evolution = EvolutionResult(
+                "AUTO_PROMOTE", "candidate_01", draft, static,
+                reviews,
+                {"scores": {"continuity": 92, "character": 88, "craft": 88, "anti_slop": 86},
+                 "weighted_score": 89.1, "hard_failures": [], "required_revisions": []},
+                {"status": "AUTO_PROMOTE"},
+            )
+            invalid_reader = json.loads(blind_reader_json(draft))
+            invalid_reader["verdict"] = "REVISE"
+            invalid_reader["revision_instructions"] = []
+
+            class Router:
+                def __init__(self):
+                    self.providers = {
+                        "planner": FakeProvider([valid_plan_json()]),
+                        "blind_reader_reviewer": FakeProvider([json.dumps(invalid_reader, ensure_ascii=False)]),
+                        "state_settler": FakeProvider([]),
+                    }
+
+                def provider_for(self, stage):
+                    return self.providers[stage]
+
+                def profile_for(self, stage):
+                    return stage
+
+            with patch("scripts.prequel.pipeline.QualityEvolutionEngine") as engine:
+                engine.return_value.run.return_value = evolution
+                result = WritingPipeline(root, providers=Router()).run_next(dry_run=True)
+            self.assertFalse(result.promoted)
+            self.assertEqual(result.status, "WAITING_USER")
+            decision = json.loads((result.workspace / "decision.json").read_text(encoding="utf-8"))
+            self.assertEqual(decision["status"], "WAITING_USER")
+            self.assertIn("盲读者门禁无效", decision["reasons"][0])
+
     def test_state_summary_and_hook_come_from_final_text_settlement(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = json.loads(valid_plan_json())

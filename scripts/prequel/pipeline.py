@@ -1364,6 +1364,16 @@ class WritingPipeline:
                     pass
             if reader_raw:
                 workspace.write_raw_text("reader_review.invalid.txt", reader_raw)
+            decision = {
+                "chapter_number": number,
+                "status": "WAITING_USER",
+                "reasons": [f"盲读者门禁无效: {exc}"],
+                "reader_report": "reader_review.invalid.txt" if reader_raw else None,
+                "safe_actions": ["查看无效盲读原始报告和既有候选"],
+                "new_budget_actions": ["修复盲读输出合同后发起新的预算化运行"],
+                "resume_warning": "当前候选不会自动提升；有效PASS盲读仍是硬门禁。",
+            }
+            workspace.write_json("decision.json", decision)
             manifest.fail("blind_reader_review", str(exc))
             manifest.set_status(
                 "WAITING_USER",

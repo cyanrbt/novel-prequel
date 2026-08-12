@@ -171,6 +171,21 @@ class BlindReaderReviewTests(unittest.TestCase):
         codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
         self.assertIn("READER_FALSE_DROP_POINT", codes)
 
+    def test_revise_can_use_benchmark_gaps_as_actionable_diagnosis(self):
+        self.report["verdict"] = "REVISE"
+        self.report["blocking_issues"] = []
+        self.report["benchmark_comparison"]["character_attachment"]["score"] = 3
+        self.report["benchmark_comparison"]["major_gaps"] = ["人物依恋尚未达到标杆。"]
+        self.report["revision_instructions"] = ["在威胁前演出人物不可替代的生活价值。"]
+        self.assertEqual(validate_blind_reader_review(self.report, self.draft, 1), [])
+
+    def test_revise_still_requires_an_actionable_diagnosis(self):
+        self.report["verdict"] = "REVISE"
+        self.report["blocking_issues"] = []
+        self.report["revision_instructions"] = ["继续修改。"]
+        codes = {item.code for item in validate_blind_reader_review(self.report, self.draft, 1)}
+        self.assertIn("READER_FAIL_WITHOUT_ACTION", codes)
+
 
 if __name__ == "__main__":
     unittest.main()

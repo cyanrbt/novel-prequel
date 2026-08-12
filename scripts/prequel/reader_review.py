@@ -320,6 +320,38 @@ def validate_blind_reader_review(
                     repr({"low_scores": low_benchmark_scores, "benchmark_comparison": benchmark}),
                 )
             )
-    if verdict in {"REVISE", "REPLAN"} and (not blockers or not instructions):
-        issues.append(Issue("READER_FAIL_WITHOUT_ACTION", "P1", "未通过必须给出阻断问题和修订指令", repr(review)))
+    if verdict in {"REVISE", "REPLAN"}:
+        benchmark_gaps = (
+            benchmark.get("major_gaps", [])
+            if isinstance(benchmark, dict)
+            else []
+        )
+        low_benchmark = (
+            any(
+                isinstance(benchmark.get(field), dict)
+                and benchmark[field].get("score", 5) < 4
+                for field in BENCHMARK_DIMENSIONS
+            )
+            if isinstance(benchmark, dict)
+            else False
+        )
+        low_experience = (
+            any(
+                isinstance(experience.get(field), int)
+                and experience[field] < floor
+                for field, floor in PASS_EXPERIENCE_FLOORS.items()
+            )
+            if isinstance(experience, dict)
+            else False
+        )
+        actionable_diagnosis = bool(
+            blockers or benchmark_gaps or low_benchmark or low_experience
+        )
+        if not actionable_diagnosis or not instructions:
+            issues.append(Issue(
+                "READER_FAIL_WITHOUT_ACTION",
+                "P1",
+                "未通过必须给出阻断问题，或由标杆低分/重大差距提供诊断，并同时给出修订指令",
+                repr(review),
+            ))
     return issues
