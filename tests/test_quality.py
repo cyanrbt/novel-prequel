@@ -458,6 +458,27 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("REPEATED_EXIT_LOSS", {item.code for item in issues})
 
+    def test_next_chapter_can_compare_new_wound_with_prior_lost_ticket(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        state["recent_hooks"] = [{
+            "chapter": 1,
+            "type": "代价展示",
+            "content": "张洞错过渡船客牌，已经失去本班离镇机会。",
+        }]
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["reader_investment"]["attachment_anchor"]["private_meaning"] = (
+            "被逐出母亲的针线桌，比失去一块客牌更像被剥走他能成为的人。"
+        )
+        plan["reader_investment"]["attachment_anchor"]["threatened_loss"] = "母亲会撤回共同做活的资格。"
+        plan["reader_investment"]["emotional_afterimage"]["immediate_wound"] = "母亲撤回共同做活的资格。"
+        plan["reader_investment"]["emotional_afterimage"]["material_aftereffect"] = "针线桌不再给张洞使用。"
+        plan["dramatic_spine"]["choice_cost"] = "张洞公开承担补衣责任。"
+        plan["dramatic_spine"]["cost_realization"] = "张洞当场接下殓衣。"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertNotIn("REPEATED_EXIT_LOSS", {item.code for item in issues})
+
     def test_next_chapter_cannot_repeat_lost_career_as_local_trial_loss(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})

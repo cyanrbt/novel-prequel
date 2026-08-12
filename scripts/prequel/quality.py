@@ -209,6 +209,11 @@ def _validate_immediate_serial_progression(
         r"|(?:车行|车位|客位|船牌|客牌|渡船|离镇|出镇|陆路).{0,24}(?:不去|错过|失去|放弃|无法|不能|不再)",
         planned,
     )
+    if planned_exit_loss:
+        context_start = max(0, planned_exit_loss.start() - 18)
+        comparison_context = planned[context_start:planned_exit_loss.end()]
+        if re.search(r"(?:已经|上一章|昨夜|比).{0,14}失去", comparison_context):
+            planned_exit_loss = None
     if prior_exit_loss and planned_exit_loss:
         issues.append(
             Issue(
