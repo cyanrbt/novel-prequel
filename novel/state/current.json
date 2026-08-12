@@ -1,16 +1,15 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-12T11:20:04",
+  "last_updated": "2026-08-12T12:38:30+08:00",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 2,
-    "next_chapter": 3,
+    "last_chapter": 0,
+    "next_chapter": 1,
     "current_volume": 1,
     "current_volume_name": "大汉市",
     "current_event": "event_1",
     "current_event_name": "双桥镇疑棺",
-    "current_phase": "日常边界",
-    "last_title": "守位簿的缺页"
+    "current_phase": "日常边界"
   },
   "timeline": {
     "current_year": 1908,
@@ -26,42 +25,27 @@
     "abilities": {
       "灵异感知": {
         "status": "未形成",
-        "unlock_after": [
-          "M1-DUAL-EXPOSURE"
-        ]
+        "unlock_after": ["M1-DUAL-EXPOSURE"]
       },
       "规则洞察": {
         "status": "未形成",
-        "unlock_after": [
-          "M1B-PATH-RECORD"
-        ]
+        "unlock_after": ["M1B-PATH-RECORD"]
       },
       "抹除灵异": {
         "status": "未觉醒",
-        "unlock_after": [
-          "M2-ACTIVE-PRICE"
-        ]
+        "unlock_after": ["M2-ACTIVE-PRICE"]
       },
       "威势压制": {
         "status": "未形成",
-        "unlock_after": [
-          "M3-SEVEN-FORMED"
-        ]
+        "unlock_after": ["M3-SEVEN-FORMED"]
       }
     },
     "known_info": [
       "东巷孙周氏昨夜死亡，孙家已经挂白；张洞只听到互相矛盾的开门传言，尚未核对现场。",
-      "三日后有一班直达大汉市的渡船，张洞原计划搭船去木行找学徒活。",
-      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。",
-      "张家蒸笼中的淡纸灰至少两次出现，第二次未随新米或灶火进入。",
-      "孙周氏死亡已实际切断张家赊米担保。",
-      "张大成守夜记录中存在“子时复检后侧工作门”的记号。",
-      "叔公在查档当日试图转移守位相关账箱。",
-      "父亲因张洞撬门取档，已收走其代记零工账的权限。"
+      "下一班直达大汉市的渡船明晨开行，十二块客牌在今晚发放；张洞原计划凭木行引荐搭船去做学徒。",
+      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。"
     ],
-    "body": {
-      "状态": "正常"
-    },
+    "body": {"状态": "正常"},
     "inventory": []
   },
   "characters": {
@@ -71,8 +55,8 @@
         "note": "替族里记祭田账并替木行算零工钱；想查清兄长张大成之死，尚未掌握异常规则。"
       },
       "张洞母亲": {
-        "status": "维持张家生计",
-        "note": "靠针线和赊米周转，原计划筹钱送张洞离镇；孙周氏死亡使她失去一条赊米担保。"
+        "status": "维持张家生计并催儿子离镇",
+        "note": "靠针线和赊米周转，已为张洞备好离镇饭食；孙周氏死亡使她失去一条赊米担保。"
       },
       "张家叔公": {
         "status": "保管祠堂旧物与守位记录",
@@ -92,97 +76,34 @@
       }
     },
     "pending": {
-      "罗文松": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "李庆之": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "孟小董": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "张幼红": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "罗千": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "张伯华": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
+      "罗文松": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
       "秦老": {
-        "birth_year_range": [
-          1905,
-          1915
-        ],
+        "birth_year_range": [1905, 1915],
         "appearance_after": "M3-CORE-MEMBERS-MET",
         "status": "尚未出场"
       }
     },
-    "deceased": [
-      "孙周氏",
-      "张大成"
-    ]
+    "deceased": ["孙周氏", "张大成"]
   },
   "world_lore": {
     "reveal_layer": 1,
-    "confirmed": [
-      "孙周氏已经死亡，孙家设灵；死亡原因和开门经过尚未由张洞核对。"
-    ],
+    "confirmed": ["孙周氏已经死亡，孙家设灵；死亡原因和开门经过尚未由张洞核对。"],
     "hypotheses": [],
     "gold_known": false,
     "post_office_status": "不存在线索",
     "ancient_house_status": "不存在线索"
   },
-  "active_foreshadows": {
-    "F-A01": {
-      "status": "已播种",
-      "plant_chapter": 1
-    }
-  },
+  "active_foreshadows": {},
   "completed_milestones": [],
   "revealed_rules": [],
-  "recent_hooks": [
-    {
-      "chapter": 1,
-      "type": "隐藏规则发现",
-      "content": "清洗、倒扣并罩住的空蒸笼再现纸灰，令纸灰的来处成为待查的异常。"
-    },
-    {
-      "chapter": 2,
-      "type": "未解问题",
-      "content": "张大成在子时复检后侧工作门时，究竟看见了什么？"
-    }
-  ],
+  "recent_hooks": [],
   "chapter_summaries": {
     "compression_level": 0,
-    "summaries": {
-      "1": {
-        "title": "蒸笼里的灰",
-        "core": "张洞用全部船钱买米后，发现清洗封住的空蒸笼再现纸灰；父子将灰封存上锁，决定次日查八年前守祠记录。",
-        "irreversible_changes": [
-          "protagonist_known_info_add"
-        ]
-      },
-      "2": {
-        "title": "守位簿的缺页",
-        "core": "张洞撬开祠堂工作门取出张大成守位簿残页，父亲据页抄录并收走他誊工票权限，后侧门的复检内容仍未明。",
-        "irreversible_changes": [
-          "protagonist_known_info_add"
-        ]
-      }
-    }
-  },
-  "last_review": {
-    "chapter": 2,
-    "grade": "A",
-    "verdict": "PASS",
-    "timestamp": "2026-08-12T11:20:04"
+    "summaries": {}
   }
 }
