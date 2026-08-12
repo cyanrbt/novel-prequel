@@ -119,6 +119,14 @@ class StateSettlementTests(unittest.TestCase):
         }
         self.assertIn("SETTLEMENT_FALSE_EVIDENCE", codes)
 
+    def test_duplicate_change_path_is_rejected(self):
+        self.report["change_evidence"].append(dict(self.report["change_evidence"][0]))
+        codes = {
+            item.code
+            for item in validate_state_settlement(self.report, self.state, self.plan, self.draft)
+        }
+        self.assertIn("SETTLEMENT_DUPLICATE_PATH", codes)
+
 
 if __name__ == "__main__":
     unittest.main()
