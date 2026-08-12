@@ -682,24 +682,40 @@ def accept_dry_run(
     )
     router: StageModelRouter | None = None
     if reader_gate.get("enabled", False):
-        # Acceptance may follow a targeted edit of a candidate. Always obtain
-        # a fresh blind read here so a report for an earlier text cannot be
-        # reused merely because it lives in the same workspace.
-        router = StageModelRouter.from_config(acceptance_config, project_root)
-        raw = router.provider_for("blind_reader_reviewer").generate(
-            build_blind_reader_prompt(
-                project_root,
-                build_blind_reader_packet(state, number, draft, project_root),
-            ),
-            project_root / "schemas/reader_review.schema.json",
-        )
-        try:
-            reader_review = parse_json_artifact(raw, "accept-blind-reader")
-            canonicalize_artifact_quotes(reader_review, draft)
+        reader_review: dict[str, Any] | None = None
+        existing_reader_path = workspace_path / "reader_review.json"
+        if existing_reader_path.exists():
+            try:
+                existing_reader = json.loads(existing_reader_path.read_text(encoding="utf-8"))
+                canonicalize_artifact_quotes(existing_reader, draft)
+                existing_issues = validate_blind_reader_review(existing_reader, draft, number)
+                if (
+                    not any(issue.severity == "P1" for issue in existing_issues)
+                    and existing_reader.get("verdict") == "PASS"
+                ):
+                    reader_review = existing_reader
+            except (OSError, json.JSONDecodeError):
+                reader_review = None
+        if reader_review is None:
+            # A targeted edit changes the draft hash, so reports for earlier
+            # text fail validation and a fresh blind read is mandatory.
+            router = StageModelRouter.from_config(acceptance_config, project_root)
+            raw = router.provider_for("blind_reader_reviewer").generate(
+                build_blind_reader_prompt(
+                    project_root,
+                    build_blind_reader_packet(state, number, draft, project_root),
+                ),
+                project_root / "schemas/reader_review.schema.json",
+            )
+            try:
+                reader_review = parse_json_artifact(raw, "accept-blind-reader")
+                canonicalize_artifact_quotes(reader_review, draft)
+                workspace.write_json("reader_review.json", reader_review)
+            except ArtifactValidationError:
+                workspace.write_raw_text("reader_review.invalid.txt", raw)
+                raise
+        else:
             workspace.write_json("reader_review.json", reader_review)
-        except ArtifactValidationError:
-            workspace.write_raw_text("reader_review.invalid.txt", raw)
-            raise
         require_no_p1(
             validate_blind_reader_review(reader_review, draft, number),
             "接受前盲读者审查",
