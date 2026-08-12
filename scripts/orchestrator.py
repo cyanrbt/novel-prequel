@@ -337,7 +337,7 @@ def command_reader_review(args) -> int:
     draft = by_number[chapter].read_text(encoding="utf-8")
     config = load_config(PROJECT_ROOT)
     router = StageModelRouter.from_config(config, PROJECT_ROOT)
-    packet = build_blind_reader_packet(state, chapter, draft, project_root)
+    packet = build_blind_reader_packet(state, chapter, draft, PROJECT_ROOT)
     raw = router.provider_for("blind_reader_reviewer").generate(
         build_blind_reader_prompt(PROJECT_ROOT, packet),
         PROJECT_ROOT / "schemas/reader_review.schema.json",
