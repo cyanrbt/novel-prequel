@@ -40,7 +40,14 @@ def _valid_plan():
                 "human_pressure_link": "母亲要他赶船、父亲要保留证据，纸灰使一家人的现实去留利益直接冲突。",
             },
             "revelation_shift": {
-                "from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY",
+                "from": "灰从哪里来？",
+                "on_page_answer": "纸灰已经进入倒扣饭碗，普通关闭不足以隔离它。",
+                "to": "关闭的家门还能不能保护母亲？",
+                "changes": "SAFETY",
+                "old_response": "关门并继续在饭桌边确认来源。",
+                "counterexample": "纸灰进入倒扣饭碗，使留在桌边继续检查也会让母亲接触污染。",
+                "new_response": "先让母亲离开饭桌并保留现场。",
+                "executed_change": "张洞移走母亲的碗，放弃赶船并让她离开饭桌。",
             },
             "emotional_afterimage": {
                 "person": "张洞与母亲。",
@@ -347,6 +354,43 @@ class QualityGateTests(unittest.TestCase):
         plan["reader_investment"]["revelation_shift"]["to"] = plan["reader_investment"]["revelation_shift"]["from"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_REVELATION_SHIFT", {item.code for item in issues})
+
+    def test_plan_rejects_an_unexecuted_revelation_response(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["revelation_shift"]["new_response"] = (
+            plan["reader_investment"]["revelation_shift"]["old_response"]
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("STALLED_REVELATION_RESPONSE", {item.code for item in issues})
+
+    def test_second_chapter_requires_same_visit_retargeting_not_another_voice_sample(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["reader_investment"]["revelation_shift"].update({
+            "on_page_answer": "孙有田也听见亡父声音叫门。",
+            "counterexample": "帮丧人离开，关门只能避免越界，不能保住丧事。",
+            "new_response": "张洞等母亲求助后接下殓衣。",
+            "executed_change": "张洞把日落归还殓衣的责任记在自己名下。",
+        })
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("CORE_REVEAL_REPEATS_DEAD_VOICE", {item.code for item in issues})
+
+    def test_second_chapter_accepts_same_visit_voice_retargeting(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["reader_investment"]["revelation_shift"].update({
+            "on_page_answer": "同一轮三次敲击里，借声在孙有田退开门栓后改用孙周氏声音转向第二个能开门的母亲。",
+            "counterexample": "没有重新敲门，声音仍换成第二名能开门者熟悉的死者，单让孙有田退开并未结束诱门。",
+            "new_response": "所有能开门者一起退离门栓，不让当前被叫者控制边界。",
+            "executed_change": "母亲主动带人退离门栓，张洞按她要求横过长凳隔开门栓。",
+        })
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertNotIn("CORE_REVEAL_REPEATS_DEAD_VOICE", {item.code for item in issues})
 
     def test_next_chapter_cannot_repeat_exit_loss_through_another_route(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

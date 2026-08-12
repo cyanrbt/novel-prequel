@@ -59,11 +59,16 @@
         "revelation_shift": {
           "type": "object",
           "additionalProperties": false,
-          "required": ["from", "to", "changes"],
+          "required": ["from", "on_page_answer", "to", "changes", "old_response", "counterexample", "new_response", "executed_change"],
           "properties": {
             "from": {"type": "string"},
+            "on_page_answer": {"type": "string"},
             "to": {"type": "string"},
-            "changes": {"type": "string", "enum": ["IDENTITY", "RELATIONSHIP", "SAFETY", "ACTION_RULE", "MORAL_CHOICE"]}
+            "changes": {"type": "string", "enum": ["IDENTITY", "RELATIONSHIP", "SAFETY", "ACTION_RULE", "MORAL_CHOICE"]},
+            "old_response": {"type": "string"},
+            "counterexample": {"type": "string"},
+            "new_response": {"type": "string"},
+            "executed_change": {"type": "string"}
           }
         },
         "emotional_afterimage": {

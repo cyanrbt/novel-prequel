@@ -60,7 +60,16 @@ def valid_plan_json() -> str:
                     "forced_change": "张洞必须在赶船前决定是否保留现场并阻止母亲动饭。",
                     "human_pressure_link": "母亲催船与父亲留证的现实目标因纸灰直接冲突。",
                 },
-                "revelation_shift": {"from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY"},
+                "revelation_shift": {
+                    "from": "灰从哪里来？",
+                    "on_page_answer": "纸灰已进入倒扣饭碗。",
+                    "to": "关闭的家门还能不能保护母亲？",
+                    "changes": "SAFETY",
+                    "old_response": "关门后继续留在桌边检查。",
+                    "counterexample": "饭碗被污染，留在桌边会继续使母亲接触纸灰。",
+                    "new_response": "先让母亲离开饭桌并保持现场。",
+                    "executed_change": "张洞移走饭碗并放弃赶船。",
+                },
                 "emotional_afterimage": {
                     "person": "张洞与母亲。",
                     "immediate_wound": "张洞失去学徒期限，母亲不再接受他替自己决定。",

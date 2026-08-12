@@ -22,6 +22,8 @@
 
 非首章还须逐项核对 `narrative_targets.narrative_engine.core_threat_continuation`：核心异常是否在本章现实冲突中继续起因果作用，正文是否实际演出 `old_defense`，`defense_failure` 是否使旧防法失效、受限或开始伤人，以及 `replacement_rule` 是否改变动作机制。另一个死人换一句声音只能提高同一异常的可信度，不能自动算规则变形。若局部答案只增加矛盾证词、旧防法仍可原样沿用，或删掉异常后生计/名声冲突仍可成立，`craft` 不得达到 85；规划本身没有可场景化反例时应要求重规划。
 
+同时按正文因果核对 `revelation_shift.old_response` → `counterexample` → `new_response` → `executed_change`。反例必须来自本章当前异常动作，且新应对须在章末前实际执行；若规划只把“另一个死人声音”写成答案，再用母子权限或补衣责任冒充新应对，`craft` 不得达到 85。
+
 逐项核对 `attachment_anchor.lived_value` / `loss_carrier` 与 `emotional_afterimage.material_aftereffect` / `relationship_aftereffect`。一件旧物或体贴动作只能证明关系存在；正文还须让被威胁者脱离主角功能后拥有可反复生活的手艺、愿望、日常或尊严，并在章末前改变承载它的具体客户、工具、场所、权限或关系位置。“若张洞缝坏，母亲就会丢名声”仍是条件风险，不是已发生余震；这类正文的 `character` 与 `craft` 不得达到 92，并应要求补写已发生后果或重规划。
 
 女眷入殓时放下门帘、合内门，男人留在外院，是可由正常丧事隐私解释的动作。除非同时出现具名人物拒绝放行、强迫隐瞒、公开指控、撤回承诺或其他直接影响活人的新后果，否则不得将这类关门当作主动危险或高强度章末，`craft` 不得达到 85。

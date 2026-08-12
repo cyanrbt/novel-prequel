@@ -30,7 +30,7 @@
 - `threat_in_motion` 必须落在本章当场发生的主动动作及其当前目标上，不能写“异常尚未再现”，再拿上一章已经发生的死亡、停赊或传言充当本章主动威胁。社会压力可以承担威胁，但必须有具名行动者为了自身利益在本章逼迫、索取、带走、拒绝或公开某事，并制造当天无法等待的选择。
 - 若输入事件卡要求核心异常本章当前行动，不能用第二名证人的昨夜回忆、人物复述“另一个死者声音”或对手压住传言替代。`scenes[].threat_action` 必须写清它此刻从哪一道已关闭边界外如何作用、针对哪个能开门的活人，并让在场者当即失去资源、退出、改口或作出代价选择；仍未排除的普通解释同时保留。
 - 非首章用 `core_threat_continuation` 把类型主线接成一条当前因果：`prior_hook` 只写上一章真正让读者追问的核心异常；`current_effect` 写它本章怎样仍在改变活人，而不是“尚未再现”；`local_answer` 必须排除一种理解或确认一个新边界，不能只写“证词矛盾、仍不清楚”。随后分别填写人物章初还能采用的 `old_defense`、本章反例如何证明它不足或会伤人的 `defense_failure`，以及人物付出代价后才形成的 `replacement_rule`；新规则必须改变动作机制，不能把“不开门”换成“继续不开门”。`forced_change` 写人物因此当场不能再照旧做什么；`human_pressure_link` 写现实对手的利益为何与这项异常后果直接冲突。人物冲突再强，若删去核心异常仍能原样成立，就没有接住上一章。
-- `revelation_shift` 要把问题从物证来源变成身份、关系、安全、行动规则或道德选择之一。同一未知增加第二份记录、第二个封口、第二名证人不算变形。
+- `revelation_shift` 要把问题从物证来源变成身份、关系、安全、行动规则或道德选择之一，并形成一条本章内闭合的动作链：`on_page_answer` 是付出阻力后实际得到的局部答案，`old_response` 是人物原本会采用的应对，`counterexample` 必须由本章当前异常动作证明旧应对不足，`new_response` 是因此改用的做法，`executed_change` 则写人物在章末前怎样实际执行并得到人物后果。同一未知增加第二份记录、第二个封口、第二名证人，或把母子权限变化冒充异常应对，均不算变形。
 - `emotional_afterimage` 必须分别写明读者惦记的 `person`、本章已经造成的 `immediate_wound`、本章结束前已经改变的生计/住处/工具/社会位置 `material_aftereffect`、两名具名人物下一次相处已被怎样改写的 `relationship_aftereffect`、下一章无法回避的 `unresolved_choice`，以及谜题必须服从哪项人物处境 `mystery_subordinate_to`。不能把“如果任务失败就丢名声”冒充已经发生的余震；抽象的“下一个活人怎么办”也只是规则题。
 - 关键线索必须由人物主动争取并遭遇抗力，或由对手为自身目标采取行动时暴露。若只能靠箱子恰好未锁、关键页恰好单独掉出、看守恰好离开，标为高巧合风险并放弃该方案。
 
@@ -97,7 +97,16 @@
       "forced_change": "局部答案迫使人物立刻改变的行动、关系或安全边界",
       "human_pressure_link": "现实对手的当前利益为什么与这项异常后果直接咬合"
     },
-    "revelation_shift": {"from": "章初问题类型", "to": "局部答案迫使人物面对的不同问题", "changes": "IDENTITY|RELATIONSHIP|SAFETY|ACTION_RULE|MORAL_CHOICE"},
+    "revelation_shift": {
+      "from": "章初问题类型",
+      "on_page_answer": "本章付出阻力后实际得到的局部答案",
+      "to": "局部答案迫使人物面对的不同问题",
+      "changes": "IDENTITY|RELATIONSHIP|SAFETY|ACTION_RULE|MORAL_CHOICE",
+      "old_response": "人物依据章初认知会采取的应对",
+      "counterexample": "本章当前异常动作怎样证明旧应对不足；不得用假设或纯人物冲突替代",
+      "new_response": "局部答案迫使人物采用的不同做法",
+      "executed_change": "人物在本章结束前如何实际执行新做法并造成后果"
+    },
     "emotional_afterimage": {
       "person": "读完后首先惦记的活人",
       "immediate_wound": "本章已经发生的人物伤口或损失",

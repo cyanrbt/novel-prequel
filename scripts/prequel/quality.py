@@ -56,7 +56,16 @@ READER_INVESTMENT_REQUIRED = {
     "clue_delivery",
 }
 
-REVELATION_SHIFT_REQUIRED = {"from", "to", "changes"}
+REVELATION_SHIFT_REQUIRED = {
+    "from",
+    "on_page_answer",
+    "to",
+    "changes",
+    "old_response",
+    "counterexample",
+    "new_response",
+    "executed_change",
+}
 CORE_THREAT_CONTINUATION_REQUIRED = {
     "prior_hook",
     "current_effect",
@@ -597,6 +606,42 @@ def validate_plan(
             or shift.get("changes") not in {"IDENTITY", "RELATIONSHIP", "SAFETY", "ACTION_RULE", "MORAL_CHOICE"}
         ):
             issues.append(Issue("BAD_REVELATION_SHIFT", "P1", "揭示必须把问题变成不同种类的人物或行动问题", repr(shift)))
+        else:
+            if shift["old_response"].strip() == shift["new_response"].strip():
+                issues.append(Issue(
+                    "STALLED_REVELATION_RESPONSE",
+                    "P1",
+                    "揭示后的新应对不能原样重复章初应对；反例必须迫使人物在本章执行不同动作",
+                    shift["old_response"],
+                ))
+            if plan.get("chapter_number") == 2 and plan.get("event_id") == "event_1":
+                mutation = "\n".join(
+                    str(shift.get(field, ""))
+                    for field in ("on_page_answer", "counterexample", "new_response", "executed_change")
+                )
+                same_visit = bool(re.search(
+                    r"同一(?:次|轮|阵).{0,24}(?:敲|叫门|借声)"
+                    r"|(?:没有|未|不)(?:再|重新).{0,8}(?:敲|三下)"
+                    r"|三次敲击.{0,24}(?:未再|没有再|不再)",
+                    mutation,
+                ))
+                retargets = bool(re.search(
+                    r"(?:改借|改用|换成|转而|转向|换了).{0,24}(?:声音|之声|称呼|死者|亡\S)"
+                    r"|(?:声音|借声).{0,24}(?:改借|改用|换成|转而|转向|换了|第二个目标)",
+                    mutation,
+                ))
+                second_opener = bool(re.search(
+                    r"(?:第二|另一|下一个).{0,12}(?:开门者|能开门|碰栓|门栓|目标|活人)"
+                    r"|(?:孙有田|第一人).{0,24}(?:退开|离开|放弃|远离).{0,24}(?:母亲|张母|许嫂|第二人)",
+                    mutation,
+                ))
+                if not (same_visit and retargets and second_opener):
+                    issues.append(Issue(
+                        "CORE_REVEAL_REPEATS_DEAD_VOICE",
+                        "P1",
+                        "第二章已被盲审证明不能靠第三份同类借声越过揭示门槛；当前诱门必须在同一轮敲击中改换死者模板并转向第二名能开门者，迫使人物执行新的应对",
+                        mutation[:640],
+                    ))
         delivery = investment.get("clue_delivery")
         if (
             not isinstance(delivery, dict)
