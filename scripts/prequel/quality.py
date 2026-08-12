@@ -44,11 +44,13 @@ SCENE_MODEL_REQUIRED = {
 
 DRAMATIC_SPINE_REQUIRED = {
     "opening_pressure",
+    "opening_genre_signal",
     "protagonist_immediate_want",
     "personal_stake",
     "destabilizing_event",
     "protagonist_choice",
     "choice_cost",
+    "cost_realization",
     "relationship_friction",
     "question_progression",
     "emotional_turn",

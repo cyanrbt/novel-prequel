@@ -13,14 +13,16 @@
     "dramatic_spine": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["opening_pressure", "protagonist_immediate_want", "personal_stake", "destabilizing_event", "protagonist_choice", "choice_cost", "relationship_friction", "question_progression", "emotional_turn", "serial_promise"],
+      "required": ["opening_pressure", "opening_genre_signal", "protagonist_immediate_want", "personal_stake", "destabilizing_event", "protagonist_choice", "choice_cost", "cost_realization", "relationship_friction", "question_progression", "emotional_turn", "serial_promise"],
       "properties": {
         "opening_pressure": {"type": "string"},
+        "opening_genre_signal": {"type": "string"},
         "protagonist_immediate_want": {"type": "string"},
         "personal_stake": {"type": "string"},
         "destabilizing_event": {"type": "string"},
         "protagonist_choice": {"type": "string"},
         "choice_cost": {"type": "string"},
+        "cost_realization": {"type": "string"},
         "relationship_friction": {"type": "string"},
         "question_progression": {
           "type": "array",

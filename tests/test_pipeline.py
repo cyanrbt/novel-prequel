@@ -35,11 +35,13 @@ def valid_plan_json() -> str:
             "chapter_purpose": "纸灰从祠堂进入张洞家中，日常安全边界第一次失效",
             "dramatic_spine": {
                 "opening_pressure": "张洞即将离镇时家门失效。",
+                "opening_genre_signal": "开篇即出现越过门板的纸灰。",
                 "protagonist_immediate_want": "赶上渡船去木行。",
                 "personal_stake": "错过学徒机会。",
                 "destabilizing_event": "纸灰进入关闭的门内。",
                 "protagonist_choice": "张洞留下检查纸灰。",
                 "choice_cost": "离镇准备被耽搁。",
+                "cost_realization": "张洞当场用自己的船钱补上家中缺口。",
                 "relationship_friction": "母亲要他先走，张洞要先确认家人安全。",
                 "question_progression": ["灰从哪里来？", "门是否仍安全？", "他还能否按时离镇？"],
                 "emotional_turn": "离镇期待变成守家压力。",

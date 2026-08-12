@@ -14,11 +14,13 @@ def _valid_plan():
         "chapter_purpose": "建立第一次异常",
         "dramatic_spine": {
             "opening_pressure": "张洞准备离家时发现院门异常。",
+            "opening_genre_signal": "开篇即出现越过关闭院门的纸灰。",
             "protagonist_immediate_want": "赶上三日后的渡船。",
             "personal_stake": "错过木行学徒机会。",
             "destabilizing_event": "纸灰越过关闭的门。",
             "protagonist_choice": "张洞留下检查并阻止家人开门。",
             "choice_cost": "他冒着错过渡船安排的风险。",
+            "cost_realization": "他当场交出自己的船钱并失去对余款的控制。",
             "relationship_friction": "母亲催他离开，张洞坚持先保住家人。",
             "question_progression": ["灰从哪里来？", "关闭的门是否还安全？", "张洞还能否按时离镇？"],
             "emotional_turn": "离镇期待转成对家门失效的担忧。",
