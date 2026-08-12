@@ -611,6 +611,48 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(state["chapter"]["last_chapter"], 1)
             self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
 
+    def test_accept_runs_enabled_blind_reader_with_project_root(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
+            WritingPipeline(root, provider).run_next(dry_run=True)
+
+            config_path = root / "config/prequel_config.json"
+            config = json.loads(config_path.read_text(encoding="utf-8"))
+            config["quality_gates"].update({
+                "blind_reader_gate": {"enabled": True},
+                "state_evidence_gate": {"enabled": True},
+            })
+            config_path.write_text(json.dumps(config), encoding="utf-8")
+            (root / "agents/reader_reviewer.md").write_text("盲读。", encoding="utf-8")
+            (root / "agents/state_settler.md").write_text("结算。", encoding="utf-8")
+            (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
+            (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
+
+            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
+            workspace = root / "novel/work/chapter_001/attempt_01"
+            plan = json.loads((workspace / "plan.json").read_text(encoding="utf-8"))
+            draft = (workspace / "draft.txt").read_text(encoding="utf-8")
+
+            class Router:
+                def __init__(self):
+                    self.providers = {
+                        "blind_reader_reviewer": FakeProvider([blind_reader_json(draft)]),
+                        "state_settler": FakeProvider([state_settlement_json(state, plan, draft)]),
+                    }
+
+                def provider_for(self, stage):
+                    return self.providers[stage]
+
+            with patch(
+                "scripts.prequel.pipeline.StageModelRouter.from_config",
+                return_value=Router(),
+            ):
+                accepted = accept_dry_run(root)
+
+            self.assertTrue(accepted.promoted)
+            self.assertTrue((root / "novel/work/chapter_001/attempt_01/reader_review.json").exists())
+
     def test_revision_is_isolated_and_second_attempt_can_promote(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))

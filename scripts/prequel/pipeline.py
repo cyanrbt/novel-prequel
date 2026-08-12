@@ -689,7 +689,7 @@ def accept_dry_run(
         raw = router.provider_for("blind_reader_reviewer").generate(
             build_blind_reader_prompt(
                 project_root,
-                build_blind_reader_packet(state, number, draft, self.project_root),
+                build_blind_reader_packet(state, number, draft, project_root),
             ),
             project_root / "schemas/reader_review.schema.json",
         )
