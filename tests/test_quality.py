@@ -282,6 +282,17 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("UNSUPPORTED_DEBT_AUTHORITY", {item.code for item in issues})
 
+    def test_plan_rejects_normal_funeral_privacy_as_active_ending_threat(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan["hook"]["content"] = (
+            "母亲已经进入孙家内屋做入殓针线，张洞只能留在外院等待。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("STATIC_INTERIOR_WAIT_HOOK", {item.code for item in issues})
+
     def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()

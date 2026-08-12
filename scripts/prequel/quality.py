@@ -265,6 +265,7 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
         "dramatic_spine": plan.get("dramatic_spine"),
         "scenes": plan.get("scenes"),
     })
+    issues: list[Issue] = []
     if (
         "孙有田" in rendered
         and re.search(
@@ -272,13 +273,29 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
             rendered,
         )
     ):
-        return [Issue(
+        issues.append(Issue(
             "UNSUPPORTED_DEBT_AUTHORITY",
             "P1",
             "孙有田可以索取丧事人情，但不能把亡妻在米铺的担保当成自己可追讨、撤销或强制核认的债权",
             "孙有田 / 赊米担保",
-        )]
-    return []
+        ))
+    hook_content = plan.get("hook", {}).get("content", "")
+    if (
+        plan.get("chapter_number") == 2
+        and isinstance(hook_content, str)
+        and re.search(r"(?:进入|留在|走进).{0,12}孙家.{0,8}(?:内屋|屋内)|孙家.{0,8}(?:内屋|屋内)", hook_content)
+        and not re.search(
+            r"(?:求救|呼喊|拒绝放行|不许.{0,8}离开|锁住|落锁|上闩|封住|改口|逼迫|隐瞒|争执|失踪|受伤)",
+            hook_content,
+        )
+    ):
+        issues.append(Issue(
+            "STATIC_INTERIOR_WAIT_HOOK",
+            "P1",
+            "母亲进入孙家内屋或张洞被留在外院只是位置变化；章末必须出现无法被正常入殓私密流程解释的主动变化",
+            hook_content,
+        ))
+    return issues
 
 
 def _result(issues: list[Issue], metrics: dict[str, Any]) -> dict[str, Any]:
