@@ -48,6 +48,13 @@ def valid_plan_json() -> str:
                 },
                 "protagonist_contradiction": "他想离开，却习惯用查清异常拖延承认自己正在离开母亲。",
                 "threat_in_motion": "纸灰正在越过关闭家门，直接改变母亲能否留下。",
+                "core_threat_continuation": {
+                    "prior_hook": "首章将建立关闭家门为何仍出现纸灰的核心疑问。",
+                    "current_effect": "纸灰当场污染送行饭并改变母子的离镇选择。",
+                    "local_answer": "倒扣容器不能解释纸灰来源，原有日常边界已不可靠。",
+                    "forced_change": "张洞必须在赶船前决定是否保留现场并阻止母亲动饭。",
+                    "human_pressure_link": "母亲催船与父亲留证的现实目标因纸灰直接冲突。",
+                },
                 "revelation_shift": {"from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY"},
                 "emotional_afterimage": {
                     "person": "张洞与母亲。",

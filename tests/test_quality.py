@@ -27,6 +27,13 @@ def _valid_plan():
             },
             "protagonist_contradiction": "他口头上要赶船，遇到可核对的异常却会借调查拖延离开。",
             "threat_in_motion": "纸灰正在越过家门，使母亲当晚仍住在家中的选择变危险。",
+            "core_threat_continuation": {
+                "prior_hook": "首章将建立关闭家门为何仍出现纸灰的核心疑问。",
+                "current_effect": "纸灰当场污染送行饭并迫使母子改变离镇安排。",
+                "local_answer": "倒扣碗没有隔绝纸灰，单靠关闭生活容器不足以保住原有日常。",
+                "forced_change": "张洞必须在赶船前先决定是否保留现场并阻止母亲继续食用。",
+                "human_pressure_link": "母亲要他赶船、父亲要保留证据，纸灰使一家人的现实去留利益直接冲突。",
+            },
             "revelation_shift": {
                 "from": "灰从哪里来？", "to": "关闭的家门还能不能保护母亲？", "changes": "SAFETY",
             },
@@ -215,6 +222,37 @@ class QualityGateTests(unittest.TestCase):
         )
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("INACTIVE_THREAT_ADMITTED", {item.code for item in issues})
+
+    def test_plan_requires_cross_chapter_core_threat_contract(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["core_threat_continuation"] = {}
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("BAD_CORE_THREAT_CONTINUATION", {item.code for item in issues})
+
+    def test_plan_rejects_conflicting_testimony_as_the_only_core_answer(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["reader_investment"]["core_threat_continuation"]["local_answer"] = (
+            "孙家内屋只是出现矛盾说法，仍不清楚谁先开门。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("STALLED_CORE_REVELATION", {item.code for item in issues})
+
+    def test_second_chapter_cannot_drop_the_dead_voice_core_hook(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["reader_investment"]["core_threat_continuation"] = {
+            "prior_hook": "上一章留下家门是否安全的问题。",
+            "current_effect": "孙家的入殓期限正在损害母亲针线名声。",
+            "local_answer": "孙家内部确实有人隐瞒开门先后。",
+            "forced_change": "母亲必须决定是否继续缝补。",
+            "human_pressure_link": "孙有田为名声阻止母亲离开。",
+        }
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("CORE_HOOK_RECEDES_IN_PLAN", {item.code for item in issues})
 
     def test_plan_rejects_superficial_attachment_label(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))

@@ -24,7 +24,7 @@
     "reader_investment": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["attachment_anchor", "protagonist_contradiction", "threat_in_motion", "revelation_shift", "emotional_afterimage", "clue_delivery"],
+      "required": ["attachment_anchor", "protagonist_contradiction", "threat_in_motion", "core_threat_continuation", "revelation_shift", "emotional_afterimage", "clue_delivery"],
       "properties": {
         "attachment_anchor": {
           "type": "object",
@@ -39,6 +39,18 @@
         },
         "protagonist_contradiction": {"type": "string"},
         "threat_in_motion": {"type": "string"},
+        "core_threat_continuation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["prior_hook", "current_effect", "local_answer", "forced_change", "human_pressure_link"],
+          "properties": {
+            "prior_hook": {"type": "string"},
+            "current_effect": {"type": "string"},
+            "local_answer": {"type": "string"},
+            "forced_change": {"type": "string"},
+            "human_pressure_link": {"type": "string"}
+          }
+        },
         "revelation_shift": {
           "type": "object",
           "additionalProperties": false,

@@ -50,12 +50,20 @@ READER_INVESTMENT_REQUIRED = {
     "attachment_anchor",
     "protagonist_contradiction",
     "threat_in_motion",
+    "core_threat_continuation",
     "revelation_shift",
     "emotional_afterimage",
     "clue_delivery",
 }
 
 REVELATION_SHIFT_REQUIRED = {"from", "to", "changes"}
+CORE_THREAT_CONTINUATION_REQUIRED = {
+    "prior_hook",
+    "current_effect",
+    "local_answer",
+    "forced_change",
+    "human_pressure_link",
+}
 CLUE_DELIVERY_REQUIRED = {"method", "resistance", "coincidence_risk"}
 ATTACHMENT_ANCHOR_REQUIRED = {
     "focus",
@@ -439,6 +447,43 @@ def validate_plan(
                     threat_in_motion,
                 )
             )
+        core_thread = investment.get("core_threat_continuation")
+        if (
+            not isinstance(core_thread, dict)
+            or set(core_thread) != CORE_THREAT_CONTINUATION_REQUIRED
+            or not all(
+                isinstance(core_thread.get(field), str) and core_thread[field].strip()
+                for field in CORE_THREAT_CONTINUATION_REQUIRED
+            )
+        ):
+            issues.append(Issue(
+                "BAD_CORE_THREAT_CONTINUATION",
+                "P1",
+                "非首章必须说明上一章核心威胁怎样在本章继续作用、产生局部答案、迫使当前改变，并与活人压力合流；首章也须声明核心威胁的当场闭环",
+                repr(core_thread)[:480],
+            ))
+        else:
+            local_answer = core_thread["local_answer"]
+            if re.search(
+                r"(?:只是|仅|仍|尚|无法|不能).{0,12}(?:矛盾|不一|不明|不清|未知|没说清|未确认)"
+                r"|(?:矛盾说法|说法不一|各执一词)(?:。|，|；|$)",
+                local_answer,
+            ):
+                issues.append(Issue(
+                    "STALLED_CORE_REVELATION",
+                    "P1",
+                    "核心局部答案不能只把同一未知改写成证词矛盾或仍待确认；它必须排除一种理解、改变问题种类或形成新的行动边界",
+                    local_answer,
+                ))
+            if plan.get("chapter_number") == 2 and plan.get("event_id") == "event_1":
+                core_rendered = "\n".join(core_thread.values())
+                if not re.search(r"(?:死者|死人|借声|声音|叫门)", core_rendered):
+                    issues.append(Issue(
+                        "CORE_HOOK_RECEDES_IN_PLAN",
+                        "P1",
+                        "第二章不能只用孙家名声冲突承接第一章；借用死者声音的核心疑问必须与本章局部答案和现实压力直接相连",
+                        core_rendered[:480],
+                    ))
         attachment = investment.get("attachment_anchor")
         if (
             not isinstance(attachment, dict)
