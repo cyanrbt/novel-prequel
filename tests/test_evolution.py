@@ -457,9 +457,64 @@ class EvolutionTests(unittest.TestCase):
                 ],
                 specialist_outputs=[specialist("continuity", 95)],
             )
-            self.assertEqual(result.status, "AUTO_PROMOTE")
+            self.assertEqual(result.status, "AUTO_PROMOTE", result.decision)
             self.assertTrue(result.decision["selection_confident"])
             self.assertTrue(result.decision["evaluation_degraded"])
+
+    def test_verified_continuity_revision_supplies_the_continuity_guard(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            bad = integrated(
+                {
+                    "continuity": 95,
+                    "character": 90,
+                    "craft": 92,
+                    "anti_slop": 90,
+                }
+            ).replace("门板上的灰", "正文里不存在的句子")
+            revision_issue = {
+                "dimension": "continuity",
+                "code": "FIX_CAUSAL",
+                "quote": "门板上的灰",
+                "instruction": "修复连续性期限。",
+                "acceptance": "期限与上一状态一致。",
+            }
+            revisable = json.loads(
+                integrated(
+                    {
+                        "continuity": 76,
+                        "character": 91,
+                        "craft": 90,
+                        "anti_slop": 92,
+                    },
+                    revisions=[revision_issue],
+                )
+            )
+            revisable["hard_failures"] = [
+                {
+                    "dimension": "continuity",
+                    "code": "FIX_CAUSAL",
+                    "quote": "门板上的灰",
+                    "explanation": "期限与上一状态冲突。",
+                }
+            ]
+            result, _, _, _ = self.setup_run(
+                root,
+                writer_outputs=[valid_draft(), valid_draft()],
+                triage_outputs=[
+                    bad,
+                    json.dumps(revisable, ensure_ascii=False),
+                ],
+                reviser_outputs=[valid_draft()],
+                verifier_outputs=[verification()],
+            )
+            self.assertEqual(result.status, "AUTO_PROMOTE", result.decision)
+            self.assertEqual(result.selected_id, "revision_01")
+            self.assertTrue(result.decision["selection_confident"])
+            self.assertEqual(
+                result.decision["revision_history"][0]["verified_dimensions"],
+                ["continuity"],
+            )
 
     def test_static_hard_fail_is_content_degraded_not_review_invalid(self):
         with tempfile.TemporaryDirectory() as tmp:

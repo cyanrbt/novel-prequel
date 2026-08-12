@@ -1125,6 +1125,11 @@ class QualityEvolutionEngine:
                 "accepted": accepted,
                 "weighted_before": selected.scorecard["weighted_score"],
                 "weighted_after": card["weighted_score"],
+                "verified_dimensions": [
+                    item["dimension"]
+                    for item in verification.get("updated_scores", [])
+                    if isinstance(item, dict) and item.get("dimension") in DIMENSIONS
+                ],
             }
         ]
         if not accepted:
@@ -1383,7 +1388,15 @@ class QualityEvolutionEngine:
                 caller=caller,
             )
 
-        continuity_guard_passed = "continuity" in selected.reviews
+        revision_continuity_verified = any(
+            item.get("accepted") is True
+            and "continuity" in item.get("verified_dimensions", [])
+            for item in revision_history
+            if isinstance(item, dict)
+        )
+        continuity_guard_passed = (
+            "continuity" in selected.reviews or revision_continuity_verified
+        )
         if (
             selection_mode == "REVISE"
             and verification_passed
