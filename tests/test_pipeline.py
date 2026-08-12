@@ -14,6 +14,7 @@ from scripts.prequel.run_manifest import RunManifest, fingerprint
 from scripts.prequel.memory import MemoryStore
 from scripts.prequel.pipeline import WritingPipeline, _new_state_after_chapter, accept_dry_run, merge_formal_chapters
 from scripts.prequel.quality import scan_draft
+from scripts.prequel.reader_review import canonicalize_pacing_diagnostics
 from scripts.prequel.state_settlement import expected_state_changes
 
 
@@ -145,8 +146,9 @@ def valid_plan_json() -> str:
 
 
 def valid_draft() -> str:
-    body = "张洞把门板上的灰扫进簸箕。灰没有落到底，贴在竹篾缝里。" * 40
-    return "第1章：门上的灰\n\n" + body + "\n\n天黑前，那层灰到了门内。"
+    repeated = "张洞把门板上的灰扫进簸箕。灰没有落到底，贴在竹篾缝里。"
+    body = repeated * 20 + "张洞把簸箕移到门边。" + repeated * 20
+    return "第1章：门上的灰\n\n灰正落在张洞手上。" + body + "\n\n天黑前，那层灰到了门内。"
 
 
 def review_json(verdict: str) -> str:
@@ -172,8 +174,7 @@ def review_json(verdict: str) -> str:
 
 
 def blind_reader_json(draft: str) -> str:
-    return json.dumps(
-        {
+    report = {
             "chapter_number": 1,
             "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
             "verdict": "PASS",
@@ -190,6 +191,29 @@ def blind_reader_json(draft: str) -> str:
                 "knowledge_or_behavior_gaps": [],
                 "physical_or_spatial_gaps": [],
                 "unsupported_recap_claims": [],
+            },
+            "pacing_diagnostics": {
+                "first_1000_chars_result": "张洞检查家门，灰的位置迫使他改变处置。",
+                "first_active_pressure": {
+                    "quote": "灰正落在张洞手上。", "position_percent": 0,
+                    "effect": "家门异常阻断张洞的原定安排。",
+                },
+                "core_threat_activation": {
+                    "quote": "灰正落在张洞手上。", "position_percent": 0,
+                    "effect": "纸灰直接侵入家门边界。",
+                },
+                "first_costly_choice": {
+                    "quote": "张洞把簸箕移到门边。", "position_percent": 0,
+                    "effect": "张洞放弃原位置并接手处置现场。",
+                },
+                "pressure_turns": [
+                    {"quote": "灰正落在张洞手上。", "effect": "异常进入目标。"},
+                    {"quote": "张洞把簸箕移到门边。", "effect": "处置方式改变。"},
+                    {"quote": "天黑前，那层灰到了门内。", "effect": "家门防线失效。"},
+                ],
+                "max_pressure_gap_chars": 0,
+                "exposition_runs": [],
+                "information_only_passages": [],
             },
             "reading_experience": {
                 "prose_accessibility": 4,
@@ -225,9 +249,9 @@ def blind_reader_json(draft: str) -> str:
                 {"quote": "到了门内", "finding": "章末边界发生变化"},
             ],
             "revision_instructions": [],
-        },
-        ensure_ascii=False,
-    )
+        }
+    canonicalize_pacing_diagnostics(report, draft)
+    return json.dumps(report, ensure_ascii=False)
 
 
 def state_settlement_json(state: dict, plan: dict, draft: str) -> str:

@@ -25,11 +25,17 @@ from scripts.prequel.pipeline import (
     run_preflight,
 )
 from scripts.prequel.quality import scan_draft
-from scripts.prequel.evaluation import DIMENSIONS, build_scorecard, validate_specialist_review
+from scripts.prequel.evaluation import (
+    DIMENSIONS,
+    build_scorecard,
+    canonicalize_artifact_quotes,
+    validate_specialist_review,
+)
 from scripts.prequel.pipeline import parse_json_artifact
 from scripts.prequel.reader_review import (
     build_blind_reader_packet,
     build_blind_reader_prompt,
+    canonicalize_pacing_diagnostics,
     validate_blind_reader_review,
 )
 from scripts.prequel.state_store import atomic_save_json, atomic_save_text, load_state
@@ -345,6 +351,8 @@ def command_reader_review(args) -> int:
     raw_target = PROJECT_ROOT / "novel/work/reader_reviews" / f"chapter_{chapter:03d}.raw.txt"
     atomic_save_text(raw_target, raw)
     report = parse_json_artifact(raw, f"reader-review-chapter-{chapter}")
+    canonicalize_artifact_quotes(report, draft)
+    canonicalize_pacing_diagnostics(report, draft)
     failures = [
         issue.message
         for issue in validate_blind_reader_review(report, draft, chapter)

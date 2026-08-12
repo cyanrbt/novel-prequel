@@ -4,13 +4,14 @@ from pathlib import Path
 
 from scripts.prequel.reader_review import (
     build_blind_reader_packet,
+    canonicalize_pacing_diagnostics,
     validate_blind_reader_review,
 )
 
 
 class BlindReaderReviewTests(unittest.TestCase):
     def setUp(self):
-        self.draft = "张洞要上船。\n舱门没有开。\n纸从门缝里出来。"
+        self.draft = "张洞要上船。\n\n舱门没有开。\n\n纸从门缝里出来。"
         self.report = {
             "chapter_number": 1,
             "draft_sha256": hashlib.sha256(self.draft.encode("utf-8")).hexdigest(),
@@ -28,6 +29,29 @@ class BlindReaderReviewTests(unittest.TestCase):
                 "knowledge_or_behavior_gaps": [],
                 "physical_or_spatial_gaps": [],
                 "unsupported_recap_claims": [],
+            },
+            "pacing_diagnostics": {
+                "first_1000_chars_result": "张洞的上船目标立刻被关闭的舱门阻断。",
+                "first_active_pressure": {
+                    "quote": "张洞要上船。", "position_percent": 0,
+                    "effect": "上船目标进入场面。",
+                },
+                "core_threat_activation": {
+                    "quote": "舱门没有开。", "position_percent": 0,
+                    "effect": "关闭边界成为必须处理的阻力。",
+                },
+                "first_costly_choice": {
+                    "quote": "要上船。", "position_percent": 0,
+                    "effect": "张洞承诺立刻离开当前安全位置。",
+                },
+                "pressure_turns": [
+                    {"quote": "张洞要上船。", "effect": "目标开始。"},
+                    {"quote": "舱门没有开。", "effect": "通路被阻断。"},
+                    {"quote": "来。", "effect": "纸越过关闭边界。"},
+                ],
+                "max_pressure_gap_chars": 0,
+                "exposition_runs": [],
+                "information_only_passages": [],
             },
             "reading_experience": {
                 "prose_accessibility": 5,
@@ -74,6 +98,7 @@ class BlindReaderReviewTests(unittest.TestCase):
             ],
             "revision_instructions": [],
         }
+        canonicalize_pacing_diagnostics(self.report, self.draft)
 
     def test_blind_packet_excludes_hidden_outline_and_current_state(self):
         state = {
@@ -95,6 +120,103 @@ class BlindReaderReviewTests(unittest.TestCase):
 
     def test_valid_report_requires_reader_visible_evidence(self):
         self.assertEqual(validate_blind_reader_review(self.report, self.draft, 1), [])
+
+    def test_pacing_metrics_are_derived_from_exact_quotes(self):
+        pacing = self.report["pacing_diagnostics"]
+        self.assertEqual(pacing["core_threat_activation"]["position_percent"], 30.0)
+        self.assertEqual(pacing["max_pressure_gap_chars"], 12)
+
+    def test_pacing_positions_exclude_chapter_title(self):
+        draft = "第1章：试题\n\n正文从这里开始。\n后续压力。"
+        report = {
+            "pacing_diagnostics": {
+                "first_active_pressure": {
+                    "quote": "正文从这里开始。", "position_percent": 99,
+                },
+            }
+        }
+        canonicalize_pacing_diagnostics(report, draft)
+        self.assertEqual(
+            report["pacing_diagnostics"]["first_active_pressure"][
+                "position_percent"
+            ],
+            0.0,
+        )
+
+    def test_pass_rejects_late_core_threat(self):
+        self.report["pacing_diagnostics"]["core_threat_activation"]["quote"] = "来。"
+        canonicalize_pacing_diagnostics(self.report, self.draft)
+        codes = {
+            item.code
+            for item in validate_blind_reader_review(self.report, self.draft, 1)
+        }
+        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+
+    def test_pass_rejects_three_paragraph_exposition_run(self):
+        self.report["pacing_diagnostics"]["exposition_runs"] = [{
+            "quote": self.draft,
+            "paragraph_count": 0,
+            "approx_chars": 0,
+            "explanation": "连续三段只解释既有状态。",
+        }]
+        canonicalize_pacing_diagnostics(self.report, self.draft)
+        codes = {
+            item.code
+            for item in validate_blind_reader_review(self.report, self.draft, 1)
+        }
+        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+
+    def test_pass_rejects_oversized_information_only_passage(self):
+        passage = "账册旧目" * 30
+        self.draft = (
+            "张洞要上船。\n\n舱门没有开。\n\n"
+            + passage
+            + "\n\n纸从门缝里出来。"
+        )
+        self.report["draft_sha256"] = hashlib.sha256(
+            self.draft.encode("utf-8")
+        ).hexdigest()
+        self.report["pacing_diagnostics"]["information_only_passages"] = [{
+            "quote": passage,
+            "approx_chars": 0,
+            "explanation": "删除后只少重复账目。",
+        }]
+        canonicalize_pacing_diagnostics(self.report, self.draft)
+        codes = {
+            item.code
+            for item in validate_blind_reader_review(self.report, self.draft, 1)
+        }
+        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+
+    def test_pass_rejects_pressure_gap_over_800_chars(self):
+        passage = "旧账" * 420
+        self.draft = (
+            "张洞要上船。\n\n舱门没有开。\n\n"
+            + passage
+            + "\n\n纸从门缝里出来。"
+        )
+        self.report["draft_sha256"] = hashlib.sha256(
+            self.draft.encode("utf-8")
+        ).hexdigest()
+        canonicalize_pacing_diagnostics(self.report, self.draft)
+        codes = {
+            item.code
+            for item in validate_blind_reader_review(self.report, self.draft, 1)
+        }
+        self.assertGreater(
+            self.report["pacing_diagnostics"]["max_pressure_gap_chars"], 800
+        )
+        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+
+    def test_report_rejects_falsified_pacing_position(self):
+        self.report["pacing_diagnostics"]["first_active_pressure"][
+            "position_percent"
+        ] = 90
+        codes = {
+            item.code
+            for item in validate_blind_reader_review(self.report, self.draft, 1)
+        }
+        self.assertIn("READER_FALSE_PACING_POSITION", codes)
 
     def test_report_rejects_quote_not_present_in_draft(self):
         self.report["evidence"][0]["quote"] = "作者的解释"

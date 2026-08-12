@@ -38,6 +38,7 @@ from .quality import Issue, scan_draft, validate_plan, validate_review
 from .reader_review import (
     build_blind_reader_packet,
     build_blind_reader_prompt,
+    canonicalize_pacing_diagnostics,
     validate_blind_reader_review,
 )
 from .run_manifest import RunManifest, fingerprint
@@ -688,6 +689,7 @@ def accept_dry_run(
             try:
                 existing_reader = json.loads(existing_reader_path.read_text(encoding="utf-8"))
                 canonicalize_artifact_quotes(existing_reader, draft)
+                canonicalize_pacing_diagnostics(existing_reader, draft)
                 existing_issues = validate_blind_reader_review(existing_reader, draft, number)
                 if (
                     not any(issue.severity == "P1" for issue in existing_issues)
@@ -710,6 +712,7 @@ def accept_dry_run(
             try:
                 reader_review = parse_json_artifact(raw, "accept-blind-reader")
                 canonicalize_artifact_quotes(reader_review, draft)
+                canonicalize_pacing_diagnostics(reader_review, draft)
                 workspace.write_json("reader_review.json", reader_review)
             except ArtifactValidationError:
                 workspace.write_raw_text("reader_review.invalid.txt", raw)
@@ -1390,6 +1393,7 @@ class WritingPipeline:
                 "blind-reader-review",
             )
             canonicalize_artifact_quotes(reader_review, engine_result.draft)
+            canonicalize_pacing_diagnostics(reader_review, engine_result.draft)
             require_no_p1(
                 validate_blind_reader_review(reader_review, engine_result.draft, number),
                 "盲读者审查结构",

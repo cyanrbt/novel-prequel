@@ -54,6 +54,19 @@
 
 对章末行动做空间和控制权反证：人物守的位置能看见哪些出口、对手是否能从另一条已建立的路线行动、证物是否仍在人物影响范围内。若一句“今晚不能没人看着”实际无法阻止或发现它声称要防的事，`ending_compulsion` 最高3，即使台词紧迫、人物愿意行动。
 
+另做一份可量化的 `pacing_diagnostics`。这里的“压力变化”必须让人物的可选行动、关系或危险发生变化；新物证、气氛描写、同一事实的复述不算。所有位置按去除标题、空格和换行后的正文长度估算百分比，程序会根据引文重新计算，所以不得虚报数字：
+
+- `first_1000_chars_result`：只写前1000字已经让谁失去、决定、误判或被迫做了什么；不能只罗列已交代的信息；
+- `first_active_pressure`：第一个正在作用于人物目标、身体、关系或安全的阻力，填写 `{quote, position_percent, effect}`；
+- `core_threat_activation`：本章核心威胁第一次实际侵入活人处境的位置，填写相同结构；只有怪异物证存在不算；
+- `first_costly_choice`：主角第一个已经付出或不可逆承诺时间、金钱、信誉、关系、身份或安全的选择，填写相同结构；口头说“我负责”但代价仍由别人承担不算；
+- `pressure_turns`：按正文顺序列出至少三次真正的压力变化，每项为 `{quote, effect}`；引文必须各自唯一，并覆盖到章末最后一次改变行动条件的位置；
+- `max_pressure_gap_chars`：相邻压力变化引文起点之间的最大去空白字数；可先估算，程序会据引文校正；
+- `exposition_runs`：列出所有疑似连续纯解释段，每项为 `{quote, paragraph_count, approx_chars, explanation}`；引文需完整覆盖被判断的连续段；若没有则为空数组；
+- `information_only_passages`：列出所有删除后只少一点资料、却不改变当前选择、关系、危险或情绪落点的连续文字，每项为 `{quote, approx_chars, explanation}`；若没有则为空数组。
+
+`PASS` 的节奏硬门禁是：首个有效压力不晚于25%，核心威胁不晚于30%，首个高代价选择不晚于60%；相邻压力变化最大空档不超过800字，最后一次压力变化不早于85%；不得出现连续三段纯解释，也不得保留120字及以上的纯信息段。任一不满足，必须降低相应体验分并判为 `REVISE` 或 `REPLAN`。
+
 在决定结论前，必须主动做五类反证检查，并将结果分别写入 `adversarial_checks`：
 
 1. `ordinary_explanations`：正文尚未排除的日常解释；这是对人物证据边界的记录，不因其存在就自动构成文本缺口；
@@ -66,7 +79,7 @@
 
 ## 结论规则
 
-- `PASS`：目标、空间、人物与因果都可从正文自行理解；除可被正文诚实保留的普通解释外，没有阻断继续阅读的前置、知识、空间或复述缺口；八项体验分均至少4，五项标杆诊断均至少4，`competitive_readiness` 必须为 `MATCH`，`evidence_payoff_mode` 不能是 `EVIDENCE_ONLY`，`would_choose_over_competent_peer` 为 true，`major_gaps` 为空，`continue_reading` 为 true 且没有弃读点或重大摩擦。`PASS` 可以诚实保留轻微摩擦和非阻断 warning，但 `blocking_issues` 与 `revision_instructions` 必须为空。
+- `PASS`：目标、空间、人物与因果都可从正文自行理解；除可被正文诚实保留的普通解释外，没有阻断继续阅读的前置、知识、空间或复述缺口；满足全部节奏硬门禁；八项体验分均至少4，五项标杆诊断均至少4，`competitive_readiness` 必须为 `MATCH`，`evidence_payoff_mode` 不能是 `EVIDENCE_ONLY`，`would_choose_over_competent_peer` 为 true，`major_gaps` 为空，`continue_reading` 为 true 且没有弃读点或重大摩擦。`PASS` 可以诚实保留轻微摩擦和非阻断 warning，但 `blocking_issues` 与 `revision_instructions` 必须为空。
 - `REVISE`：主线仍成立，但存在会令普通读者停下来发问的关键缺口。
 - `REPLAN`：目标、人物动机、场景因果或异常机制无法建立，局部修句不能解决。
 

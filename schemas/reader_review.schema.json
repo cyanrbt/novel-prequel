@@ -3,7 +3,7 @@
   "$id": "reader_review.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "draft_sha256", "verdict", "reader_recap", "adversarial_checks", "reading_experience", "benchmark_comparison", "blocking_issues", "warnings", "evidence", "revision_instructions"],
+  "required": ["chapter_number", "draft_sha256", "verdict", "reader_recap", "adversarial_checks", "pacing_diagnostics", "reading_experience", "benchmark_comparison", "blocking_issues", "warnings", "evidence", "revision_instructions"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
     "draft_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
@@ -30,6 +30,31 @@
         "knowledge_or_behavior_gaps": {"type": "array", "items": {"type": "string"}},
         "physical_or_spatial_gaps": {"type": "array", "items": {"type": "string"}},
         "unsupported_recap_claims": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "pacing_diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first_1000_chars_result", "first_active_pressure", "core_threat_activation", "first_costly_choice", "pressure_turns", "max_pressure_gap_chars", "exposition_runs", "information_only_passages"],
+      "properties": {
+        "first_1000_chars_result": {"type": "string"},
+        "first_active_pressure": {"$ref": "#/$defs/pacingMilestone"},
+        "core_threat_activation": {"$ref": "#/$defs/pacingMilestone"},
+        "first_costly_choice": {"$ref": "#/$defs/pacingMilestone"},
+        "pressure_turns": {
+          "type": "array",
+          "minItems": 3,
+          "items": {"$ref": "#/$defs/pressureTurn"}
+        },
+        "max_pressure_gap_chars": {"type": "integer", "minimum": 0},
+        "exposition_runs": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/expositionRun"}
+        },
+        "information_only_passages": {
+          "type": "array",
+          "items": {"$ref": "#/$defs/informationOnlyPassage"}
+        }
       }
     },
     "reading_experience": {
@@ -121,6 +146,46 @@
     "revision_instructions": {"type": "array", "items": {"type": "string"}}
   },
   "$defs": {
+    "pacingMilestone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quote", "position_percent", "effect"],
+      "properties": {
+        "quote": {"type": "string"},
+        "position_percent": {"type": "number", "minimum": 0, "maximum": 100},
+        "effect": {"type": "string"}
+      }
+    },
+    "pressureTurn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quote", "effect"],
+      "properties": {
+        "quote": {"type": "string"},
+        "effect": {"type": "string"}
+      }
+    },
+    "expositionRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quote", "paragraph_count", "approx_chars", "explanation"],
+      "properties": {
+        "quote": {"type": "string"},
+        "paragraph_count": {"type": "integer", "minimum": 1},
+        "approx_chars": {"type": "integer", "minimum": 1},
+        "explanation": {"type": "string"}
+      }
+    },
+    "informationOnlyPassage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quote", "approx_chars", "explanation"],
+      "properties": {
+        "quote": {"type": "string"},
+        "approx_chars": {"type": "integer", "minimum": 1},
+        "explanation": {"type": "string"}
+      }
+    },
     "benchmarkDimension": {
       "type": "object",
       "additionalProperties": false,

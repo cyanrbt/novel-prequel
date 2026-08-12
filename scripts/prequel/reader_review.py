@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -59,6 +60,32 @@ BENCHMARK_COMPARISON_FIELDS = {
     "evidence_payoff_mode",
     "would_choose_over_competent_peer",
     "major_gaps",
+}
+
+PACING_DIAGNOSTIC_FIELDS = {
+    "first_1000_chars_result",
+    "first_active_pressure",
+    "core_threat_activation",
+    "first_costly_choice",
+    "pressure_turns",
+    "max_pressure_gap_chars",
+    "exposition_runs",
+    "information_only_passages",
+}
+
+PACING_MILESTONE_FIELDS = {
+    "first_active_pressure",
+    "core_threat_activation",
+    "first_costly_choice",
+}
+
+PASS_PACING_LIMITS = {
+    "first_active_pressure": 25.0,
+    "core_threat_activation": 30.0,
+    "first_costly_choice": 60.0,
+    "max_pressure_gap_chars": 800,
+    "last_pressure_turn_min_percent": 85.0,
+    "information_only_passage_max_chars": 120,
 }
 
 PASS_EXPERIENCE_FLOORS = {
@@ -119,6 +146,404 @@ def build_blind_reader_prompt(project_root: Path, packet: dict[str, Any]) -> str
     )
 
 
+def _compact_length(text: str) -> int:
+    return len(re.sub(r"\s+", "", text))
+
+
+def _chapter_body(draft: str) -> tuple[str, int]:
+    first_line, separator, remainder = draft.partition("\n")
+    if separator and re.match(r"^第\d+章(?:[：:].*)?$", first_line.strip()):
+        return remainder.lstrip("\r\n"), len(draft) - len(remainder.lstrip("\r\n"))
+    return draft, 0
+
+
+def _pacing_length(draft: str) -> int:
+    body, _ = _chapter_body(draft)
+    return _compact_length(body)
+
+
+def _quote_metrics(draft: str, quote: Any) -> tuple[int, float] | None:
+    if not isinstance(quote, str) or not quote or draft.count(quote) != 1:
+        return None
+    raw_offset = draft.find(quote)
+    body, body_offset = _chapter_body(draft)
+    if raw_offset < body_offset:
+        return None
+    compact_offset = _compact_length(draft[body_offset:raw_offset])
+    total = max(_compact_length(body), 1)
+    return compact_offset, round(compact_offset / total * 100, 1)
+
+
+def canonicalize_pacing_diagnostics(review: dict[str, Any], draft: str) -> None:
+    """Derive every countable pacing metric from quoted draft evidence."""
+    pacing = review.get("pacing_diagnostics")
+    if not isinstance(pacing, dict):
+        return
+
+    for field in PACING_MILESTONE_FIELDS:
+        item = pacing.get(field)
+        if not isinstance(item, dict):
+            continue
+        metrics = _quote_metrics(draft, item.get("quote"))
+        if metrics is not None:
+            item["position_percent"] = metrics[1]
+
+    turn_positions: list[int] = []
+    turn_quotes: set[str] = set()
+    pressure_turns = pacing.get("pressure_turns")
+    if isinstance(pressure_turns, list):
+        for item in pressure_turns:
+            if not isinstance(item, dict):
+                continue
+            quote = item.get("quote")
+            metrics = _quote_metrics(draft, quote)
+            if metrics is None or quote in turn_quotes:
+                continue
+            turn_quotes.add(quote)
+            turn_positions.append(metrics[0])
+    if len(turn_positions) >= 2 and turn_positions == sorted(turn_positions):
+        pacing["max_pressure_gap_chars"] = max(
+            right - left
+            for left, right in zip(turn_positions, turn_positions[1:])
+        )
+
+    exposition_runs = pacing.get("exposition_runs")
+    if isinstance(exposition_runs, list):
+        for item in exposition_runs:
+            if not isinstance(item, dict):
+                continue
+            quote = item.get("quote")
+            if not isinstance(quote, str) or not quote or quote not in draft:
+                continue
+            item["paragraph_count"] = len(
+                [part for part in re.split(r"\n\s*\n", quote) if part.strip()]
+            )
+            item["approx_chars"] = _compact_length(quote)
+
+    information_only = pacing.get("information_only_passages")
+    if isinstance(information_only, list):
+        for item in information_only:
+            if not isinstance(item, dict):
+                continue
+            quote = item.get("quote")
+            if isinstance(quote, str) and quote and quote in draft:
+                item["approx_chars"] = _compact_length(quote)
+
+
+def _validate_pacing_diagnostics(
+    pacing: Any, draft: str, verdict: Any
+) -> list[Issue]:
+    issues: list[Issue] = []
+    if not isinstance(pacing, dict) or set(pacing) != PACING_DIAGNOSTIC_FIELDS:
+        return [
+            Issue(
+                "READER_BAD_PACING",
+                "P1",
+                "节奏诊断字段不完整",
+                repr(pacing),
+            )
+        ]
+
+    first_result = pacing.get("first_1000_chars_result")
+    if not isinstance(first_result, str) or not first_result.strip():
+        issues.append(
+            Issue(
+                "READER_BAD_PACING",
+                "P1",
+                "节奏诊断必须说明前1000字造成的结果",
+                repr(first_result),
+            )
+        )
+
+    for field in PACING_MILESTONE_FIELDS:
+        item = pacing.get(field)
+        if (
+            not isinstance(item, dict)
+            or set(item) != {"quote", "position_percent", "effect"}
+            or isinstance(item.get("position_percent"), bool)
+            or not isinstance(item.get("position_percent"), (int, float))
+            or not isinstance(item.get("effect"), str)
+            or not item["effect"].strip()
+        ):
+            issues.append(
+                Issue(
+                    "READER_BAD_PACING_MILESTONE",
+                    "P1",
+                    f"{field}必须提供唯一正文引文、位置百分比和实际效果",
+                    repr(item),
+                )
+            )
+            continue
+        metrics = _quote_metrics(draft, item.get("quote"))
+        if metrics is None:
+            issues.append(
+                Issue(
+                    "READER_FALSE_PACING_EVIDENCE",
+                    "P1",
+                    f"{field}引文必须在正文中且只出现一次",
+                    repr(item.get("quote")),
+                )
+            )
+            continue
+        _, actual_percent = metrics
+        if abs(float(item["position_percent"]) - actual_percent) > 0.2:
+            issues.append(
+                Issue(
+                    "READER_FALSE_PACING_POSITION",
+                    "P1",
+                    f"{field}位置百分比与正文不符",
+                    repr(
+                        {
+                            "reported": item["position_percent"],
+                            "actual": actual_percent,
+                        }
+                    ),
+                )
+            )
+
+    pressure_turns = pacing.get("pressure_turns")
+    turn_positions: list[int] = []
+    turn_quotes: set[str] = set()
+    if not isinstance(pressure_turns, list) or len(pressure_turns) < 3:
+        issues.append(
+            Issue(
+                "READER_BAD_PRESSURE_TURNS",
+                "P1",
+                "节奏诊断至少需要三次有效压力变化",
+                repr(pressure_turns),
+            )
+        )
+    else:
+        for item in pressure_turns:
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"quote", "effect"}
+                or not isinstance(item.get("effect"), str)
+                or not item["effect"].strip()
+            ):
+                issues.append(
+                    Issue(
+                        "READER_BAD_PRESSURE_TURNS",
+                        "P1",
+                        "压力变化必须提供唯一正文引文和新产生的选择、关系或危险",
+                        repr(item),
+                    )
+                )
+                continue
+            quote = item.get("quote")
+            metrics = _quote_metrics(draft, quote)
+            if metrics is None or quote in turn_quotes:
+                issues.append(
+                    Issue(
+                        "READER_FALSE_PRESSURE_TURN",
+                        "P1",
+                        "压力变化引文必须在正文中唯一且不得重复",
+                        repr(quote),
+                    )
+                )
+                continue
+            turn_quotes.add(quote)
+            turn_positions.append(metrics[0])
+        if turn_positions != sorted(turn_positions):
+            issues.append(
+                Issue(
+                    "READER_UNORDERED_PRESSURE_TURNS",
+                    "P1",
+                    "压力变化必须按正文出现顺序提交",
+                    repr(turn_positions),
+                )
+            )
+
+    reported_gap = pacing.get("max_pressure_gap_chars")
+    actual_gap: int | None = None
+    if len(turn_positions) >= 2:
+        actual_gap = max(
+            right - left
+            for left, right in zip(turn_positions, turn_positions[1:])
+        )
+    if isinstance(reported_gap, bool) or not isinstance(reported_gap, int) or reported_gap < 0:
+        issues.append(
+            Issue(
+                "READER_BAD_PRESSURE_GAP",
+                "P1",
+                "max_pressure_gap_chars必须是非负整数",
+                repr(reported_gap),
+            )
+        )
+    elif actual_gap is not None and reported_gap != actual_gap:
+        issues.append(
+            Issue(
+                "READER_FALSE_PRESSURE_GAP",
+                "P1",
+                "最大压力空档与正文引文位置不符",
+                repr({"reported": reported_gap, "actual": actual_gap}),
+            )
+        )
+
+    exposition_runs = pacing.get("exposition_runs")
+    long_exposition = False
+    if not isinstance(exposition_runs, list):
+        issues.append(
+            Issue(
+                "READER_BAD_EXPOSITION_RUNS",
+                "P1",
+                "exposition_runs必须是数组",
+                repr(exposition_runs),
+            )
+        )
+    else:
+        for item in exposition_runs:
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"quote", "paragraph_count", "approx_chars", "explanation"}
+                or isinstance(item.get("paragraph_count"), bool)
+                or not isinstance(item.get("paragraph_count"), int)
+                or item["paragraph_count"] < 1
+                or isinstance(item.get("approx_chars"), bool)
+                or not isinstance(item.get("approx_chars"), int)
+                or item["approx_chars"] < 1
+                or not isinstance(item.get("explanation"), str)
+                or not item["explanation"].strip()
+            ):
+                issues.append(
+                    Issue(
+                        "READER_BAD_EXPOSITION_RUNS",
+                        "P1",
+                        "纯解释段必须提供连续引文、段数、字数和停滞原因",
+                        repr(item),
+                    )
+                )
+                continue
+            quote = item.get("quote")
+            if not isinstance(quote, str) or not quote or quote not in draft:
+                issues.append(
+                    Issue(
+                        "READER_FALSE_EXPOSITION_RUN",
+                        "P1",
+                        "纯解释段引文不在正文",
+                        repr(quote),
+                    )
+                )
+                continue
+            actual_paragraphs = len(
+                [part for part in re.split(r"\n\s*\n", quote) if part.strip()]
+            )
+            actual_chars = _compact_length(quote)
+            if (
+                item["paragraph_count"] != actual_paragraphs
+                or abs(item["approx_chars"] - actual_chars) > 2
+            ):
+                issues.append(
+                    Issue(
+                        "READER_FALSE_EXPOSITION_METRICS",
+                        "P1",
+                        "纯解释段的段数或字数与引文不符",
+                        repr(
+                            {
+                                "reported_paragraphs": item["paragraph_count"],
+                                "actual_paragraphs": actual_paragraphs,
+                                "reported_chars": item["approx_chars"],
+                                "actual_chars": actual_chars,
+                            }
+                        ),
+                    )
+                )
+            long_exposition = long_exposition or actual_paragraphs >= 3
+
+    information_only = pacing.get("information_only_passages")
+    oversized_information = False
+    if not isinstance(information_only, list):
+        issues.append(
+            Issue(
+                "READER_BAD_INFORMATION_ONLY",
+                "P1",
+                "information_only_passages必须是数组",
+                repr(information_only),
+            )
+        )
+    else:
+        for item in information_only:
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"quote", "approx_chars", "explanation"}
+                or isinstance(item.get("approx_chars"), bool)
+                or not isinstance(item.get("approx_chars"), int)
+                or item["approx_chars"] < 1
+                or not isinstance(item.get("explanation"), str)
+                or not item["explanation"].strip()
+            ):
+                issues.append(
+                    Issue(
+                        "READER_BAD_INFORMATION_ONLY",
+                        "P1",
+                        "纯信息段必须提供连续引文、字数和删除影响",
+                        repr(item),
+                    )
+                )
+                continue
+            quote = item.get("quote")
+            if not isinstance(quote, str) or not quote or quote not in draft:
+                issues.append(
+                    Issue(
+                        "READER_FALSE_INFORMATION_ONLY",
+                        "P1",
+                        "纯信息段引文不在正文",
+                        repr(quote),
+                    )
+                )
+                continue
+            actual_chars = _compact_length(quote)
+            if abs(item["approx_chars"] - actual_chars) > 2:
+                issues.append(
+                    Issue(
+                        "READER_FALSE_INFORMATION_METRICS",
+                        "P1",
+                        "纯信息段字数与引文不符",
+                        repr({"reported": item["approx_chars"], "actual": actual_chars}),
+                    )
+                )
+            oversized_information = oversized_information or (
+                actual_chars
+                >= PASS_PACING_LIMITS["information_only_passage_max_chars"]
+            )
+
+    if verdict == "PASS" and not any(issue.severity == "P1" for issue in issues):
+        late_milestones = {}
+        for field in PACING_MILESTONE_FIELDS:
+            metrics = _quote_metrics(draft, pacing[field]["quote"])
+            if metrics and metrics[1] > PASS_PACING_LIMITS[field]:
+                late_milestones[field] = metrics[1]
+        last_turn_percent = (
+            round(turn_positions[-1] / max(_pacing_length(draft), 1) * 100, 1)
+            if turn_positions
+            else 0.0
+        )
+        if (
+            late_milestones
+            or (actual_gap is not None and actual_gap > PASS_PACING_LIMITS["max_pressure_gap_chars"])
+            or last_turn_percent < PASS_PACING_LIMITS["last_pressure_turn_min_percent"]
+            or long_exposition
+            or oversized_information
+        ):
+            issues.append(
+                Issue(
+                    "READER_PASS_WITH_SLOW_PACING",
+                    "P1",
+                    "PASS必须满足威胁、选择、压力空档和解释密度门禁",
+                    repr(
+                        {
+                            "late_milestones": late_milestones,
+                            "max_pressure_gap_chars": actual_gap,
+                            "last_pressure_turn_percent": last_turn_percent,
+                            "long_exposition": long_exposition,
+                            "oversized_information": oversized_information,
+                        }
+                    ),
+                )
+            )
+    return issues
+
+
 def validate_blind_reader_review(
     review: dict[str, Any], draft: str, expected_chapter: int
 ) -> list[Issue]:
@@ -129,6 +554,7 @@ def validate_blind_reader_review(
         "verdict",
         "reader_recap",
         "adversarial_checks",
+        "pacing_diagnostics",
         "reading_experience",
         "benchmark_comparison",
         "blocking_issues",
@@ -162,6 +588,12 @@ def validate_blind_reader_review(
         for value in adversarial_checks.values()
     ):
         issues.append(Issue("READER_BAD_ADVERSARIAL_CHECKS", "P1", "反证检查必须是非空字符串数组的集合", repr(adversarial_checks)))
+
+    issues.extend(
+        _validate_pacing_diagnostics(
+            review.get("pacing_diagnostics"), draft, review.get("verdict")
+        )
+    )
 
     experience = review.get("reading_experience")
     experience_valid = True

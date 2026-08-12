@@ -26,7 +26,7 @@
       "summary": "张洞发现倒扣饭碗中出现纸灰，阻止母亲为门外冒充孙周氏的声音开门，并毁坏木样错失渡船客牌，母子因此决裂",
       "chapter": 1,
       "source_path": "novel/chapters/vol_01/chapter_001.txt",
-      "source_sha256": "a4578c988e7a7920b0c8967f28985e23475dbaaa042b040662f9a10ff04fde3b"
+      "source_sha256": "045c4a7cb4ecaedf767e28f18db33ec9e03b3ba251d749557394cd8a42210740"
     },
     {
       "characters": [
@@ -34,12 +34,15 @@
         "孙有田",
         "张洞",
         "张洞母亲",
-        "木匠老李"
+        "木匠老李",
+        "许嫂",
+        "陈婶"
       ],
       "locations": [
         "东巷孙家外院、内屋门帘外与关闭的街门内侧",
         "孙家外院至张家外厢",
-        "张家院正屋、正门内侧与外厢"
+        "张家院正屋、正门内侧与外厢",
+        "张家外厢临街小窗内外"
       ],
       "event_id": "event_1",
       "foreshadows": [],
@@ -47,15 +50,16 @@
         "protagonist_known_info_add",
         "protagonist_inventory_add",
         "protagonist_location",
+        "protagonist_body_updates",
         "timeline_year",
         "timeline_elapsed_days",
         "world_hypotheses_add"
       ],
       "hook_type": "代价展示",
-      "summary": "孙家门外声音在孙有田退开后转叫张洞母亲；张洞接下未完殓衣，独自留在外厢修补并面对日落前交衣的追责。",
+      "summary": "借声转向不同开门者并抢先冒充张洞母亲隔断邻里互证；张洞接下殓衣负伤担责，真实母亲被挡在院外。",
       "chapter": 2,
       "source_path": "novel/chapters/vol_01/chapter_002.txt",
-      "source_sha256": "bb7a95255edce194d150d23b10434d913794d6e53bf1d5081088e4dd3a3f71d3"
+      "source_sha256": "a8ee49b614bb757565f33ac969e0aeda01b035e731da9e86df91f028d337e079"
     }
   ]
 }
