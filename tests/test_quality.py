@@ -302,7 +302,7 @@ class QualityGateTests(unittest.TestCase):
             "门外借用孙有田亡父声音叫门，正在诱使他开门。"
         )
         plan["scenes"][0]["threat_action"] = (
-            "关闭的侧门外三次敲击后传来亡父声音，抬棺人当场退出。"
+            "门外客借孙有田亡父之声主动诱他开街门，抬棺人当场退出。"
         )
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         codes = {item.code for item in issues}
