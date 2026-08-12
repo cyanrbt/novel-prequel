@@ -240,6 +240,30 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("REPEATED_EXIT_LOSS", {item.code for item in issues})
 
+    def test_next_chapter_cannot_repeat_lost_career_as_local_trial_loss(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        state["recent_hooks"] = [{
+            "chapter": 1,
+            "type": "代价展示",
+            "content": "张洞毁坏木样并失去木行学徒客位。",
+        }]
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["choice_cost"] = "老李撤回张洞在木匠铺的试工机会。"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("REPEATED_CAREER_LOSS", {item.code for item in issues})
+
+    def test_plan_rejects_hearing_sun_house_from_woodshop(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["scenes"][0]["location"] = "双桥镇西口木匠铺"
+        plan["scenes"][0]["choice_reason"] = (
+            "张洞听见孙家内屋争执，又听到母亲在外院叫他，立刻赶去。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("IMPOSSIBLE_REMOTE_TRIGGER", {item.code for item in issues})
+
     def test_next_chapter_cannot_reuse_just_planted_clue_as_main_engine(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})

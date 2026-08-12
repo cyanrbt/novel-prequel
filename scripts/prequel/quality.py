@@ -191,6 +191,26 @@ def _validate_immediate_serial_progression(
             )
         )
 
+    prior_career_loss = re.search(
+        r"(?:失去|错过|错失|毁坏).{0,24}(?:学徒|木行|引荐|客位|客牌|木样)"
+        r"|(?:学徒|木行|引荐|客位|客牌|木样).{0,24}(?:失去|错过|错失|毁坏)",
+        prior,
+    )
+    planned_career_loss = re.search(
+        r"(?:失去|放弃|撤回|不再给).{0,24}(?:试工|木工活|用工|木匠铺|手艺机会)"
+        r"|(?:试工|木工活|用工|木匠铺|手艺机会).{0,24}(?:失去|放弃|撤回|不再给)",
+        planned,
+    )
+    if prior_career_loss and planned_career_loss:
+        issues.append(
+            Issue(
+                "REPEATED_CAREER_LOSS",
+                "P1",
+                "上一章已经毁掉木样并失去学徒客位；下一章不能再以失去本地试工或木工机会重复支付同一身份代价",
+                planned_career_loss.group(0),
+            )
+        )
+
     active_foreshadows = state.get("active_foreshadows", {})
     paper_ash_just_planted = any(
         item_id == "F-A01"
@@ -226,6 +246,37 @@ def _validate_immediate_serial_progression(
                 next((line for line in planned.splitlines() if "样榫" in line), "样榫"),
             )
         )
+    return issues
+
+
+def _validate_scene_spatial_triggers(plan: dict[str, Any]) -> list[Issue]:
+    issues: list[Issue] = []
+    scenes = plan.get("scenes", [])
+    if not isinstance(scenes, list):
+        return issues
+    for index, scene in enumerate(scenes, 1):
+        if not isinstance(scene, dict):
+            continue
+        location = scene.get("location", "")
+        rendered = "\n".join(
+            str(scene.get(key, ""))
+            for key in ("discovery_path", "choice_reason", "threat_action", "human_turn", "end_state")
+        )
+        if (
+            isinstance(location, str)
+            and "孙家" not in location
+            and re.search(
+                r"(?:听见|听到).{0,10}孙家.{0,8}(?:内屋|外院|争执|呼叫)"
+                r"|孙家.{0,8}(?:内屋|外院).{0,12}(?:叫|喊|呼叫|争执).{0,10}(?:张洞|他)",
+                rendered,
+            )
+        ):
+            issues.append(Issue(
+                "IMPOSSIBLE_REMOTE_TRIGGER",
+                "P1",
+                "张家或木匠铺距孙家步行约一刻钟；张洞不能直接听见孙家内屋争执或母亲呼叫，必须已在现场或有可见传话链",
+                f"scene {index}: {location}",
+            ))
     return issues
 
 
@@ -341,6 +392,7 @@ def validate_plan(
     if plan.get("event_id") != state.get("chapter", {}).get("current_event"):
         issues.append(Issue("PLAN_EVENT_MISMATCH", "P1", "规划事件与状态不一致", str(plan.get("event_id"))))
     issues.extend(_validate_immediate_serial_progression(plan, state))
+    issues.extend(_validate_scene_spatial_triggers(plan))
     issues.extend(_validate_ending_leverage_support(plan))
     issues.extend(_validate_event_specific_authority(plan))
     continuity = plan.get("serial_continuity")
