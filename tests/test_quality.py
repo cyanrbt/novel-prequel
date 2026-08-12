@@ -293,6 +293,15 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("STATIC_INTERIOR_WAIT_HOOK", {item.code for item in issues})
 
+    def test_plan_rejects_hook_that_abandons_emotional_afterimage_person(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan["hook"]["content"] = "李二受染坊差遣，邀张洞去孙家收回孝布。"
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        self.assertIn("ENDING_ABANDONS_AFTERIMAGE", {item.code for item in issues})
+
     def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         plan = _valid_plan()

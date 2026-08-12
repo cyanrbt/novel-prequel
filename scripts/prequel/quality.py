@@ -295,6 +295,21 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
             "母亲进入孙家内屋或张洞被留在外院只是位置变化；章末必须出现无法被正常入殓私密流程解释的主动变化",
             hook_content,
         ))
+    afterimage = plan.get("reader_investment", {}).get("emotional_afterimage", {})
+    person = afterimage.get("person", "") if isinstance(afterimage, dict) else ""
+    if (
+        plan.get("chapter_number", 0) > 1
+        and isinstance(person, str)
+        and ("母亲" in person or "张母" in person)
+        and isinstance(hook_content, str)
+        and not any(alias in hook_content for alias in ("母亲", "张母", "娘"))
+    ):
+        issues.append(Issue(
+            "ENDING_ABANDONS_AFTERIMAGE",
+            "P1",
+            "章末钩子必须继续作用于情绪余震中的母亲，不能在她刚付出代价后切换成配角的新差事或下一项调查",
+            hook_content,
+        ))
     return issues
 
 
