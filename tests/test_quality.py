@@ -392,6 +392,31 @@ class QualityGateTests(unittest.TestCase):
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertNotIn("CORE_REVEAL_REPEATS_DEAD_VOICE", {item.code for item in issues})
 
+    def test_second_chapter_accepts_attempt_27_retargeting_wording_and_cost(self):
+        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
+        plan = _valid_plan()
+        plan["chapter_number"] = 2
+        plan["dramatic_spine"]["choice_cost"] = (
+            "张洞本人承接孙周氏未完殓衣，须在日落前以自己的名义补好交还。"
+        )
+        plan["dramatic_spine"]["cost_realization"] = (
+            "孙有田把殓衣交到张洞手中，张洞当场答应日落前交回。"
+        )
+        plan["reader_investment"]["revelation_shift"].update({
+            "on_page_answer": "同一次诱门里，孙有田退离后诱门未重敲便转向仍能碰栓的张母。",
+            "counterexample": "当前借声在孙有田退离后改换目标，证明只按住一个人挡不住诱门。",
+            "new_response": "所有能开门者一同退离栓柄。",
+            "executed_change": "张母要求众人退开，张洞用长凳隔开人与栓柄。",
+        })
+        plan["reader_investment"]["core_threat_continuation"]["local_answer"] = (
+            "同一次诱门在第一名能开门者退离后，转向第二名能开门者。"
+        )
+        issues = validate_plan(plan, state, {"CANON-RULE-001"})
+        codes = {item.code for item in issues}
+        self.assertNotIn("CORE_REVEAL_REPEATS_DEAD_VOICE", codes)
+        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", codes)
+
     def test_next_chapter_cannot_repeat_exit_loss_through_another_route(self):
         state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})

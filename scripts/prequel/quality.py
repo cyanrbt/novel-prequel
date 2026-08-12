@@ -352,7 +352,7 @@ def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
             for field in ("choice_cost", "cost_realization")
         ) if isinstance(spine, dict) else ""
         if not re.search(
-            r"张洞(?:当场|公开|亲自|因此|也|将)?(?:失去|交出|承担|接下|背上|负责|被拒|被逐|受损|受牵连)"
+            r"张洞(?:当场|公开|亲自|本人|因此|也|将)?(?:失去|交出|承担|承接|接下|背上|负责|被拒|被逐|受损|受牵连)"
             r"|张洞.{0,40}(?:责任|追责|风险).{0,16}(?:自己|名下)"
             r"|张洞.{0,24}(?:收下|接过).{0,16}(?:殓衣|亡者衣物)"
             r"|(?:责任|代价|追责|风险).{0,12}(?:落在|记在|压到|由).{0,8}张洞",
@@ -616,17 +616,22 @@ def validate_plan(
                 ))
             if plan.get("chapter_number") == 2 and plan.get("event_id") == "event_1":
                 mutation = "\n".join(
-                    str(shift.get(field, ""))
-                    for field in ("on_page_answer", "counterexample", "new_response", "executed_change")
+                    [
+                        str(core_thread.get("local_answer", "")) if isinstance(core_thread, dict) else "",
+                        str(core_thread.get("defense_failure", "")) if isinstance(core_thread, dict) else "",
+                    ] + [
+                        str(shift.get(field, ""))
+                        for field in ("on_page_answer", "counterexample", "new_response", "executed_change")
+                    ]
                 )
                 same_visit = bool(re.search(
-                    r"同一(?:次|轮|阵).{0,24}(?:敲|叫门|借声)"
-                    r"|(?:没有|未|不)(?:再|重新).{0,8}(?:敲|三下)"
+                    r"同一(?:次|轮|阵).{0,24}(?:敲|叫门|借声|诱门)"
+                    r"|(?:没有|未|不)(?:再|重新|重).{0,8}(?:敲|三下)"
                     r"|三次敲击.{0,24}(?:未再|没有再|不再)",
                     mutation,
                 ))
                 retargets = bool(re.search(
-                    r"(?:改借|改用|换成|转而|转向|换了).{0,24}(?:声音|之声|称呼|死者|亡\S)"
+                    r"(?:改借|改用|改换|换成|转而|转向|换了|转移).{0,24}(?:声音|之声|称呼|死者|亡\S|目标)"
                     r"|(?:声音|借声).{0,24}(?:改借|改用|换成|转而|转向|换了|第二个目标)",
                     mutation,
                 ))
