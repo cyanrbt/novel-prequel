@@ -9,17 +9,16 @@
   "entries": {
     "F-A01": {
       "class": "A",
-      "status": "active",
-      "plant": "双桥镇早期：不该出现的纸灰",
-      "recover_by": "M1-CITY-EXIT",
-      "meaning": "纸灰指向封存泄漏的路径；根源保持未定。"
+      "status": "retired",
+      "plant": "旧版双桥镇开篇：不该出现的纸灰",
+      "meaning": "该 ID 随纸灰开篇撤销，仅保留身份审计；不得在现行连续性重新播种或复用。"
     },
     "F-A02": {
       "class": "A",
       "status": "active",
-      "plant": "双桥镇中段：被涂黑的四个名字、补砖与守位记录",
+      "plant": "双桥镇中段：被改动的守位姓名、修补记录与张大成旧死",
       "recover_by": "M1-CITY-EXIT",
-      "meaning": "四个守位与更深结构有关；不得提前指定其完整身份或血缘。"
+      "meaning": "旧制度会指定活人优先承受封存泄漏；人数、身份与更深结构不得一次定死。"
     },
     "F-A03": {
       "class": "A",
@@ -69,6 +68,34 @@
       "plant_after": ["M3-SEVEN-FORMED"],
       "recover_by": "M5-FINAL-SEAL",
       "meaning": "封存设施之间存在视觉或空间对应；终局只解释其服务于限制，而非万能解决。"
+    },
+    "F-P01": {
+      "class": "A",
+      "status": "planned",
+      "plant_after": ["M1-CITY-EXIT"],
+      "recover_by": "M3-PAPER-BIRTH",
+      "meaning": "记事人提供的事实从不直接为假，但叙述主语、终点和被省略的受害者会随求助者改变；先建立可信收益，再揭示诱导。"
+    },
+    "F-P02": {
+      "class": "B",
+      "status": "planned",
+      "plant_after": ["M2-ACTIVE-PRICE"],
+      "recover_by": "M3-PAPER-BIRTH",
+      "meaning": "被记事人完整记录的人或鬼会在媒介中留下可再次调用的反应，指向后世人皮纸吞鬼与借拼图活动。"
+    },
+    "F-P03": {
+      "class": "C",
+      "status": "planned",
+      "plant_after": ["M3-PAPER-BIRTH"],
+      "recover_by": "M5-PAPER-ESCAPE",
+      "meaning": "转化后文字仍保留前身记忆和语气，却持续选择有利于媒介存续的未来；最终不裁定说话者是人、鬼或两者不可分。"
+    },
+    "F-P04": {
+      "class": "D",
+      "status": "planned",
+      "plant_after": ["M4-SYSTEM-FAILURE"],
+      "recover_by": "M5-PAPER-ESCAPE",
+      "meaning": "人皮纸需要可长期活动的载体并会主动索取厉鬼；七人只能剥离当时载体与拼图，不能消灭其本体。"
     }
   }
 }
