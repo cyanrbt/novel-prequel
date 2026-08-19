@@ -21,9 +21,17 @@ class OpeningBlueprintTests(unittest.TestCase):
     def test_current_opening_chapter_is_injected_without_future_cards(self):
         context = build_planner_context(ROOT, self.state)
         blueprint = context["chapter_blueprint"]
+        next_chapter = self.state["chapter"]["next_chapter"]
 
-        self.assertIn("## 第1章《母亲又回来了》", blueprint)
-        self.assertNotIn("## 第2章《门外的母亲》", blueprint)
+        self.assertRegex(blueprint, rf"(?m)^## 第{next_chapter}章")
+        if next_chapter > 1:
+            self.assertNotRegex(
+                blueprint, rf"(?m)^## 第{next_chapter - 1}章"
+            )
+        if next_chapter < 16:
+            self.assertNotRegex(
+                blueprint, rf"(?m)^## 第{next_chapter + 1}章"
+            )
         self.assertIn("## 写作执行红线", blueprint)
 
         pack = build_chapter_context_pack(self.state, context, [])

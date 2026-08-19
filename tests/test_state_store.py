@@ -45,11 +45,22 @@ class StateStoreTests(unittest.TestCase):
             self.assertTrue(path.with_suffix(".json.bak").exists())
 
     def test_project_state_has_canonical_timeline(self):
-        state = load_state(Path("novel/state/current.json"))
+        root = Path(__file__).resolve().parents[1]
+        state = load_state(root / "novel/state/current.json")
+        formal_numbers = sorted(
+            int(path.stem.rsplit("_", 1)[-1])
+            for path in (root / "novel/chapters").glob("vol_*/chapter_*.txt")
+        )
         self.assertEqual(state["timeline"]["current_year"], 1911)
         self.assertEqual(state["protagonist"]["age"], 17)
-        self.assertEqual(state["chapter"]["last_chapter"], 0)
-        self.assertEqual(state["chapter"]["next_chapter"], 1)
+        self.assertEqual(
+            formal_numbers,
+            list(range(1, state["chapter"]["last_chapter"] + 1)),
+        )
+        self.assertEqual(
+            state["chapter"]["next_chapter"],
+            state["chapter"]["last_chapter"] + 1,
+        )
         self.assertNotIn("birth_year_range", state["characters"]["pending"]["秦"])
         self.assertNotIn("周正", state["characters"].get("active", {}))
 

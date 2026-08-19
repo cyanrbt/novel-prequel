@@ -1,16 +1,16 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-19T17:38:59+08:00",
+  "last_updated": "2026-08-20T02:41:12",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 0,
-    "next_chapter": 1,
+    "last_chapter": 1,
+    "next_chapter": 2,
     "current_volume": 1,
     "current_volume_name": "门外",
     "current_event": "event_1",
     "current_event_name": "第一卷·门外",
-    "current_phase": "新版开篇待写",
-    "last_title": ""
+    "current_phase": "阶段一：门外身份重演与棺下影双暴露",
+    "last_title": "母亲又回来了"
   },
   "timeline": {
     "current_year": 1911,
@@ -26,22 +26,34 @@
     "abilities": {
       "异常辨认": {
         "status": "未形成",
-        "unlock_after": ["M1-DUAL-EXPOSURE"]
+        "unlock_after": [
+          "M1-DUAL-EXPOSURE"
+        ]
       },
       "规则记录": {
         "status": "未形成",
-        "unlock_after": ["M1B-PATH-RECORD"]
+        "unlock_after": [
+          "M1B-PATH-RECORD"
+        ]
       },
       "抹除灵异": {
         "status": "未觉醒",
-        "unlock_after": ["M2-ACTIVE-PRICE"]
+        "unlock_after": [
+          "M2-ACTIVE-PRICE"
+        ]
       },
       "成熟压制": {
         "status": "未形成",
-        "unlock_after": ["M3-SEVEN-FORMED"]
+        "unlock_after": [
+          "M3-SEVEN-FORMED"
+        ]
       }
     },
-    "known_info": [],
+    "known_info": [
+      "屋内来人的布包内层没有铜顶针、染坊收据和结回的钱。",
+      "张洞从院门的半尺缝看见一只沾着蓝色染料的手，手里夹着盖红印的收据并攥着几枚钱。",
+      "张洞当日晚船的学徒空位已补给别人。"
+    ],
     "body": {
       "状态": "普通少年，尚未接触灵异",
       "伤情": "无"
@@ -64,23 +76,55 @@
       }
     },
     "pending": {
-      "罗文松": {"appearance_after": "M1-CITY-EXIT", "status": "未出场"},
-      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
-      "沈惟明": {"appearance_year": 1919, "status": "未出场"},
-      "秦": {"birth_year": "原著未锁定，仅确认出生于民国", "appearance_after": "M3-CORE-MEMBERS-MET", "status": "未出场"},
-      "刘桂": {"status": "未出场"},
-      "张羡光": {"birth_year": 1942, "status": "尚未出生"}
+      "罗文松": {
+        "appearance_after": "M1-CITY-EXIT",
+        "status": "未出场"
+      },
+      "罗千": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "李庆之": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张伯华": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "孟小董": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "张幼红": {
+        "appearance_after": "M2-COOPERATION-ANCHOR",
+        "status": "未出场"
+      },
+      "沈惟明": {
+        "appearance_year": 1919,
+        "status": "未出场"
+      },
+      "秦": {
+        "birth_year": "原著未锁定，仅确认出生于民国",
+        "appearance_after": "M3-CORE-MEMBERS-MET",
+        "status": "未出场"
+      },
+      "刘桂": {
+        "status": "未出场"
+      },
+      "张羡光": {
+        "birth_year": 1942,
+        "status": "尚未出生"
+      }
     },
     "deceased": []
   },
   "world_lore": {
     "reveal_layer": 0,
     "confirmed": [],
-    "hypotheses": [],
+    "hypotheses": [
+      "屋内来人的布包可能停留在张母清晨的旧状态。"
+    ],
     "gold_known": false,
     "post_office_status": "不存在线索",
     "ancient_house_status": "不存在线索",
@@ -89,10 +133,43 @@
   "active_foreshadows": {},
   "completed_milestones": [],
   "revealed_rules": [],
-  "recent_hooks": [],
+  "recent_hooks": [
+    {
+      "chapter": 1,
+      "type": "安全区崩坏",
+      "content": "家门内外出现相互冲突的来人，张洞既未开门也未封门，只能以顶针核验。"
+    }
+  ],
   "chapter_summaries": {
     "compression_level": 0,
-    "summaries": {}
+    "summaries": {
+      "1": {
+        "title": "母亲又回来了",
+        "core": "张洞错失晚船返家后，发现屋内来人的布包缺少顶针、收据和钱；门外又出现带收据与钱的来人，他用榫样卡住门楔，并要求递入顶针核验。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "world_hypotheses_add"
+        ]
+      }
+    }
   },
-  "formal_review_bindings": {}
+  "formal_review_bindings": {
+    "1": {
+      "draft_sha256": "19b2396240ffe994fcb67ac2a88e748376d20c6e90978d0a290809a3c0d5f7ba",
+      "reader_verdict": "PASS",
+      "mechanism_verdict": "PASS",
+      "taste_contract_sha256": "f4e12e45e3371c9a7712032b4a7366e3a937176cfb8ead216dab8ca2c6e2e31c",
+      "reviewed_at": "2026-08-20T02:41:12"
+    }
+  },
+  "last_review": {
+    "chapter": 1,
+    "grade": "B",
+    "verdict": "PASS",
+    "timestamp": "2026-08-20T02:41:12",
+    "draft_sha256": "19b2396240ffe994fcb67ac2a88e748376d20c6e90978d0a290809a3c0d5f7ba",
+    "reader_verdict": "PASS",
+    "mechanism_verdict": "PASS",
+    "taste_contract_sha256": "f4e12e45e3371c9a7712032b4a7366e3a937176cfb8ead216dab8ca2c6e2e31c"
+  }
 }
