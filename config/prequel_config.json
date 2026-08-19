@@ -128,7 +128,7 @@
     {"name": "孟小董", "event": "event_4", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "替代代价事件与其他成员线路交叉，不以被招募为出口"},
     {"name": "张幼红", "event": "event_5", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "木偶复制与多世保存的早期尝试先改变孟小董或李庆之，不以身份窃取入场"},
     {"name": "罗千", "event": "event_6", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "坟场现实承诺被共同危机触及，不作为团队职位补缺"},
-    {"name": "张伯华", "event": "event_6b", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "药铺优先服务具体病人，并保留体系外异议"},
+    {"name": "张伯华", "event": "event_6b", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "药铺优先服务具体病人；作为七人之一保留对共同方案的拒绝权，不以入队仪式收束"},
     {"name": "秦", "event": "event_6b", "earliest_after": "M3-CORE-MEMBERS-MET", "entry_condition": "无名孤儿与天生异类的双层线在集结后段展开", "note": "原著只锁定出生于民国；人为制造为B级，制造者、生母和精确年份不写死"}
   ],
 
