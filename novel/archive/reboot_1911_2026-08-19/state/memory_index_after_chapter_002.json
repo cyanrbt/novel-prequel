@@ -1,0 +1,29 @@
+{
+  "schema": "novel-memory-index",
+  "entries": [
+    {
+      "characters": ["张洞", "张洞母亲", "周秀兰", "六伢"],
+      "locations": ["大汉市双桥镇·张家前门与院子", "大汉市双桥镇·张家正屋与后门夹巷"],
+      "event_id": "event_1",
+      "foreshadows": [],
+      "irreversible_changes": ["protagonist_known_info_add", "protagonist_inventory_remove", "protagonist_location", "timeline_year", "timeline_elapsed_days"],
+      "hook_type": "旧账失效",
+      "summary": "母亲把用了四年的第一枚木扣还给张洞做行囊扣，母子又为离家试工发生争执；周秀兰死后到张家重复已经完成的还米，张洞放弃赶船救母，关门仍未阻止她出现在院内，最终留下行囊、木样与船钱并错过渡船。",
+      "chapter": 1,
+      "source_path": "novel/chapters/vol_01/chapter_001.txt",
+      "source_sha256": "f696ed8234865cc6f409eb5a142d540bc22857ada15078d7dbd2a845de874fc7"
+    },
+    {
+      "characters": ["张洞", "张洞母亲", "张洞父亲", "张家叔公", "周秀兰", "六伢", "吴老板", "孙有田"],
+      "locations": ["张家后门夹巷与张家祠堂", "河埠头吴记", "孙家院门与堂屋"],
+      "event_id": "event_1",
+      "foreshadows": [],
+      "irreversible_changes": ["protagonist_known_info_add", "protagonist_location", "character_updates", "timeline_year", "timeline_elapsed_days", "world_confirmed_add", "world_hypotheses_add"],
+      "hook_type": "放行成功",
+      "summary": "张洞发现死后来客重演周秀兰已完成的路线，利用自己修过吴记通行板的木工经验暂时阻止放行；孙有田随后将她接回孙家，亲眼看见两个周秀兰后被一起关进堂屋。",
+      "chapter": 2,
+      "source_path": "novel/chapters/vol_01/chapter_002.txt",
+      "source_sha256": "17ace1b5464ecc16aa2c0c002d0b18db717750c88324c42ef1de6ee6180e8b5b"
+    }
+  ]
+}

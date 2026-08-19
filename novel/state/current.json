@@ -1,203 +1,98 @@
 {
   "schema": "novel-prequel-state",
-  "last_updated": "2026-08-12T23:03:35",
+  "last_updated": "2026-08-19T17:38:59+08:00",
   "machine_state": "IDLE",
   "chapter": {
-    "last_chapter": 2,
-    "next_chapter": 3,
+    "last_chapter": 0,
+    "next_chapter": 1,
     "current_volume": 1,
-    "current_volume_name": "大汉市",
+    "current_volume_name": "门外",
     "current_event": "event_1",
-    "current_event_name": "双桥镇疑棺",
-    "current_phase": "日常边界",
-    "last_title": "不止一个人能开门"
+    "current_event_name": "第一卷·门外",
+    "current_phase": "新版开篇待写",
+    "last_title": ""
   },
   "timeline": {
-    "current_year": 1908,
-    "era": "清末",
-    "year_label": "清末（辛亥革命前三年）",
+    "current_year": 1911,
+    "era": "辛亥前夜",
+    "year_label": "1911年·辛亥前后",
     "elapsed_days": 0
   },
   "protagonist": {
     "name": "张洞",
-    "age": 18,
-    "location": "大汉市·双桥镇·张家院外厢",
+    "age": 17,
+    "location": "大汉市辖下·双桥镇·张家",
     "erosion": 0,
     "abilities": {
-      "灵异感知": {
+      "异常辨认": {
         "status": "未形成",
-        "unlock_after": [
-          "M1-DUAL-EXPOSURE"
-        ]
+        "unlock_after": ["M1-DUAL-EXPOSURE"]
       },
-      "规则洞察": {
+      "规则记录": {
         "status": "未形成",
-        "unlock_after": [
-          "M1B-PATH-RECORD"
-        ]
+        "unlock_after": ["M1B-PATH-RECORD"]
       },
       "抹除灵异": {
         "status": "未觉醒",
-        "unlock_after": [
-          "M2-ACTIVE-PRICE"
-        ]
+        "unlock_after": ["M2-ACTIVE-PRICE"]
       },
-      "威势压制": {
+      "成熟压制": {
         "status": "未形成",
-        "unlock_after": [
-          "M3-SEVEN-FORMED"
-        ]
+        "unlock_after": ["M3-SEVEN-FORMED"]
       }
     },
-    "known_info": [
-      "东巷孙周氏昨夜死亡，孙家已经挂白；张洞只听到互相矛盾的开门传言，尚未核对现场。",
-      "下一班直达大汉市的渡船明晨开行，十二块客牌在今晚发放；张洞原计划凭木行引荐搭船去做学徒。",
-      "父亲的兄长张大成八年前在替叔公守祠后被记作急病身亡，父亲与叔公一直因此不和。",
-      "张洞亲眼看见倒扣饭碗里的纸灰，普通来源未能当场查清。",
-      "张洞听见门外声音模仿孙周氏的口音，并用母亲的赊米私事诱她开门；声音身份与来源未明。",
-      "张家正门未遭外力撞撬；未开门只说明这次边界仍关闭，不能证明门外无人。",
-      "本班直达大汉市的十二块客牌已发尽，张洞因未本人到场失去木行引荐对应的客位。",
-      "孙有田退开门栓后，门外没有再敲，声音却改叫张洞母亲。",
-      "孙有田辨认出门外曾借用其亡父的私人称呼。",
-      "孙有田已将未完成殓衣交给张洞。",
-      "张洞从外厢小窗看见母亲因陈婶拒绝而独自返家。",
-      "母亲独自返家后，张家院门外出现她的声音，并谎称陈婶与她同行。"
-    ],
+    "known_info": [],
     "body": {
-      "状态": "嘴角轻伤",
-      "伤情": "在孙家阻止孙有田开门时被其手肘撞破嘴角，已有轻微出血。"
+      "状态": "普通少年，尚未接触灵异",
+      "伤情": "无"
     },
-    "inventory": [
-      "孙周氏未完成殓衣（暂代修补）",
-      "母亲限借的细针、相容线与小剪"
-    ]
+    "inventory": []
   },
   "characters": {
     "active": {
       "张洞父亲": {
-        "status": "在张家记账",
-        "note": "替族里记祭田账并替木行算零工钱；想查清兄长张大成之死，尚未掌握异常规则。"
+        "status": "在双桥镇生活",
+        "note": "识字，会记零账和辨木料；其过去与张家旧守位的关系尚未在正文确认。"
       },
       "张洞母亲": {
-        "status": "独自被拒在张家院门外",
-        "note": "仍扣留张洞行囊并坚持自行决定去留；因借声抢先冒名，许嫂与陈婶已撤回三件针线活，陈婶还拒绝她再登门。"
+        "status": "在双桥镇生活",
+        "note": "靠针线和家务维持家庭；她有自己的生计、判断与去留权。"
       },
       "张家叔公": {
-        "status": "保管祠堂旧物与守位记录",
-        "note": "曾让张大成代守祠堂并参与隐瞒死因；相信少说能少招祸，也害怕无人接手旧守位。"
-      },
-      "李二": {
-        "status": "东巷染坊学徒",
-        "note": "认识孙家并替人传过话；首先要保住工钱和母亲的安全，不是张洞的固定跟班。"
-      },
-      "木匠老李": {
-        "status": "经营西口木匠铺",
-        "note": "按尺寸做门栓，只对亲见的木槽和门板损坏负责；担心门栓出事败坏名声。"
-      },
-      "孙有田": {
-        "status": "在孙家等待日落前取回亡妻殓衣",
-        "note": "已承认亡妻曾被其亡父的声音诱向门栓，并把未完殓衣、入殓期限与公开追责压到张洞名下。"
+        "status": "在双桥镇生活",
+        "note": "知道部分家族旧规，但不是全知导师；正文开始前不预结算其罪责。"
       }
     },
     "pending": {
-      "罗文松": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "李庆之": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "孟小董": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "张幼红": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "罗千": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "张伯华": {
-        "appearance_after": "M2-COOPERATION-ANCHOR",
-        "status": "未出场"
-      },
-      "秦老": {
-        "birth_year_range": [
-          1905,
-          1915
-        ],
-        "appearance_after": "M3-CORE-MEMBERS-MET",
-        "status": "尚未出场"
-      }
+      "罗文松": {"appearance_after": "M1-CITY-EXIT", "status": "未出场"},
+      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "沈惟明": {"appearance_year": 1919, "status": "未出场"},
+      "秦": {"birth_year": "原著未锁定，仅确认出生于民国", "appearance_after": "M3-CORE-MEMBERS-MET", "status": "未出场"},
+      "刘桂": {"status": "未出场"},
+      "张羡光": {"birth_year": 1942, "status": "尚未出生"}
     },
-    "deceased": [
-      "孙周氏",
-      "张大成"
-    ]
+    "deceased": []
   },
   "world_lore": {
-    "reveal_layer": 1,
-    "confirmed": [
-      "孙周氏已经死亡，孙家设灵；孙有田称她曾被其亡父的声音诱向门栓，殓衣可能在他将她拽回时扯裂。"
-    ],
-    "hypotheses": [
-      "门外借声会依据同一关闭边界内仍能开门的活人转移目标。",
-      "借声者可能抢先模仿活人、利用已知危险隔断邻里互证，并伪造刚约定的开门条件。"
-    ],
+    "reveal_layer": 0,
+    "confirmed": [],
+    "hypotheses": [],
     "gold_known": false,
     "post_office_status": "不存在线索",
-    "ancient_house_status": "不存在线索"
+    "ancient_house_status": "不存在线索",
+    "human_skin_paper_status": "沈惟明尚未入场"
   },
-  "active_foreshadows": {
-    "F-A01": {
-      "status": "已播种",
-      "plant_chapter": 1
-    }
-  },
+  "active_foreshadows": {},
   "completed_milestones": [],
   "revealed_rules": [],
-  "recent_hooks": [
-    {
-      "chapter": 1,
-      "type": "代价展示",
-      "content": "张洞为守住门而失去行囊与客牌，母亲更将是否让他继续住下作为天亮后的问题。"
-    },
-    {
-      "chapter": 2,
-      "type": "代价展示",
-      "content": "真实母亲独自被挡在小窗外，院门外的同声者却谎称陈婶同行；张洞必须在不开门的前提下救回她。"
-    }
-  ],
+  "recent_hooks": [],
   "chapter_summaries": {
     "compression_level": 0,
-    "summaries": {
-      "1": {
-        "title": "门上的灰",
-        "core": "张洞发现倒扣饭碗中出现纸灰，阻止母亲为门外冒充孙周氏的声音开门，并毁坏木样错失渡船客牌，母子因此决裂。",
-        "irreversible_changes": [
-          "protagonist_known_info_add"
-        ]
-      },
-      "2": {
-        "title": "不止一个人能开门",
-        "core": "借声在孙家转向不同开门者，又抢先冒充张洞母亲隔断邻里互证；张洞接下殓衣并负伤担责，章末看见真实母亲被自己的验人规则挡在院外。",
-        "irreversible_changes": [
-          "protagonist_known_info_add",
-          "protagonist_inventory_add",
-          "protagonist_location",
-          "protagonist_body_updates",
-          "world_hypotheses_add"
-        ]
-      }
-    }
+    "summaries": {}
   },
-  "last_review": {
-    "chapter": 2,
-    "grade": "A",
-    "verdict": "PASS",
-    "timestamp": "2026-08-12T23:03:35"
-  }
+  "formal_review_bindings": {}
 }

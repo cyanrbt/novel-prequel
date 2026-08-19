@@ -1,10 +1,12 @@
 {
   "protagonist": "张洞",
   "time_span": {
-    "start_year": 1890,
-    "end_year": 1950
+    "start_year": 1911,
+    "main_campaign_end_year": 1955,
+    "end_year": 2015,
+    "end_boundary": "杨间时代古宅葬礼；2015仅作运行时近似年份，不冒充原著精确纪年"
   },
-  "target_chapters": {"target": 600, "flexible_range": [520, 700], "mode": "milestone_driven"},
+  "target_chapters": {"target": 500, "flexible_range": [440, 580], "mode": "milestone_driven"},
   "words_per_chapter": 4200,
   "chapter_length": {
     "safe_min": 2500,
@@ -20,6 +22,9 @@
     "compact_style": "novel/style/compact_style.yaml",
     "style_anchors": "novel/style/style_anchors.txt",
     "series_architecture": "novel/plots/series_architecture.md",
+    "relationship_map": "novel/characters/relationship_map.md",
+    "canon_registry": "novel/knowledge/canon_registry.json",
+    "historical_anchors": "novel/knowledge/historical_anchors.md",
     "arc_registry": "novel/knowledge/arc_registry.json",
     "foreshadow_registry": "novel/knowledge/foreshadow_registry.json",
     "foreshadow_tracker": "novel/foreshadow_tracker.md",
@@ -100,11 +105,12 @@
   "git": {"auto_commit": false},
 
   "volume_structure": [
-    {"volume": 1, "name": "大汉市", "entry_event": "event_1", "entry_event_name": "大汉市疑棺", "estimated_chapters": [65, 95], "years": "1908-1911", "exit_milestone": "M1-CITY-EXIT"},
-    {"volume": 2, "name": "乱世觉醒", "entry_event": "event_2", "entry_event_name": "鬼邮局初现", "estimated_chapters": [70, 110], "years": "1912-1927", "exit_milestone": "M2-COOPERATION-ANCHOR"},
-    {"volume": 3, "name": "七老集结", "entry_event": "event_3", "entry_event_name": "凯撒大酒店", "estimated_chapters": [130, 190], "years": "1930-1940", "exit_milestone": "M3-SEVEN-FORMED"},
-    {"volume": 4, "name": "黑暗降临", "entry_event": "event_7", "entry_event_name": "黑暗时期", "estimated_chapters": [115, 165], "years": "1937-1945", "exit_milestone": "M4-SYSTEM-FAILURE"},
-    {"volume": 5, "name": "终极抉择", "entry_event": "event_8", "entry_event_name": "终局", "estimated_chapters": [110, 160], "years": "1945-1950", "exit_milestone": "M5-FINAL-SEAL"}
+    {"volume": 1, "name": "门外", "entry_event": "event_1", "entry_event_name": "第一卷·门外", "estimated_chapters": [55, 70], "years": "1911-1914", "exit_milestone": "M1-CITY-EXIT"},
+    {"volume": 2, "name": "无主信", "entry_event": "event_2", "entry_event_name": "第二卷·无主信", "estimated_chapters": [75, 95], "years": "1914-1927", "exit_milestone": "M2-COOPERATION-ANCHOR"},
+    {"volume": 3, "name": "不同的门", "entry_event": "event_3", "entry_event_name": "第三卷·不同的门", "estimated_chapters": [110, 135], "years": "1928-1937", "exit_milestone": "M3-SEVEN-FORMED"},
+    {"volume": 4, "name": "无人守得住", "entry_event": "event_7", "entry_event_name": "第四卷·无人守得住", "estimated_chapters": [90, 115], "years": "1937-1945", "exit_milestone": "M4-SYSTEM-FAILURE"},
+    {"volume": 5, "name": "留给后来人", "entry_event": "event_8", "entry_event_name": "第五卷·留给后来人", "estimated_chapters": [75, 105], "years": "1945-1955", "exit_milestone": "M5-FINAL-SEAL"},
+    {"volume": 6, "name": "守到后来", "entry_event": "event_9", "entry_event_name": "第六卷·守到后来", "estimated_chapters": [35, 60], "years": "1950年代至杨间时代", "exit_milestone": "M6-CANON-HANDOFF"}
   ],
 
   "world_reveal_layers": [
@@ -112,17 +118,18 @@
     {"layer": 2, "name": "规则", "after": "M1B-PATH-RECORD", "before": "M2-COOPERATION-ANCHOR", "reveals": ["规律可发现可利用", "驭鬼者概念成型"]},
     {"layer": 3, "name": "代价", "after": "M2-ACTIVE-PRICE", "before": "M3-SEVEN-FORMED", "reveals": ["使用力量必有代价", "人与鬼的关系不可逆"]},
     {"layer": 4, "name": "体系", "after": "M3-SEVEN-FORMED", "before": "M4-SYSTEM-FAILURE", "reveals": ["灵异体系可建造", "S级灵异需群体对抗"]},
-    {"layer": 5, "name": "抉择", "after": "M4-SYSTEM-FAILURE", "before": "M5-FINAL-SEAL", "reveals": ["终极方案是拖延战", "封印体系不可永久"]}
+    {"layer": 5, "name": "抉择", "after": "M4-SYSTEM-FAILURE", "before": "M5-FINAL-SEAL", "reveals": ["终极方案是拖延战", "封印体系不可永久"]},
+    {"layer": 6, "name": "守望", "after": "M5-FINAL-SEAL", "before": "M6-CANON-HANDOFF", "reveals": ["节点依赖维护者", "多名成员与设施累计失效", "后来者可以拒绝旧答案"]}
   ],
 
   "seven_elders_introduction": [
-    {"name": "罗文松", "event": "event_2", "earliest_after": "M2-ACTIVE-PRICE", "entry_condition": "邮局事件中形成合作锚点"},
-    {"name": "李庆之", "event": "event_3", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "其个人事件完成首次价值冲突"},
-    {"name": "孟小董", "event": "event_4", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "其个人事件迫使张洞接受代价观差异"},
-    {"name": "张幼红", "event": "event_5", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "其身份事件先于集结"},
-    {"name": "罗千", "event": "event_6", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "坟场事件先于共同限制"},
-    {"name": "张伯华", "event": "event_6b", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "药铺事件先于七人完成集结"},
-    {"name": "秦老", "event": "event_6b", "earliest_after": "M3-CORE-MEMBERS-MET", "entry_condition": "天生异类线在集结后段展开", "note": "出生年份仅保留1905-1915区间，不写死"}
+    {"name": "罗文松", "event": "event_2", "earliest_after": "M1-CITY-EXIT", "entry_condition": "第二卷早段因互相冲突的处置方案相遇，合作锚点在卷末形成"},
+    {"name": "李庆之", "event": "event_3", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "交叉事件中先与至少两名核心人物形成责任关系"},
+    {"name": "孟小董", "event": "event_4", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "替代代价事件与其他成员线路交叉，不以被招募为出口"},
+    {"name": "张幼红", "event": "event_5", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "木偶复制与多世保存的早期尝试先改变孟小董或李庆之，不以身份窃取入场"},
+    {"name": "罗千", "event": "event_6", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "坟场现实承诺被共同危机触及，不作为团队职位补缺"},
+    {"name": "张伯华", "event": "event_6b", "earliest_after": "M2-COOPERATION-ANCHOR", "entry_condition": "药铺优先服务具体病人，并保留体系外异议"},
+    {"name": "秦", "event": "event_6b", "earliest_after": "M3-CORE-MEMBERS-MET", "entry_condition": "无名孤儿与天生异类的双层线在集结后段展开", "note": "原著只锁定出生于民国；人为制造为B级，制造者、生母和精确年份不写死"}
   ],
 
   "memory_management": {

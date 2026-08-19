@@ -1,0 +1,187 @@
+{
+  "schema": "novel-prequel-state",
+  "last_updated": "2026-08-18T16:52:25+08:00",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 2,
+    "next_chapter": 3,
+    "current_volume": 1,
+    "current_volume_name": "门外",
+    "current_event": "event_1",
+    "current_event_name": "第一卷·门外",
+    "current_phase": "日常边界",
+    "last_title": "走过的路"
+  },
+  "timeline": {
+    "current_year": 1908,
+    "era": "清末",
+    "year_label": "清末（辛亥革命前三年）",
+    "elapsed_days": 0
+  },
+  "protagonist": {
+    "name": "张洞",
+    "age": 18,
+    "location": "大汉市·双桥镇·孙家院门外",
+    "erosion": 0,
+    "abilities": {
+      "灵异感知": {
+        "status": "未形成",
+        "unlock_after": ["M1-DUAL-EXPOSURE"]
+      },
+      "规则洞察": {
+        "status": "未形成",
+        "unlock_after": ["M1B-PATH-RECORD"]
+      },
+      "抹除灵异": {
+        "status": "未觉醒",
+        "unlock_after": ["M2-ACTIVE-PRICE"]
+      },
+      "威势压制": {
+        "status": "未形成",
+        "unlock_after": ["M3-SEVEN-FORMED"]
+      }
+    },
+    "known_info": [
+      "周秀兰在中午亲自还清张家五升米，又去吴记还清十二文钱，回家后不到一个时辰死亡。",
+      "六伢参与了周秀兰中午还账和下午停尸，并在张家敞开的院门前与死后来客正面相见。",
+      "张母在门开着时叫周秀兰进来倒米；得知死讯后，张洞亲眼确认她未跨门槛就将门关上，她仍在视线中断后出现于院内。",
+      "张洞选择带母亲从后门逃走，将行囊、船钱、木样和针线箱留在张家正屋，并当场错过渡船。",
+      "死后来客在重复周秀兰中午已经完成的还账路线，而不是在处理未清旧账。",
+      "吴记铺口原本敞开，周秀兰仍等到吴老板说出进来并抬起通行板才试图跨入；吴老板得知死讯、松手落板后，她没有进去。",
+      "张洞只能暂时怀疑：单纯开着的门可能还不够，边界内有权放行的人如何对待来客更重要。",
+      "孙有田同时看见门外的周秀兰与堂屋里的尸体，仍说出回来吧并让开门口；周秀兰进入孙家堂屋后关门，孙有田只喊出一声救命。"
+    ],
+    "body": {
+      "状态": "无外伤，受到强烈惊吓",
+      "伤情": "无可见外伤；奔跑后双腿发软、心跳过快，仍保持行动能力。"
+    },
+    "inventory": []
+  },
+  "characters": {
+    "active": {
+      "张洞父亲": {
+        "status": "跟随张洞到孙家院门外",
+        "note": "中午亲眼见到活着的周秀兰还米并说出账清了；当晚得知同一还账被重复，没有回张家。"
+      },
+      "张洞母亲": {
+        "status": "在孙家院门外",
+        "note": "张家首次放行由她无意完成；她在逃出后主动阻止张洞返回取钱和木样，尚未与张洞发生决定权决裂。"
+      },
+      "张家叔公": {
+        "status": "留在张家祠堂",
+        "note": "得知周秀兰死后再现并进入张家，只提出今夜都别回去，无法回答它是否会主动出来。"
+      },
+      "六伢": {
+        "status": "在孙家院内",
+        "note": "周秀兰死前最后路线的目击者；已跑回孙家警告孙有田，但未能阻止他放行。"
+      },
+      "吴老板": {
+        "status": "留在吴记内，未放行成功",
+        "note": "中午已收到周秀兰的十二文还款；当晚在说出进来并抬板后得知死讯，松手落板，周秀兰未跨入。"
+      },
+      "孙有田": {
+        "status": "与周秀兰被关在孙家堂屋，生死未确认",
+        "note": "同时看见妻子外形的来客和妻子尸体，仍因情感冲击说出回来吧并让开门口。"
+      },
+      "李二": {
+        "status": "东巷染坊学徒，未参与当晚前两章事件",
+        "note": "首先要保住染坊工钱和自家安全，不是张洞的固定跟班。"
+      }
+    },
+    "pending": {
+      "罗文松": {"appearance_after": "M1-CITY-EXIT", "status": "未出场"},
+      "李庆之": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "孟小董": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张幼红": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "罗千": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "张伯华": {"appearance_after": "M2-COOPERATION-ANCHOR", "status": "未出场"},
+      "秦老": {
+        "birth_year_range": [1905, 1915],
+        "appearance_after": "M3-CORE-MEMBERS-MET",
+        "status": "尚未出场"
+      }
+    },
+    "deceased": ["周秀兰", "张大成"]
+  },
+  "world_lore": {
+    "reveal_layer": 1,
+    "confirmed": [
+      "周秀兰已经死亡，孙家堂屋木板上的尸体与当晚沿她路线行走的来客曾同时出现。",
+      "死后来客重复了周秀兰中午已完成的张家还米、吴记还钱和返家路线。"
+    ],
+    "hypotheses": [
+      "单纯敞开的门似乎不足以让死后来客进入；边界内有权放行的人如何对待她可能更重要。",
+      "张母在门开时说出进来，可能使后续关门失去作用；这只有一次样本，尚不能确认。",
+      "来客是否只能重演周秀兰死前的最后路线，以及路线结束后会发生什么，都尚未知。"
+    ],
+    "gold_known": false,
+    "post_office_status": "不存在线索",
+    "ancient_house_status": "不存在线索"
+  },
+  "active_foreshadows": {},
+  "completed_milestones": [],
+  "revealed_rules": [],
+  "recent_hooks": [
+    {
+      "chapter": 1,
+      "type": "旧账失效",
+      "content": "六伢证明周秀兰中午已经亲自还清五升米；她死后第二次还的是一笔已经清掉的账。"
+    },
+    {
+      "chapter": 2,
+      "type": "放行成功",
+      "content": "孙有田在同时看见妻子与妻子尸体后，仍说出回来吧并让她进入；他在堂屋门后只喊出一声救命。"
+    }
+  ],
+  "chapter_summaries": {
+    "compression_level": 0,
+    "summaries": {
+      "1": {
+        "title": "第五升",
+        "core": "母亲把用了四年的第一枚木扣还给张洞做行囊扣，母子又因她是否拖住他离家发生争执。周秀兰死后当晚到张家重新还米；张洞亲眼确认她未跨门槛，前门上栏、后门未开，她却在两人背对院子时出现于院内。张洞选择救母，留下行囊、木样与船钱并错过渡船。六伢证明米账中午已清，并说她下一站曾去吴记；父亲将从危险前门回家，张洞决定先警告父亲，再赶往吴记。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "protagonist_inventory_remove",
+          "protagonist_location"
+        ]
+      },
+      "2": {
+        "title": "走过的路",
+        "core": "张洞发现死后来客正重演周秀兰中午已完成的还账路线，并及时阻止吴记放行。孙有田随后将她接回孙家，亲眼看见两个周秀兰后被一起关进堂屋，只喊出一声救命。",
+        "irreversible_changes": [
+          "protagonist_known_info_add",
+          "protagonist_location",
+          "character_updates",
+          "world_confirmed_add",
+          "world_hypotheses_add"
+        ]
+      }
+    }
+  },
+  "formal_review_bindings": {
+    "1": {
+      "draft_sha256": "f696ed8234865cc6f409eb5a142d540bc22857ada15078d7dbd2a845de874fc7",
+      "reader_verdict": "PASS",
+      "mechanism_verdict": "PASS",
+      "taste_contract_sha256": "55f100bba40508565f22e614a4e7969fd83b7341126cf6957322c112fe7aa4b8",
+      "reviewed_at": "2026-08-18T16:52:25+08:00"
+    },
+    "2": {
+      "draft_sha256": "17ace1b5464ecc16aa2c0c002d0b18db717750c88324c42ef1de6ee6180e8b5b",
+      "reader_verdict": "PASS",
+      "mechanism_verdict": "PASS",
+      "taste_contract_sha256": "55f100bba40508565f22e614a4e7969fd83b7341126cf6957322c112fe7aa4b8",
+      "reviewed_at": "2026-08-18T16:52:25+08:00"
+    }
+  },
+  "last_review": {
+    "chapter": 2,
+    "grade": "PASS",
+    "verdict": "PASS",
+    "timestamp": "2026-08-18T16:52:25+08:00",
+    "draft_sha256": "17ace1b5464ecc16aa2c0c002d0b18db717750c88324c42ef1de6ee6180e8b5b",
+    "reader_verdict": "PASS",
+    "mechanism_verdict": "PASS",
+    "taste_contract_sha256": "55f100bba40508565f22e614a4e7969fd83b7341126cf6957322c112fe7aa4b8"
+  }
+}

@@ -8,113 +8,121 @@ from scripts.prequel.quality import scan_draft, validate_plan, validate_review
 def _valid_plan():
     return {
         "chapter_number": 1,
-        "title": "门上的灰",
+        "title": "两种冷意",
         "event_id": "event_1",
-        "phase": "征兆",
-        "chapter_purpose": "建立第一次异常",
+        "phase": "双暴露",
+        "chapter_purpose": "让身份重演与地下路径在同一场现实危机中出现",
         "serial_continuity": {
-            "prior_human_wound": "首章无上一章人物伤口。",
-            "opening_consequence": "首章从离镇期限正在逼近开始。",
-            "carried_object_state": "木样完好，行囊尚在张洞手中。",
-            "pressure_novelty": "首章建立离镇愿望、母子关系和主动借声威胁。",
+            "prior_human_wound": "首章没有上一章人物伤口。",
+            "opening_consequence": "张洞刚凭手艺挣到第一笔工钱。",
+            "carried_object_state": "工钱已经登记在张洞的随身资源中。",
+            "pressure_novelty": "首章同时建立边界身份与地下路径两种压力。",
         },
         "reader_investment": {
             "attachment_anchor": {
-                "focus": "张洞凭木工手艺得到的学徒身份和母亲对他的信任。",
-                "on_page_moment": "母亲试坐他亲手修好的针线凳，并替他包好进木行要交的样榫。",
-                "private_meaning": "样榫证明他不是靠父母求人才能离镇，针线凳则是他第一次让母亲少受一点累。",
-                "lived_value": "母亲每天靠针线凳接活养家，也坚持由自己决定接谁的活。",
-                "threatened_loss": "错过木行期限会使他的手艺仍只是家中零活，强行锁门又会让母亲不再相信他的照料。",
-                "loss_carrier": "针线凳与样榫承载两人的手艺生活，并会在章末失去原有用途。",
+                "focus": "张洞靠手艺取得的第一份报酬和父亲对他的认可。",
+                "on_page_moment": "雇主验过修好的货箱，当众把工钱交给张洞。",
+                "private_meaning": "这份报酬证明他能凭自己本事进入更大的城市。",
+                "lived_value": "父子可以靠同一门手艺合作，而不必接受家族替他们安排去留。",
+                "threatened_loss": "异常若逼停货栈，刚建立的合作会立即中断。",
+                "loss_carrier": "工钱、雇主认可和后续工作介绍共同承载这条普通生活。",
             },
-            "protagonist_contradiction": "他口头上要赶船，遇到可核对的异常却会借调查拖延离开。",
-            "threat_in_motion": "纸灰正在越过家门，使母亲当晚仍住在家中的选择变危险。",
+            "protagonist_contradiction": "他想证明能独立作主，却会在危险时替父亲决定风险。",
+            "threat_in_motion": "门外来客沿重复身份逼近边界，地下刮擦同时使旧木变冷。",
             "core_threat_continuation": {
-                "prior_hook": "首章将建立关闭家门为何仍出现纸灰的核心疑问。",
-                "current_effect": "纸灰当场污染送行饭并迫使母子改变离镇安排。",
-                "local_answer": "倒扣碗没有隔绝纸灰，单靠关闭生活容器不足以保住原有日常。",
-                "old_defense": "关紧家门并倒扣饭碗。",
-                "defense_failure": "纸灰仍出现在倒扣碗内，证明普通关闭不足以保护母亲。",
-                "replacement_rule": "先让活人离开受污染的饭桌，再保持门与碗原状追查路径。",
-                "forced_change": "张洞必须在赶船前先决定是否保留现场并阻止母亲继续食用。",
-                "human_pressure_link": "母亲要他赶船、父亲要保留证据，纸灰使一家人的现实去留利益直接冲突。",
+                "prior_hook": "首章无前置钩子，当场建立两类现象为何同时出现的问题。",
+                "current_effect": "来客要求熟人放行，地下冷意迫使货栈工人移动旧木。",
+                "local_answer": "关门只影响来客，搬动旧木却会让地下刮擦改变方向。",
+                "old_defense": "关门后把可疑旧木搬出工作区。",
+                "defense_failure": "门外来客停下时，旧木下的刮擦反而逼近搬运者。",
+                "replacement_rule": "先分开有权放行的人和接触旧木的人，再组织撤出。",
+                "forced_change": "张洞必须放弃独自控制现场，让父亲选择自己的撤离位置。",
+                "human_pressure_link": "雇主想保货物，父亲想保工人，两类异常迫使他们公开冲突。",
             },
             "revelation_shift": {
-                "from": "灰从哪里来？",
-                "on_page_answer": "纸灰已经进入倒扣饭碗，普通关闭不足以隔离它。",
-                "to": "关闭的家门还能不能保护母亲？",
-                "changes": "SAFETY",
-                "old_response": "关门并继续在饭桌边确认来源。",
-                "counterexample": "纸灰进入倒扣饭碗，使留在桌边继续检查也会让母亲接触污染。",
-                "new_response": "先让母亲离开饭桌并保留现场。",
-                "executed_change": "张洞移走母亲的碗，放弃赶船并让她离开饭桌。",
+                "from": "门外来客是不是地下异常的另一种样子？",
+                "on_page_answer": "来客停下时，地下刮擦仍沿旧木继续移动。",
+                "to": "两类作用同时发生时，活人该分别避开什么？",
+                "changes": "ACTION_RULE",
+                "old_response": "关门并把所有可疑物件一起搬走。",
+                "counterexample": "关闭边界没有停止地下路径，搬运反而让它靠近工人。",
+                "new_response": "让不同接触者分开撤离并记录两种现象各自变化。",
+                "executed_change": "张洞接受父亲分配位置，自己只负责记录和示警。",
             },
             "emotional_afterimage": {
-                "person": "张洞与母亲。",
-                "immediate_wound": "张洞已经失去学徒期限，母亲也因他强行控制门栓而不再接受他的保护。",
-                "material_aftereffect": "送行饭被弃置，张洞错过当日渡船与学徒期限。",
-                "relationship_aftereffect": "母亲不再接受张洞借保护之名替她决定去留。",
-                "unresolved_choice": "他必须在不再替母亲作主的前提下保护她，母亲也必须决定是否仍把自己的退路押在儿子身上。",
-                "mystery_subordinate_to": "门外是谁只在它继续撕裂母子信任和离镇身份时才重要。",
+                "person": "张洞与父亲。",
+                "immediate_wound": "张洞越过父亲替他安排风险，父亲撤回了刚给出的信任。",
+                "material_aftereffect": "第一笔工钱仍在，但后续介绍暂时搁置。",
+                "relationship_aftereffect": "父亲要求张洞下一次先说明观察，再讨论由谁承担。",
+                "unresolved_choice": "张洞要在保护家人与尊重家人选择之间找到新的做法。",
+                "mystery_subordinate_to": "两类异常的关系只有在继续逼迫父子选择时才重要。",
             },
-            "clue_delivery": {"method": "张洞放弃赶船时间亲手验证", "resistance": "母亲催他离开且异常持续扩大", "coincidence_risk": "LOW"},
+            "clue_delivery": {
+                "method": "张洞在同一救援中对照两类现象的变化",
+                "resistance": "工人必须搬货，熟人又必须决定是否放行",
+                "coincidence_risk": "LOW",
+            },
         },
         "dramatic_spine": {
-            "opening_pressure": "张洞准备离家时发现院门异常。",
-            "opening_genre_signal": "开篇即出现越过关闭院门的纸灰。",
-            "protagonist_immediate_want": "赶上三日后的渡船。",
-            "personal_stake": "错过木行学徒机会。",
-            "destabilizing_event": "纸灰越过关闭的门。",
-            "protagonist_choice": "张洞留下检查并阻止家人开门。",
-            "choice_cost": "他冒着错过渡船安排的风险。",
-            "cost_realization": "他当场交出自己的船钱并失去对余款的控制。",
-            "relationship_friction": "母亲催他离开，张洞坚持先保住家人。",
-            "question_progression": ["灰从哪里来？", "关闭的门是否还安全？", "张洞还能否按时离镇？"],
-            "emotional_turn": "离镇期待转成对家门失效的担忧。",
-            "serial_promise": "张洞下一章必须在离镇与守家之间行动。",
-            "ending_leverage": "张洞持有唯一钥匙，能实际阻止家人误开院门。",
+            "opening_pressure": "张洞刚拿到工钱，货栈便要求所有人立即搬货。",
+            "opening_genre_signal": "边界外的熟悉身份与地下刮擦同时出现。",
+            "protagonist_immediate_want": "保住工钱和后续工作介绍。",
+            "personal_stake": "证明自己能凭手艺承担家庭责任。",
+            "destabilizing_event": "两类异常在同一批货物周围表现出不同路径。",
+            "protagonist_choice": "张洞组织人员分开撤出，而不是独自查清所有现象。",
+            "choice_cost": "他把路线决定权还给父亲，并公开承认自己的判断不完整。",
+            "cost_realization": "父亲当场否决张洞安排的位置，改走自己选择的出口。",
+            "relationship_friction": "张洞想先保父亲，父亲拒绝被当成需要搬走的物件。",
+            "question_progression": [
+                "门外身份为何重复出现？",
+                "地下刮擦为何跟随旧木？",
+                "两类现象是否会互相改变路径？",
+            ],
+            "emotional_turn": "获得报酬的自豪变成承认判断有限的难堪。",
+            "serial_promise": "下一次选择必须由承担风险的人共同决定。",
+            "ending_leverage": "张洞保住工钱并记录了两类现象的第一组差异。",
         },
         "scenes": [{
-            "location": "张家院",
-            "characters": ["张洞"],
-            "goal": "检查门板",
-            "conflict": "纸灰进入门内",
-            "function": "升级",
-            "initial_state": "门从内上栓，张洞站在屋内。",
-            "discovery_path": "张洞开灯后看见门板内侧的纸灰。",
-            "knowledge_limits": "张洞只知道门栓未动，不知道纸灰何时出现。",
+            "location": "双桥镇货栈",
+            "characters": ["张洞", "父亲", "货栈雇主"],
+            "goal": "把工人和货物撤出受影响区域",
+            "conflict": "门外身份与地下路径要求相反的应对",
+            "function": "建立两类异常的差异",
+            "initial_state": "货栈仍在营业，张洞刚领到工钱。",
+            "discovery_path": "张洞先看见来客停步，随后从未移动的旧木下听见刮擦继续靠近。",
+            "knowledge_limits": "他只知道两类现象没有同步停止，不知道来源与完整规律。",
             "ordinary_explanations": {
-                "considered": ["灶灰被风吹入"],
-                "excluded": [],
-                "remaining": ["纸灰早已留在门缝"]
+                "considered": ["有人冒名顶替", "地下有动物"],
+                "excluded": ["同一人在两个位置同时行动"],
+                "remaining": ["两种普通原因恰好同时发生"],
             },
-            "choice_reason": "张洞要先确认门况再决定是否叫醒家人。",
-            "end_state": "门仍上栓，纸灰留在门内，张洞没有开门。",
-            "pressure_change": "张洞不再相信院门安全",
-            "irreversible_change": "纸灰进入门内",
-            "threat_action": "纸灰从门外移动到门内，夺走一家对门栓的信任。",
-            "human_turn": "母亲从催张洞离开转为要求他交出钥匙，母子第一次不再站在同一边。",
+            "choice_reason": "继续留人核验会让工人同时暴露在两条路径上。",
+            "end_state": "工人分批撤出，张洞保住报酬但失去独自安排父亲的权力。",
+            "pressure_change": "一个未知被拆成两类仍未解决的行动危险",
+            "irreversible_change": "父亲公开拒绝张洞替自己选择位置",
+            "threat_action": "来客要求放行的同时，地下刮擦沿搬动的旧木转向工人。",
+            "human_turn": "父亲自行选择出口，并要求张洞只报告自己真正看见的差异。",
             "payoff_type": "MIXED",
         }],
-        "new_information": ["纸灰会移动"],
+        "new_information": ["两类现象不会同步停止"],
         "state_changes": {
-            "protagonist_known_info_add": ["纸灰会移动"],
-            "protagonist_inventory_add": [],
+            "protagonist_known_info_add": ["两类现象不会同步停止"],
+            "protagonist_inventory_add": ["第一笔工钱"],
             "protagonist_inventory_remove": [],
-            "protagonist_location": None,
+            "protagonist_location": "双桥镇货栈",
             "protagonist_body_updates": [],
             "ability_updates": [],
-            "timeline_year": 1908,
+            "timeline_year": 1911,
             "timeline_elapsed_days": 1,
-            "character_updates": [],
+            "character_updates": ["父亲拒绝由张洞替自己选择风险位置"],
             "world_confirmed_add": [],
-            "world_hypotheses_add": ["纸灰会移动"],
+            "world_hypotheses_add": ["门外身份与地下路径可能是两类作用"],
         },
-        "rule_hypotheses": ["纸灰会移动"],
+        "rule_hypotheses": ["门外身份与地下路径可能是两类作用"],
         "canon_evidence_ids": ["CANON-RULE-001"],
         "foreshadow_operations": {"plant": [], "recover": []},
         "milestone_operations": {"complete": []},
-        "hook": {"type": "安全区崩坏", "content": "灰在门内"},
+        "hook": {"type": "路径分裂", "content": "来客停下后，地下刮擦仍在移动"},
         "prohibited_elements": [],
     }
 
@@ -138,82 +146,75 @@ def _valid_review():
     }
 
 
+def _state():
+    return json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+
+
 class QualityGateTests(unittest.TestCase):
     def test_plan_rejects_unregistered_canon_evidence(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["canon_evidence_ids"] = ["MADE-UP-FACT"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("UNKNOWN_CANON_EVIDENCE", {item.code for item in issues})
 
     def test_plan_rejects_unregistered_design_identifiers(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["foreshadow_operations"]["plant"] = ["F-A99"]
+        plan["foreshadow_operations"]["plant"] = ["F-Z99"]
         plan["milestone_operations"]["complete"] = ["M9-NOT-REAL"]
         issues = validate_plan(
             plan,
             state,
             {"CANON-RULE-001"},
-            {"F-A01"},
+            {"F-X01"},
             {"M1-TEST"},
         )
         self.assertEqual(
             {"UNKNOWN_FORESHADOW", "UNKNOWN_MILESTONE"},
-            {item.code for item in issues if item.code.startswith("UNKNOWN_")} - {"UNKNOWN_CANON_EVIDENCE"},
+            {item.code for item in issues if item.code.startswith("UNKNOWN_")}
+            - {"UNKNOWN_CANON_EVIDENCE"},
         )
 
     def test_plan_requires_reconstructable_scene_model(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         del plan["scenes"][0]["initial_state"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("SCENE_MODEL_MISSING", {item.code for item in issues})
 
     def test_plan_requires_distinct_question_progression(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["dramatic_spine"]["question_progression"] = ["灰是什么？"] * 3
+        plan["dramatic_spine"]["question_progression"] = ["现象从哪里来？"] * 3
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_QUESTION_PROGRESSION", {item.code for item in issues})
 
     def test_plan_rejects_removal_of_untracked_inventory(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["state_changes"]["protagonist_inventory_remove"] = ["未登记的船钱"]
+        plan["state_changes"]["protagonist_inventory_remove"] = ["未登记资源"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("INVENTORY_REMOVE_MISSING", {item.code for item in issues})
 
     def test_plan_rejects_known_information_as_new_progress(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        repeated = "张洞已经知道纸灰来自门内"
+        repeated = "两类现象不会同步停止"
         state["protagonist"]["known_info"].append(repeated)
         plan["state_changes"]["protagonist_known_info_add"] = [repeated]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("KNOWN_INFO_ALREADY_PRESENT", {item.code for item in issues})
 
-    def test_plan_rejects_semantic_rewording_of_existing_door_fact(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["protagonist"]["known_info"].append(
-            "张家正门未遭外力撞撬；门仍关闭。"
-        )
-        plan = _valid_plan()
-        plan["state_changes"]["protagonist_known_info_add"] = [
-            "张家正门木槽没有由门外撞裂形成的新痕迹。"
-        ]
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("KNOWN_INFO_SEMANTIC_DUPLICATE", {item.code for item in issues})
-
     def test_plan_rejects_malformed_ordinary_explanations(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["scenes"][0]["ordinary_explanations"] = {"considered": "灶灰"}
+        plan["scenes"][0]["ordinary_explanations"] = {"considered": "普通回声"}
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("SCENE_BAD_ALTERNATIVES", {item.code for item in issues})
 
     def test_plan_rejects_evidence_dominated_scenes(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["scenes"][0]["payoff_type"] = "EVIDENCE_ONLY"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
@@ -222,370 +223,137 @@ class QualityGateTests(unittest.TestCase):
         self.assertIn("EVIDENCE_ONLY_ENDING", codes)
 
     def test_plan_rejects_high_coincidence_clue_delivery(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["reader_investment"]["clue_delivery"]["coincidence_risk"] = "HIGH"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("HIGH_COINCIDENCE_CLUE", {item.code for item in issues})
 
     def test_plan_rejects_threat_field_that_admits_no_current_action(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["reader_investment"]["threat_in_motion"] = (
-            "门外之物尚未再现，先前死亡造成的议论让家人花钱修门。"
+            "异常尚未再现，家人只是在讨论上次事故。"
         )
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("INACTIVE_THREAT_ADMITTED", {item.code for item in issues})
 
     def test_plan_requires_cross_chapter_core_threat_contract(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["reader_investment"]["core_threat_continuation"] = {}
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_CORE_THREAT_CONTINUATION", {item.code for item in issues})
 
     def test_plan_rejects_conflicting_testimony_as_the_only_core_answer(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["reader_investment"]["core_threat_continuation"]["local_answer"] = (
-            "孙家内屋只是出现矛盾说法，仍不清楚谁先开门。"
+            "在场者只是说法不一，仍不清楚谁先移动。"
         )
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("STALLED_CORE_REVELATION", {item.code for item in issues})
 
     def test_plan_rejects_repeating_the_old_defense_as_a_new_rule(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["reader_investment"]["core_threat_continuation"]["old_defense"] = "关紧家门，不回应门外声音。"
-        plan["reader_investment"]["core_threat_continuation"]["replacement_rule"] = "关紧家门，不回应门外声音。"
+        thread = plan["reader_investment"]["core_threat_continuation"]
+        thread["old_defense"] = "所有人留在原地等待。"
+        thread["replacement_rule"] = "所有人留在原地等待。"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("STALLED_ACTION_RULE", {item.code for item in issues})
 
-    def test_second_chapter_cannot_drop_the_dead_voice_core_hook(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["reader_investment"]["core_threat_continuation"] = {
-            "prior_hook": "上一章留下家门是否安全的问题。",
-            "current_effect": "孙家的入殓期限正在损害母亲针线名声。",
-            "local_answer": "孙家内部确实有人隐瞒开门先后。",
-            "old_defense": "关紧街门。",
-            "defense_failure": "孙家仍因门外说法发生争执。",
-            "replacement_rule": "让在场者分别作证。",
-            "forced_change": "母亲必须决定是否继续缝补。",
-            "human_pressure_link": "孙有田为名声阻止母亲离开。",
-        }
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("CORE_HOOK_RECEDES_IN_PLAN", {item.code for item in issues})
-
-    def test_second_chapter_requires_a_new_cost_on_the_protagonist(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = (
-            "张洞支持母亲离开，导致她失去孙家针线工钱。"
-        )
-        plan["dramatic_spine"]["cost_realization"] = (
-            "孙有田当场取消母亲的工钱和后续委托。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
-
-    def test_second_chapter_accepts_protagonist_personally_taking_the_garment(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = "他把殓衣责任记到自己名下。"
-        plan["dramatic_spine"]["cost_realization"] = (
-            "孙有田把未完殓衣交给张洞；张洞亲手接下，母亲不替他落针。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
-
-    def test_second_chapter_accepts_split_delivery_and_named_receipt(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = (
-            "他成为日落前补好并送回殓衣的具名责任人。"
-        )
-        plan["dramatic_spine"]["cost_realization"] = (
-            "孙有田把殓衣交到张洞手中；张洞当场收下，母亲不替他落第一针。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", {item.code for item in issues})
-
-    def test_second_chapter_requires_the_core_anomaly_to_act_on_page(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = "张洞接下亡者衣物与当夜追责。"
-        plan["dramatic_spine"]["cost_realization"] = "张洞承担日落归还衣物的责任。"
-        plan["reader_investment"]["core_threat_continuation"]["prior_hook"] = (
-            "上一章借用死者声音叫门的威胁仍未结束。"
-        )
-        plan["scenes"][0]["threat_action"] = (
-            "孙有田为入殓名声挡住通路，并公开取消母亲的针线工钱。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("CORE_ANOMALY_NOT_ACTING_ON_PAGE", {item.code for item in issues})
-
-    def test_second_chapter_accepts_named_responsibility_and_current_dead_voice(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = (
-            "张洞把日落归还殓衣的责任记到自己名下。"
-        )
-        plan["dramatic_spine"]["cost_realization"] = (
-            "孙有田交出殓衣，张洞收下亡者衣物。"
-        )
-        plan["reader_investment"]["core_threat_continuation"]["prior_hook"] = (
-            "上一章借用死者声音叫门的威胁仍未结束。"
-        )
-        plan["reader_investment"]["core_threat_continuation"]["current_effect"] = (
-            "门外借用孙有田亡父声音叫门，正在诱使他开门。"
-        )
-        plan["scenes"][0]["threat_action"] = (
-            "门外客借孙有田亡父之声主动诱他开街门，抬棺人当场退出。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        codes = {item.code for item in issues}
-        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", codes)
-        self.assertNotIn("CORE_ANOMALY_NOT_ACTING_ON_PAGE", codes)
-
     def test_plan_rejects_superficial_attachment_label(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["reader_investment"]["attachment_anchor"] = "母亲很重要"
+        plan["reader_investment"]["attachment_anchor"] = "父亲很重要"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_ATTACHMENT_ANCHOR", {item.code for item in issues})
 
     def test_plan_requires_human_afterimage_beyond_mystery(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["reader_investment"]["emotional_afterimage"] = "想知道门外是谁"
+        plan["reader_investment"]["emotional_afterimage"] = "只想知道来客是谁"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_EMOTIONAL_AFTERIMAGE", {item.code for item in issues})
 
     def test_plan_requires_question_to_change_kind(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["reader_investment"]["revelation_shift"]["to"] = plan["reader_investment"]["revelation_shift"]["from"]
+        shift = plan["reader_investment"]["revelation_shift"]
+        shift["to"] = shift["from"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("BAD_REVELATION_SHIFT", {item.code for item in issues})
 
     def test_plan_rejects_an_unexecuted_revelation_response(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["reader_investment"]["revelation_shift"]["new_response"] = (
-            plan["reader_investment"]["revelation_shift"]["old_response"]
-        )
+        shift = plan["reader_investment"]["revelation_shift"]
+        shift["new_response"] = shift["old_response"]
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("STALLED_REVELATION_RESPONSE", {item.code for item in issues})
 
-    def test_second_chapter_requires_same_visit_retargeting_not_another_voice_sample(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["reader_investment"]["revelation_shift"].update({
-            "on_page_answer": "孙有田也听见亡父声音叫门。",
-            "counterexample": "帮丧人离开，关门只能避免越界，不能保住丧事。",
-            "new_response": "张洞等母亲求助后接下殓衣。",
-            "executed_change": "张洞把日落归还殓衣的责任记在自己名下。",
-        })
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("CORE_REVEAL_REPEATS_DEAD_VOICE", {item.code for item in issues})
-
-    def test_second_chapter_accepts_same_visit_voice_retargeting(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["reader_investment"]["revelation_shift"].update({
-            "on_page_answer": "同一轮三次敲击里，借声在孙有田退开门栓后改用孙周氏声音转向第二个能开门的母亲。",
-            "counterexample": "没有重新敲门，声音仍换成第二名能开门者熟悉的死者，单让孙有田退开并未结束诱门。",
-            "new_response": "所有能开门者一起退离门栓，不让当前被叫者控制边界。",
-            "executed_change": "母亲主动带人退离门栓，张洞按她要求横过长凳隔开门栓。",
-        })
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertNotIn("CORE_REVEAL_REPEATS_DEAD_VOICE", {item.code for item in issues})
-
-    def test_second_chapter_accepts_attempt_27_retargeting_wording_and_cost(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = (
-            "张洞本人承接孙周氏未完殓衣，须在日落前以自己的名义补好交还。"
-        )
-        plan["dramatic_spine"]["cost_realization"] = (
-            "孙有田把殓衣交到张洞手中，张洞当场答应日落前交回。"
-        )
-        plan["reader_investment"]["revelation_shift"].update({
-            "on_page_answer": "同一次诱门里，孙有田退离后诱门未重敲便转向仍能碰栓的张母。",
-            "counterexample": "当前借声在孙有田退离后改换目标，证明只按住一个人挡不住诱门。",
-            "new_response": "所有能开门者一同退离栓柄。",
-            "executed_change": "张母要求众人退开，张洞用长凳隔开人与栓柄。",
-        })
-        plan["reader_investment"]["core_threat_continuation"]["local_answer"] = (
-            "同一次诱门在第一名能开门者退离后，转向第二名能开门者。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        codes = {item.code for item in issues}
-        self.assertNotIn("CORE_REVEAL_REPEATS_DEAD_VOICE", codes)
-        self.assertNotIn("PROTAGONIST_COST_NOT_REALIZED", codes)
-
-    def test_next_chapter_cannot_repeat_exit_loss_through_another_route(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+    def test_next_chapter_cannot_repeat_exit_loss_in_another_form(self):
+        state = _state()
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
         state["recent_hooks"] = [{
             "chapter": 1,
             "type": "代价展示",
-            "content": "张洞错过渡船客牌，已经失去本班离镇机会。",
+            "content": "道路封闭使张洞错过离开本地的机会。",
         }]
         plan = _valid_plan()
         plan["chapter_number"] = 2
-        plan["dramatic_spine"]["protagonist_choice"] = "张洞不去车行询问陆路车位，留下修门。"
-        plan["dramatic_spine"]["choice_cost"] = "他再次失去离镇车位。"
+        plan["dramatic_spine"]["choice_cost"] = "新的停运让他再次无法撤离。"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("REPEATED_EXIT_LOSS", {item.code for item in issues})
 
-    def test_next_chapter_can_compare_new_wound_with_prior_lost_ticket(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+    def test_next_chapter_can_compare_new_wound_with_prior_exit_loss(self):
+        state = _state()
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
         state["recent_hooks"] = [{
             "chapter": 1,
             "type": "代价展示",
-            "content": "张洞错过渡船客牌，已经失去本班离镇机会。",
+            "content": "道路封闭使张洞错过离开本地的机会。",
         }]
         plan = _valid_plan()
         plan["chapter_number"] = 2
         plan["reader_investment"]["attachment_anchor"]["private_meaning"] = (
-            "被逐出母亲的针线桌，比失去一块客牌更像被剥走他能成为的人。"
+            "相比上一章失去离开本地的机会，这次父亲撤回信任才是新的伤口。"
         )
-        plan["reader_investment"]["attachment_anchor"]["threatened_loss"] = "母亲会撤回共同做活的资格。"
-        plan["reader_investment"]["emotional_afterimage"]["immediate_wound"] = "母亲撤回共同做活的资格。"
-        plan["reader_investment"]["emotional_afterimage"]["material_aftereffect"] = "针线桌不再给张洞使用。"
-        plan["dramatic_spine"]["choice_cost"] = "张洞公开承担补衣责任。"
-        plan["dramatic_spine"]["cost_realization"] = "张洞当场接下殓衣。"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertNotIn("REPEATED_EXIT_LOSS", {item.code for item in issues})
 
-    def test_next_chapter_cannot_repeat_lost_career_as_local_trial_loss(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+    def test_next_chapter_cannot_repeat_livelihood_loss(self):
+        state = _state()
         state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
         state["recent_hooks"] = [{
             "chapter": 1,
             "type": "代价展示",
-            "content": "张洞毁坏木样并失去木行学徒客位。",
+            "content": "雇主终止工作，张洞失去唯一收入。",
         }]
         plan = _valid_plan()
         plan["chapter_number"] = 2
-        plan["dramatic_spine"]["choice_cost"] = "老李撤回张洞在木匠铺的试工机会。"
+        plan["dramatic_spine"]["choice_cost"] = "新的雇用也被终止，他再次失去谋生收入。"
         issues = validate_plan(plan, state, {"CANON-RULE-001"})
         self.assertIn("REPEATED_CAREER_LOSS", {item.code for item in issues})
 
-    def test_plan_rejects_hearing_sun_house_from_woodshop(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = _valid_plan()
-        plan["scenes"][0]["location"] = "双桥镇西口木匠铺"
-        plan["scenes"][0]["choice_reason"] = (
-            "张洞听见孙家内屋争执，又听到母亲在外院叫他，立刻赶去。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("IMPOSSIBLE_REMOTE_TRIGGER", {item.code for item in issues})
-
-    def test_next_chapter_cannot_reuse_just_planted_clue_as_main_engine(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        state["active_foreshadows"] = {
-            "F-A01": {"status": "已播种", "plant_chapter": 1}
-        }
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("IMMEDIATE_CLUE_REPETITION", {item.code for item in issues})
-
-    def test_next_chapter_must_preserve_destroyed_signature_object(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        state["chapter_summaries"]["summaries"]["1"] = {
-            "title": "门上的灰",
-            "core": "张洞毁坏木样后失去学徒客位。",
-            "irreversible_changes": [],
-        }
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("DAMAGED_OBJECT_STATE_ERASED", {item.code for item in issues})
-
-    def test_plan_rejects_ending_resource_not_established_in_scenes(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = _valid_plan()
-        plan["dramatic_spine"]["ending_leverage"] = (
-            "张洞凭空成为孙家铁栓的安装人，因此可以进入孙家。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("UNSUPPORTED_ENDING_LEVERAGE", {item.code for item in issues})
-
-    def test_plan_rejects_sun_husband_claiming_rice_shop_debt_authority(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = _valid_plan()
-        plan["reader_investment"]["threat_in_motion"] = (
-            "孙有田以亡妻替张母赊米担保为由要求张母当天认账。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("UNSUPPORTED_DEBT_AUTHORITY", {item.code for item in issues})
-
-    def test_plan_does_not_assign_a_later_speakers_request_to_sun(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = _valid_plan()
-        plan["scenes"][0]["discovery_path"] = (
-            "孙有田辨出亡父旧称而退开；门外改以孙周氏口音提张家赊米私事，张母要求众人退离门栓。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertNotIn("UNSUPPORTED_DEBT_AUTHORITY", {item.code for item in issues})
-
-    def test_plan_rejects_normal_funeral_privacy_as_active_ending_threat(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan["hook"]["content"] = (
-            "母亲已经进入孙家内屋做入殓针线，张洞只能留在外院等待。"
-        )
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("STATIC_INTERIOR_WAIT_HOOK", {item.code for item in issues})
-
-    def test_plan_rejects_hook_that_abandons_emotional_afterimage_person(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = _valid_plan()
-        plan["chapter_number"] = 2
-        state["chapter"].update({"last_chapter": 1, "next_chapter": 2})
-        plan["hook"]["content"] = "李二受染坊差遣，邀张洞去孙家收回孝布。"
-        issues = validate_plan(plan, state, {"CANON-RULE-001"})
-        self.assertIn("ENDING_ABANDONS_AFTERIMAGE", {item.code for item in issues})
-
     def test_foreshadow_must_be_planted_in_an_earlier_chapter(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
-        plan["foreshadow_operations"]["recover"] = ["F-A01"]
+        plan["foreshadow_operations"]["recover"] = ["F-X01"]
         issues = validate_plan(
-            plan, state, {"CANON-RULE-001"}, {"F-A01"}, set(),
-            {"entries": {"F-A01": {}}}, {"milestones": {}},
+            plan,
+            state,
+            {"CANON-RULE-001"},
+            {"F-X01"},
+            set(),
+            {"entries": {"F-X01": {}}},
+            {"milestones": {}},
         )
         self.assertIn("FORESHADOW_NOT_PLANTED", {item.code for item in issues})
 
     def test_milestone_requires_prior_milestone_and_current_volume(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         plan = _valid_plan()
         plan["milestone_operations"]["complete"] = ["M2-ACTIVE-PRICE"]
         registry = {
@@ -594,25 +362,34 @@ class QualityGateTests(unittest.TestCase):
             }
         }
         issues = validate_plan(
-            plan, state, {"CANON-RULE-001"}, set(), {"M2-ACTIVE-PRICE"},
-            {"entries": {}}, registry,
+            plan,
+            state,
+            {"CANON-RULE-001"},
+            set(),
+            {"M2-ACTIVE-PRICE"},
+            {"entries": {}},
+            registry,
         )
         codes = {item.code for item in issues}
         self.assertIn("MILESTONE_PREREQUISITE_MISSING", codes)
         self.assertIn("MILESTONE_WRONG_VOLUME", codes)
 
     def test_due_foreshadow_blocks_exit_milestone(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         state["active_foreshadows"] = {
-            "F-A01": {"status": "已播种", "plant_chapter": 1}
+            "F-X01": {"status": "已播种", "plant_chapter": 1}
         }
         state["chapter"]["next_chapter"] = 2
         plan = _valid_plan()
         plan["chapter_number"] = 2
         plan["milestone_operations"]["complete"] = ["M1-CITY-EXIT"]
         issues = validate_plan(
-            plan, state, {"CANON-RULE-001"}, {"F-A01"}, {"M1-CITY-EXIT"},
-            {"entries": {"F-A01": {"recover_by": "M1-CITY-EXIT"}}},
+            plan,
+            state,
+            {"CANON-RULE-001"},
+            {"F-X01"},
+            {"M1-CITY-EXIT"},
+            {"entries": {"F-X01": {"recover_by": "M1-CITY-EXIT"}}},
             {"milestones": {"M1-CITY-EXIT": {"volume": 1}}},
         )
         self.assertIn("FORESHADOW_RECOVERY_OVERDUE", {item.code for item in issues})
@@ -677,13 +454,18 @@ class QualityGateTests(unittest.TestCase):
             [],
             {"characters": [], "terms": []},
             {"chapter_number": 1, "prohibited_elements": []},
-            length_policy={"safe_min": 2500, "target_min": 3200, "target_max": 5000, "safe_max": 8000},
+            length_policy={
+                "safe_min": 2500,
+                "target_min": 3200,
+                "target_max": 5000,
+                "safe_max": 8000,
+            },
         )
         self.assertFalse(result["passed"])
         self.assertIn("WORD_COUNT_HARD_FAIL", {item["code"] for item in result["issues"]})
 
     def test_plan_must_match_next_chapter_and_change_state(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
+        state = _state()
         issues = validate_plan({"chapter_number": 2, "event_id": "event_1"}, state)
         codes = {issue.code for issue in issues}
         self.assertIn("PLAN_CHAPTER_MISMATCH", codes)

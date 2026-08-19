@@ -46,11 +46,11 @@ class StateStoreTests(unittest.TestCase):
 
     def test_project_state_has_canonical_timeline(self):
         state = load_state(Path("novel/state/current.json"))
-        self.assertEqual(state["timeline"]["current_year"], 1908)
-        self.assertEqual(
-            state["characters"]["pending"]["秦老"]["birth_year_range"],
-            [1905, 1915],
-        )
+        self.assertEqual(state["timeline"]["current_year"], 1911)
+        self.assertEqual(state["protagonist"]["age"], 17)
+        self.assertEqual(state["chapter"]["last_chapter"], 0)
+        self.assertEqual(state["chapter"]["next_chapter"], 1)
+        self.assertNotIn("birth_year_range", state["characters"]["pending"]["秦"])
         self.assertNotIn("周正", state["characters"].get("active", {}))
 
     def test_canon_registry_has_three_confidence_levels(self):

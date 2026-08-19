@@ -185,6 +185,31 @@ def _planned_serial_engine(plan: dict[str, Any]) -> str:
     return "\n".join(part for part in parts if isinstance(part, str) and part)
 
 
+LOSS_MARKER = (
+    r"(?:失去|错过|错失|无法继续|不能继续|不再能够|被(?:取消|撤回|终止|剥夺|拒绝)"
+    r"|遭(?:取消|撤回|终止|剥夺|拒绝)|停运|中断|断绝)"
+)
+EXIT_LOSS_DOMAIN = r"(?:离开|离镇|出镇|离城|撤离|迁离|启程|上路|通行|行程|交通|运输)"
+LIVELIHOOD_LOSS_DOMAIN = r"(?:谋生|生计|工作|收入|工钱|雇用|用工|职位|营生)"
+COMPARISON_ONLY = r"(?:相比|不同于|有别于|只是比较|并非再次|不是再次|上一章|先前)"
+
+
+def _loss_in_domain(text: str, domain: str, *, ignore_comparisons: bool = False) -> str | None:
+    """Return a domain-level loss without relying on event-specific props or place names."""
+    for segment in re.split(r"[\n。！？!?；]", text):
+        segment = segment.strip()
+        if not segment or (ignore_comparisons and re.search(COMPARISON_ONLY, segment)):
+            continue
+        match = re.search(
+            rf"{LOSS_MARKER}[^，,。！？!?；\n]{{0,36}}{domain}"
+            rf"|{domain}[^，,。！？!?；\n]{{0,36}}{LOSS_MARKER}",
+            segment,
+        )
+        if match:
+            return match.group(0)
+    return None
+
+
 def _validate_immediate_serial_progression(
     plan: dict[str, Any],
     state: dict[str, Any],
@@ -199,262 +224,33 @@ def _validate_immediate_serial_progression(
     planned = _planned_serial_engine(plan)
     issues: list[Issue] = []
 
-    prior_exit_loss = re.search(
-        r"(?:失去|错过|发尽|未领到).{0,20}(?:客位|客牌|船牌|渡船|离镇|出镇|学徒)"
-        r"|(?:客位|客牌|船牌|渡船|离镇|出镇).{0,20}(?:失去|错过|发尽|未领到)",
-        prior,
+    prior_exit_loss = _loss_in_domain(prior, EXIT_LOSS_DOMAIN)
+    planned_exit_loss = _loss_in_domain(
+        planned, EXIT_LOSS_DOMAIN, ignore_comparisons=True
     )
-    planned_exit_loss = re.search(
-        r"(?:不去|错过|失去|放弃|无法|不能|不再).{0,24}(?:车行|车位|客位|船牌|客牌|渡船|离镇|出镇|陆路)"
-        r"|(?:车行|车位|客位|船牌|客牌|渡船|离镇|出镇|陆路).{0,24}(?:不去|错过|失去|放弃|无法|不能|不再)",
-        planned,
-    )
-    if planned_exit_loss:
-        context_start = max(0, planned_exit_loss.start() - 18)
-        comparison_context = planned[context_start:planned_exit_loss.end()]
-        if re.search(r"(?:已经|上一章|昨夜|比).{0,14}失去", comparison_context):
-            planned_exit_loss = None
     if prior_exit_loss and planned_exit_loss:
         issues.append(
             Issue(
                 "REPEATED_EXIT_LOSS",
                 "P1",
-                "上一章已经兑现失去离镇机会；下一章必须消费该后果并换一个压力领域，不能改换交通方式再失去一次",
-                planned_exit_loss.group(0),
+                "上一章已经兑现离开、撤离或通行受阻；下一章必须消费该后果并更换压力领域，不能再用一次出行失败支付同类代价",
+                planned_exit_loss,
             )
         )
 
-    prior_career_loss = re.search(
-        r"(?:失去|错过|错失|毁坏).{0,24}(?:学徒|木行|引荐|客位|客牌|木样)"
-        r"|(?:学徒|木行|引荐|客位|客牌|木样).{0,24}(?:失去|错过|错失|毁坏)",
-        prior,
-    )
-    planned_career_loss = re.search(
-        r"(?:失去|放弃|撤回|不再给).{0,24}(?:试工|木工活|用工|木匠铺|手艺机会)"
-        r"|(?:试工|木工活|用工|木匠铺|手艺机会).{0,24}(?:失去|放弃|撤回|不再给)",
-        planned,
+    prior_career_loss = _loss_in_domain(prior, LIVELIHOOD_LOSS_DOMAIN)
+    planned_career_loss = _loss_in_domain(
+        planned, LIVELIHOOD_LOSS_DOMAIN, ignore_comparisons=True
     )
     if prior_career_loss and planned_career_loss:
         issues.append(
             Issue(
                 "REPEATED_CAREER_LOSS",
-                "P1",
-                "上一章已经毁掉木样并失去学徒客位；下一章不能再以失去本地试工或木工机会重复支付同一身份代价",
-                planned_career_loss.group(0),
+                "P2",
+                "上一章已经兑现谋生、工作或收入受损；若下一章仍出现同类损失，需核对承担者与关系后果是否真正不同",
+                planned_career_loss,
             )
         )
-
-    active_foreshadows = state.get("active_foreshadows", {})
-    paper_ash_just_planted = any(
-        item_id == "F-A01"
-        and isinstance(runtime, dict)
-        and runtime.get("status") == "已播种"
-        and runtime.get("plant_chapter") == last_chapter
-        for item_id, runtime in active_foreshadows.items()
-    ) if isinstance(active_foreshadows, dict) else False
-    if paper_ash_just_planted and "纸灰" in planned:
-        issues.append(
-            Issue(
-                "IMMEDIATE_CLUE_REPETITION",
-                "P1",
-                "纸灰刚在上一章完成播种，不能立刻换一个缝隙或容器继续充当本章开篇、关键发现或主要威胁",
-                next((line for line in planned.splitlines() if "纸灰" in line), "纸灰"),
-            )
-        )
-
-    prior_damaged_sample = re.search(
-        r"(?:毁坏|折断|掰断).{0,10}(?:木样|样榫)|(?:木样|样榫).{0,10}(?:毁坏|折断|掰断)",
-        prior,
-    )
-    sample_state_preserved = re.search(
-        r"(?:断|毁|两截|半截|残).{0,10}(?:木样|样榫)|(?:木样|样榫).{0,10}(?:断|毁|两截|半截|残)",
-        planned,
-    )
-    if prior_damaged_sample and "样榫" in planned and not sample_state_preserved:
-        issues.append(
-            Issue(
-                "DAMAGED_OBJECT_STATE_ERASED",
-                "P1",
-                "上一章已毁坏的样榫不能以完好物件重新入场；规划必须明确保留其断裂状态或不再使用",
-                next((line for line in planned.splitlines() if "样榫" in line), "样榫"),
-            )
-        )
-    return issues
-
-
-def _validate_scene_spatial_triggers(plan: dict[str, Any]) -> list[Issue]:
-    issues: list[Issue] = []
-    scenes = plan.get("scenes", [])
-    if not isinstance(scenes, list):
-        return issues
-    for index, scene in enumerate(scenes, 1):
-        if not isinstance(scene, dict):
-            continue
-        location = scene.get("location", "")
-        rendered = "\n".join(
-            str(scene.get(key, ""))
-            for key in ("discovery_path", "choice_reason", "threat_action", "human_turn", "end_state")
-        )
-        if (
-            isinstance(location, str)
-            and "孙家" not in location
-            and re.search(
-                r"(?:听见|听到).{0,10}孙家.{0,8}(?:内屋|外院|争执|呼叫)"
-                r"|孙家.{0,8}(?:内屋|外院).{0,12}(?:叫|喊|呼叫|争执).{0,10}(?:张洞|他)",
-                rendered,
-            )
-        ):
-            issues.append(Issue(
-                "IMPOSSIBLE_REMOTE_TRIGGER",
-                "P1",
-                "张家或木匠铺距孙家步行约一刻钟；张洞不能直接听见孙家内屋争执或母亲呼叫，必须已在现场或有可见传话链",
-                f"scene {index}: {location}",
-            ))
-    return issues
-
-
-def _validate_ending_leverage_support(plan: dict[str, Any]) -> list[Issue]:
-    spine = plan.get("dramatic_spine", {})
-    if not isinstance(spine, dict):
-        return []
-    ending = spine.get("ending_leverage", "")
-    if not isinstance(ending, str) or not ending:
-        return []
-    claims = set(re.findall(
-        r"(?:孙家|张家|祠堂|木匠铺)[\u4e00-\u9fff]{0,3}(?:铁栓|钥匙|账簿|名单|木样|行囊)",
-        ending,
-    ))
-    if not claims:
-        return []
-    rendered = repr({
-        "scenes": plan.get("scenes", []),
-        "state_changes": plan.get("state_changes", {}),
-    })
-    unsupported = sorted(claim for claim in claims if claim not in rendered)
-    if not unsupported:
-        return []
-    return [Issue(
-        "UNSUPPORTED_ENDING_LEVERAGE",
-        "P1",
-        "ending_leverage不能凭空改变资源归属或行动身份；相关物件与关系必须先在场景中建立",
-        "、".join(unsupported),
-    )]
-
-
-def _validate_event_specific_authority(plan: dict[str, Any]) -> list[Issue]:
-    if plan.get("event_id") != "event_1":
-        return []
-    rendered = repr({
-        "reader_investment": plan.get("reader_investment"),
-        "dramatic_spine": plan.get("dramatic_spine"),
-        "scenes": plan.get("scenes"),
-    })
-    issues: list[Issue] = []
-    if plan.get("chapter_number") == 2:
-        spine = plan.get("dramatic_spine", {})
-        cost_rendered = "\n".join(
-            str(spine.get(field, ""))
-            for field in ("choice_cost", "cost_realization")
-        ) if isinstance(spine, dict) else ""
-        explicit_named_cost = bool(re.search(
-            r"张洞(?:当场|公开|亲自|亲手|本人|因此|也|将)?(?:失去|交出|承担|承接|接下|背上|负责|被拒|被逐|受损|受牵连)"
-            r"|张洞.{0,40}(?:责任|追责|风险).{0,16}(?:自己|名下)"
-            r"|张洞.{0,24}(?:收下|接过|接下).{0,16}(?:殓衣|亡者衣物)"
-            r"|(?:责任|代价|追责|风险).{0,12}(?:落在|记在|压到|由).{0,8}张洞",
-            cost_rendered,
-        ))
-        split_receipt_cost = bool(
-            re.search(r"张洞.{0,16}(?:当场|亲手)?(?:收下|接过|接下)", cost_rendered)
-            and re.search(r"(?:殓衣|亡者衣物)", cost_rendered)
-        )
-        if not (explicit_named_cost or split_receipt_cost):
-            issues.append(Issue(
-                "PROTAGONIST_COST_NOT_REALIZED",
-                "P1",
-                "第二章关键选择必须让张洞本人新承担一项已发生的责任、损失或关系风险；母亲失去针线钱不能独自替代主角代价",
-                cost_rendered[:480],
-            ))
-        scene_threats = "\n".join(
-            str(scene.get("threat_action", ""))
-            for scene in plan.get("scenes", [])
-            if isinstance(scene, dict)
-        )
-        investment = plan.get("reader_investment", {})
-        core_thread = investment.get("core_threat_continuation", {}) if isinstance(investment, dict) else {}
-        threat_parts = [
-            str(investment.get("threat_in_motion", "")) if isinstance(investment, dict) else "",
-            scene_threats,
-        ]
-        if isinstance(core_thread, dict):
-            threat_parts.extend(str(value) for value in core_thread.values())
-        threat_context = "\n".join(threat_parts)
-        dead_voice_identified = bool(re.search(
-            r"(?:死者|死人|已死|亡父|亡母|亡妻).{0,20}(?:声音|称呼|叫门)"
-            r"|(?:声音|称呼).{0,20}(?:死者|死人|已死|亡父|亡母|亡妻)",
-            threat_context,
-        ))
-        current_boundary_action = bool(re.search(
-            r"(?:街门|院门|侧门|门外|关闭边界).{0,40}(?:三次|三下|敲击|敲门|借声|声音|之声|私称|称呼|叫门|响起|诱.{0,6}(?:开门|开街门|开院门|开侧门|拔栓))"
-            r"|(?:门外客|借声|声音|之声|私称|称呼).{0,40}(?:街门|院门|侧门|门外|关闭边界|开门|开街门|开院门|开侧门|拔栓|诱.{0,6}开)"
-            r"|(?:三次|三下|敲击|敲门|叫门|响起).{0,40}(?:街门|院门|侧门|门外|关闭边界)",
-            scene_threats,
-        ))
-        immediate_human_effect = bool(re.search(
-            r"(?:当场|立即|随即).{0,20}(?:退出|撤走|离开|拒绝|改口|放下|失去)"
-            r"|(?:帮丧|抬棺|邻里|家人).{0,20}(?:退出|撤走|离开|拒绝|改口|失去)",
-            scene_threats,
-        ))
-        if not (dead_voice_identified and current_boundary_action and immediate_human_effect):
-            issues.append(Issue(
-                "CORE_ANOMALY_NOT_ACTING_ON_PAGE",
-                "P1",
-                "第二章不能只转述另一户证词；借用死者声音的威胁必须在本章当前场景短暂行动，并立即改变一个活人的选择或孙家丧事资源",
-                scene_threats[:640],
-            ))
-    if (
-        "孙有田" in rendered
-        and re.search(
-            r"孙有田[^。；\n]{0,100}(?:向米铺说明旧债|追讨旧债|核认[^。；\n]{0,12}赊米|以[^。；\n]{0,20}赊米[^。；\n]{0,20}要求)",
-            rendered,
-        )
-    ):
-        issues.append(Issue(
-            "UNSUPPORTED_DEBT_AUTHORITY",
-            "P1",
-            "孙有田可以索取丧事人情，但不能把亡妻在米铺的担保当成自己可追讨、撤销或强制核认的债权",
-            "孙有田 / 赊米担保",
-        ))
-    hook_content = plan.get("hook", {}).get("content", "")
-    if (
-        plan.get("chapter_number") == 2
-        and isinstance(hook_content, str)
-        and re.search(r"(?:进入|留在|走进).{0,12}孙家.{0,8}(?:内屋|屋内)|孙家.{0,8}(?:内屋|屋内)", hook_content)
-        and not re.search(
-            r"(?:求救|呼喊|拒绝放行|不许.{0,8}离开|锁住|落锁|上闩|封住|改口|逼迫|隐瞒|争执|失踪|受伤)",
-            hook_content,
-        )
-    ):
-        issues.append(Issue(
-            "STATIC_INTERIOR_WAIT_HOOK",
-            "P1",
-            "母亲进入孙家内屋或张洞被留在外院只是位置变化；章末必须出现无法被正常入殓私密流程解释的主动变化",
-            hook_content,
-        ))
-    afterimage = plan.get("reader_investment", {}).get("emotional_afterimage", {})
-    person = afterimage.get("person", "") if isinstance(afterimage, dict) else ""
-    if (
-        plan.get("chapter_number", 0) > 1
-        and isinstance(person, str)
-        and ("母亲" in person or "张母" in person)
-        and isinstance(hook_content, str)
-        and not any(alias in hook_content for alias in ("母亲", "张母", "娘"))
-    ):
-        issues.append(Issue(
-            "ENDING_ABANDONS_AFTERIMAGE",
-            "P1",
-            "章末钩子必须继续作用于情绪余震中的母亲，不能在她刚付出代价后切换成配角的新差事或下一项调查",
-            hook_content,
-        ))
     return issues
 
 
@@ -486,9 +282,6 @@ def validate_plan(
     if plan.get("event_id") != state.get("chapter", {}).get("current_event"):
         issues.append(Issue("PLAN_EVENT_MISMATCH", "P1", "规划事件与状态不一致", str(plan.get("event_id"))))
     issues.extend(_validate_immediate_serial_progression(plan, state))
-    issues.extend(_validate_scene_spatial_triggers(plan))
-    issues.extend(_validate_ending_leverage_support(plan))
-    issues.extend(_validate_event_specific_authority(plan))
     continuity = plan.get("serial_continuity")
     if (
         not isinstance(continuity, dict)
@@ -568,15 +361,6 @@ def validate_plan(
                     "局部答案必须使旧防法失效、受限或产生新代价；替代规则不能原样重复旧防法",
                     core_thread["old_defense"],
                 ))
-            if plan.get("chapter_number") == 2 and plan.get("event_id") == "event_1":
-                core_rendered = "\n".join(core_thread.values())
-                if not re.search(r"(?:死者|死人|借声|声音|叫门)", core_rendered):
-                    issues.append(Issue(
-                        "CORE_HOOK_RECEDES_IN_PLAN",
-                        "P1",
-                        "第二章不能只用孙家名声冲突承接第一章；借用死者声音的核心疑问必须与本章局部答案和现实压力直接相连",
-                        core_rendered[:480],
-                    ))
         attachment = investment.get("attachment_anchor")
         if (
             not isinstance(attachment, dict)
@@ -624,39 +408,6 @@ def validate_plan(
                     "揭示后的新应对不能原样重复章初应对；反例必须迫使人物在本章执行不同动作",
                     shift["old_response"],
                 ))
-            if plan.get("chapter_number") == 2 and plan.get("event_id") == "event_1":
-                mutation = "\n".join(
-                    [
-                        str(core_thread.get("local_answer", "")) if isinstance(core_thread, dict) else "",
-                        str(core_thread.get("defense_failure", "")) if isinstance(core_thread, dict) else "",
-                    ] + [
-                        str(shift.get(field, ""))
-                        for field in ("on_page_answer", "counterexample", "new_response", "executed_change")
-                    ]
-                )
-                same_visit = bool(re.search(
-                    r"同一(?:次|轮|阵).{0,24}(?:敲|叫门|借声|诱门)"
-                    r"|(?:没有|未|不)(?:再|重新|重).{0,8}(?:敲|三下)"
-                    r"|三次敲击.{0,24}(?:未再|没有再|不再)",
-                    mutation,
-                ))
-                retargets = bool(re.search(
-                    r"(?:改借|改用|改换|换成|转而|转向|换了|转移).{0,24}(?:声音|之声|称呼|死者|亡\S|目标)"
-                    r"|(?:声音|借声).{0,24}(?:改借|改用|换成|转而|转向|换了|第二个目标)",
-                    mutation,
-                ))
-                second_opener = bool(re.search(
-                    r"(?:第二|另一|下一个).{0,12}(?:开门者|能开门|碰栓|门栓|目标|活人)"
-                    r"|(?:孙有田|第一人).{0,24}(?:退开|离开|放弃|远离).{0,24}(?:母亲|张母|许嫂|第二人)",
-                    mutation,
-                ))
-                if not (same_visit and retargets and second_opener):
-                    issues.append(Issue(
-                        "CORE_REVEAL_REPEATS_DEAD_VOICE",
-                        "P1",
-                        "第二章已被盲审证明不能靠第三份同类借声越过揭示门槛；当前诱门必须在同一轮敲击中改换死者模板并转向第二名能开门者，迫使人物执行新的应对",
-                        mutation[:640],
-                    ))
         delivery = investment.get("clue_delivery")
         if (
             not isinstance(delivery, dict)
@@ -751,29 +502,6 @@ def validate_plan(
                     "P1",
                     "规划不能把当前状态已知事实重新当作本章新进展",
                     repr(duplicate_known),
-                )
-            )
-        existing_rendered = "\n".join(existing_known)
-        semantic_duplicates: list[str] = []
-        for item in changes.get("protagonist_known_info_add", []):
-            if not isinstance(item, str) or item in existing_known:
-                continue
-            if (
-                "张家正门" in item
-                and re.search(r"(?:外力|门外|由外向内)", item)
-                and re.search(r"(?:撞|撬)", item)
-                and "张家正门" in existing_rendered
-                and re.search(r"(?:外力|门外|由外向内)", existing_rendered)
-                and re.search(r"(?:撞|撬)", existing_rendered)
-            ):
-                semantic_duplicates.append(item)
-        if semantic_duplicates:
-            issues.append(
-                Issue(
-                    "KNOWN_INFO_SEMANTIC_DUPLICATE",
-                    "P1",
-                    "规划不能把状态中已有事实换成同义措辞再次结算；可在场景中简短复核，但不得当作新认知或章节奖励",
-                    repr(semantic_duplicates),
                 )
             )
     evidence_ids = plan.get("canon_evidence_ids")
@@ -874,7 +602,7 @@ def validate_plan(
                 continue
             for value in values:
                 if not isinstance(value, str) or not re.match(r"^F-[A-Z]-?\d+", value.strip()):
-                    issues.append(Issue("BAD_FORESHADOW_ID", "P1", "伏笔必须以稳定ID开头，如F-A01", repr(value)))
+                    issues.append(Issue("BAD_FORESHADOW_ID", "P1", "伏笔必须以稳定ID开头，如F-X01", repr(value)))
                     continue
                 matched = re.match(r"^(F-[A-Z]-?\d+)", value.strip())
                 if matched:
