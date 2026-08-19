@@ -39,6 +39,31 @@ def _recent_signatures(texts: list[str]) -> dict[str, Any]:
     return {"recent_endings": endings, "action_counts": frequent_actions}
 
 
+def _load_chapter_blueprint(
+    project_root: Path, event_id: str, chapter_number: int
+) -> str:
+    """Load only the active card from the first-volume opening outline."""
+    if event_id != "event_1" or not 1 <= chapter_number <= 16:
+        return ""
+    path = project_root / "novel/plots/volume_1_opening_16_chapters.md"
+    if not path.is_file():
+        return ""
+    text = path.read_text(encoding="utf-8")
+    first_chapter = re.search(r"(?m)^## 第1章", text)
+    intro = text[: first_chapter.start()].strip() if first_chapter else ""
+    current = re.search(
+        rf"(?ms)^## 第{chapter_number}章.*?(?=^## 第\d+章|^## 前16章结算边界|\Z)",
+        text,
+    )
+    redlines = re.search(r"(?ms)^## 写作执行红线.*\Z", text)
+    parts = [intro]
+    if current:
+        parts.append(current.group(0).strip())
+    if redlines:
+        parts.append(redlines.group(0).strip())
+    return "\n\n".join(part for part in parts if part)
+
+
 def build_planner_context(
     project_root: Path,
     state: dict[str, Any],
@@ -49,6 +74,9 @@ def build_planner_context(
     event_path = project_root / "novel/plots" / f"{event_id}.md"
     if not event_path.exists():
         raise ArtifactValidationError(f"当前事件大纲不存在: {event_path}")
+    chapter_blueprint = _load_chapter_blueprint(
+        project_root, event_id, state["chapter"]["next_chapter"]
+    )
     year = state["timeline"]["current_year"]
     era_key = next(
         (key for key in registry.get("era_bans", {}) if int(key.split("-")[0]) <= year <= int(key.split("-")[1])),
@@ -86,6 +114,7 @@ def build_planner_context(
         "recent_hooks": state["recent_hooks"][-5:],
         "recent_summaries": dict(list(state["chapter_summaries"]["summaries"].items())[-5:]),
         "event_outline": event_path.read_text(encoding="utf-8"),
+        "chapter_blueprint": chapter_blueprint,
         "series_architecture": architecture,
         "arc_registry": arc_registry,
         "foreshadow_registry": foreshadow_registry,
@@ -525,6 +554,7 @@ def build_chapter_context_pack(
         "canon_facts": planner_context.get("canon_facts", []),
         "era_bans": planner_context.get("era_bans", {}),
         "event_outline": planner_context.get("event_outline", ""),
+        "chapter_blueprint": planner_context.get("chapter_blueprint", ""),
     }
     memory = planner_context.get("memory_context", {})
     retrieved = {
@@ -574,6 +604,7 @@ def build_writer_packet(
         "canon_claims": canon_claims,
         "era_bans": context.get("era_bans", {"characters": [], "terms": []}),
         "event_guardrails": context.get("event_outline", ""),
+        "chapter_guardrails": context.get("chapter_blueprint", ""),
         "style_principles": [
             "先让人物值得在乎，再让异常或选择伤到活人的身体、身份、关系或迫切愿望",
             "规则线在人物求生与犯错中抵达；不要把正文写成验证未知的实验报告",
@@ -745,6 +776,7 @@ def build_reviewer_packet(
         "chapter_number": plan["chapter_number"],
         "constraint_ledger": build_constraint_ledger(plan),
         "draft": draft,
+        "chapter_blueprint": planner_context.get("chapter_blueprint", ""),
         "static_review": static_review,
         "continuity_before": state,
         "canon_facts": planner_context.get("canon_facts", []),
