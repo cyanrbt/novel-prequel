@@ -9,7 +9,7 @@
     "M2-COOPERATION-ANCHOR": {"volume": 2, "after": ["M2-ACTIVE-PRICE"], "meaning": "张洞与罗文松留下跨越失忆、分离与规则干扰仍可核验的合作与否决凭据"},
     "M3-CORE-MEMBERS-MET": {"volume": 3, "after": ["M2-COOPERATION-ANCHOR"], "meaning": "核心成员在交叉事件中彼此形成过帮助、伤害、债务或秘密"},
     "M3-SEVEN-FORMED": {"volume": 3, "after": ["M3-CORE-MEMBERS-MET"], "meaning": "七人第一次按各自否决边界共同限制异常，并发现体系制造了新的固定节点"},
-    "M3-PAPER-BIRTH": {"volume": 3, "after": ["M3-CORE-MEMBERS-MET"], "meaning": "记事人为逃避确定死亡舍弃人形，形成保留人类意识痕迹却按厉鬼方式行动的人皮纸；意识归属保持开放"},
+    "M3-PAPER-BIRTH": {"volume": 3, "after": ["M3-CORE-MEMBERS-MET"], "meaning": "沈惟明为逃避确定死亡舍弃人形，形成保留人类记忆痕迹却按厉鬼方式行动的人皮纸；意识归属、真话约束与吞鬼来源保持开放"},
     "M4-SYSTEM-FAILURE": {"volume": 4, "after": ["M3-SEVEN-FORMED", "M3-PAPER-BIRTH"], "meaning": "固定体系无法同时保护移动人群与旧节点；人皮纸提供真实但隐去代价归属的生路，核心牺牲使团队路线分裂"},
     "M5-FINAL-SEAL": {"volume": 5, "after": ["M4-SYSTEM-FAILURE"], "meaning": "七人分别选择自己的代价；张洞完成仍需成员活着维持、可被后来者中止或拒绝的长期限制布局"},
     "M5-PAPER-ESCAPE": {"volume": 5, "after": ["M4-SYSTEM-FAILURE", "M3-PAPER-BIRTH"], "meaning": "七人切断人皮纸与当时拼图及活动载体的联系，却为使用一条真实救人信息而保留本体；它以近乎无害的纸张形态进入后世流通链"},
