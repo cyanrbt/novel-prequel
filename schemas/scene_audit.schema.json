@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scene_audit.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["artifact_sha256", "verdict", "pov_source_ledger", "boundary_action_ledger", "shock_response_ledger", "dialogue_register_ledger", "first_read_reconstruction", "blocking_issues", "revision_instructions"],
+  "properties": {
+    "artifact_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "verdict": {"type": "string", "enum": ["PASS", "REVISE"]},
+    "pov_source_ledger": {"type": "array", "items": {"$ref": "#/$defs/povRow"}},
+    "boundary_action_ledger": {"type": "array", "items": {"$ref": "#/$defs/boundaryRow"}},
+    "shock_response_ledger": {"type": "array", "items": {"$ref": "#/$defs/shockRow"}},
+    "dialogue_register_ledger": {"type": "array", "items": {"$ref": "#/$defs/dialogueRow"}},
+    "first_read_reconstruction": {"$ref": "#/$defs/reconstruction"},
+    "blocking_issues": {"type": "array", "items": {"$ref": "#/$defs/blockingIssue"}},
+    "revision_instructions": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "povRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["anchor_id", "claim_quote", "information_source", "source_quote", "verdict", "explanation"],
+      "properties": {
+        "anchor_id": {"type": "string"}, "claim_quote": {"type": "string"},
+        "information_source": {"type": "string"}, "source_quote": {"type": ["string", "null"]},
+        "verdict": {"type": "string", "enum": ["SUPPORTED", "UNSUPPORTED", "AMBIGUOUS"]},
+        "explanation": {"type": "string"}
+      }
+    },
+    "boundaryRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["anchor_id", "action_quote", "before_quote", "after_quote", "visible_to_pov", "verdict", "explanation"],
+      "properties": {
+        "anchor_id": {"type": "string"}, "action_quote": {"type": "string"},
+        "before_quote": {"type": ["string", "null"]}, "after_quote": {"type": ["string", "null"]},
+        "visible_to_pov": {"type": "boolean"},
+        "verdict": {"type": "string", "enum": ["COHERENT", "INCOHERENT", "UNCLEAR"]},
+        "explanation": {"type": "string"}
+      }
+    },
+    "shockRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["anchor_id", "trigger_quote", "response_quote", "response_window", "verdict", "explanation"],
+      "properties": {
+        "anchor_id": {"type": "string"}, "trigger_quote": {"type": "string"},
+        "response_quote": {"type": ["string", "null"]}, "response_window": {"type": "string"},
+        "verdict": {"type": "string", "enum": ["CREDIBLE", "UNDERREACTION", "OVERSTAGED", "NOT_NEW_INFORMATION"]},
+        "explanation": {"type": "string"}
+      }
+    },
+    "dialogueRow": {
+      "type": "object", "additionalProperties": false,
+      "required": ["anchor_id", "dialogue_quote", "speaker", "goal", "verdict", "explanation"],
+      "properties": {
+        "anchor_id": {"type": "string"}, "dialogue_quote": {"type": "string"},
+        "speaker": {"type": "string"}, "goal": {"type": "string"},
+        "verdict": {"type": "string", "enum": ["NATURAL", "STIFF", "ARCHAIC", "EXPOSITORY", "UNCLEAR"]},
+        "explanation": {"type": "string"}
+      }
+    },
+    "reconstruction": {
+      "type": "object", "additionalProperties": false,
+      "required": ["reader_can_reconstruct", "required_rereads", "character_positions", "visibility_limits", "action_chain", "confusing_quotes"],
+      "properties": {
+        "reader_can_reconstruct": {"type": "boolean"}, "required_rereads": {"type": "integer", "minimum": 0},
+        "character_positions": {"type": "string"}, "visibility_limits": {"type": "string"},
+        "action_chain": {"type": "string"}, "confusing_quotes": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "blockingIssue": {
+      "type": "object", "additionalProperties": false,
+      "required": ["code", "quote", "explanation"],
+      "properties": {"code": {"type": "string"}, "quote": {"type": "string"}, "explanation": {"type": "string"}}
+    }
+  }
+}

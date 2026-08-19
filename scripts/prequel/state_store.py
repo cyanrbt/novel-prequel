@@ -109,6 +109,55 @@ def validate_state(state: dict[str, Any]) -> list[str]:
             errors.append(f"{key} 必须是 array")
     if "completed_milestones" in state and not isinstance(state["completed_milestones"], list):
         errors.append("completed_milestones 必须是 array")
+    if "last_review" in state:
+        review = state["last_review"]
+        if not isinstance(review, dict):
+            errors.append("last_review 必须是 object")
+        else:
+            for key in ("chapter", "grade", "verdict", "timestamp"):
+                if key not in review:
+                    errors.append(f"缺失 last_review 字段: {key}")
+            if "chapter" in review and not isinstance(review["chapter"], int):
+                errors.append("last_review.chapter 必须是整数")
+            for key in ("draft_sha256", "taste_contract_sha256"):
+                value = review.get(key)
+                if value is not None and (
+                    not isinstance(value, str)
+                    or len(value) != 64
+                    or any(char not in "0123456789abcdef" for char in value)
+                ):
+                    errors.append(f"last_review.{key} 必须是64位小写sha256")
+    if "formal_review_bindings" in state:
+        bindings = state["formal_review_bindings"]
+        if not isinstance(bindings, dict):
+            errors.append("formal_review_bindings 必须是 object")
+        else:
+            for chapter_key, binding in bindings.items():
+                if not isinstance(chapter_key, str) or not chapter_key.isdigit():
+                    errors.append("formal_review_bindings键必须是章号字符串")
+                    continue
+                if not isinstance(binding, dict):
+                    errors.append(f"formal_review_bindings.{chapter_key}必须是object")
+                    continue
+                for key in (
+                    "draft_sha256",
+                    "reader_verdict",
+                    "mechanism_verdict",
+                    "taste_contract_sha256",
+                    "reviewed_at",
+                ):
+                    if key not in binding:
+                        errors.append(f"formal_review_bindings.{chapter_key}缺失{key}")
+                for key in ("draft_sha256", "taste_contract_sha256"):
+                    value = binding.get(key)
+                    if value is not None and (
+                        not isinstance(value, str)
+                        or len(value) != 64
+                        or any(char not in "0123456789abcdef" for char in value)
+                    ):
+                        errors.append(
+                            f"formal_review_bindings.{chapter_key}.{key}必须是64位小写sha256"
+                        )
 
     summaries = state.get("chapter_summaries", {})
     if isinstance(summaries, dict):

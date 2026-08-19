@@ -18,6 +18,8 @@
 | 单一真相源 | 当前章号、人物、时间、伏笔和已知规则集中在一个状态文件中 |
 | 事务式写作 | 章节、元数据和状态同步提升；任一步骤失败都不改变正式内容 |
 | 多层质量门禁 | 四维计分后执行无大纲盲读，并以头部同类机制校准人物依恋、主动威胁、主角独特性、揭示变形、情绪余震和真实续读偏好 |
+| 累计偏好合同 | 用户已经否定或确认的视角、空间、反应、对白和命名要求进入版本化合同，同时注入规划、写作与审查，不随对话轮次丢失 |
+| 场景四账审计 | 程序先枚举认知判断、边界动作、死亡冲击与对白样本；盲读必须逐项给出来源和结论，漏审本身即为无效报告 |
 | 可追溯上下文 | 实际注入的规则、风格、人物状态、近期正文均记录来源哈希；未核准锚点不会进入 Writer |
 | 证据化状态 | 摘要、钩子、状态变化、伏笔和里程碑必须引用最终正文，不能直接从大纲提交 |
 | 可恢复工作区 | 每次尝试保留规划、正文和两类审查报告，支持人工确认后再提升 |
@@ -156,6 +158,12 @@ python3 scripts/orchestrator.py review --last 5
 # 为最近两章生成四维只读校准报告
 python3 scripts/orchestrator.py review --last 2 --specialists
 
+# 用 Luna 对准备交付的短片段做低成本场景预审
+python3 scripts/orchestrator.py demo-review /tmp/demo.txt
+
+# 也可从标准输入读取
+printf '待审片段' | python3 scripts/orchestrator.py demo-review - --label 对话样稿
+
 # 显式执行到期审计；审计使用独立的单次调用预算
 python3 scripts/orchestrator.py audit
 
@@ -178,7 +186,8 @@ python3 -m unittest discover -v
 
 - Terra medium：Planner、集成初筛；Terra high：专项复核、盲读、状态结算和复杂验证。
 - Sol medium：候选正文与 Selector；Sol high：定向修订。
-- Luna high：局部差分验证。
+- Luna high：局部差分验证与短片段交付前场景预审。
+- `status` 会逐章核对正式正文哈希、盲读结果和累计偏好合同版本；任何正式章在审核后被手工改动，都会显示 `STALE` 并阻断下一章生成。
 - `WAITING_USER`：已有可检查工件，但自动提升条件不足。
 - `BUDGET_EXHAUSTED`：预算已封顶；可无新增调用地查看或人工比较，也可显式创建新预算运行。
 - 候选失败时 `decision.md` 会列出失败阶段、已花费调用、当前最佳工件及未自动补写原因。

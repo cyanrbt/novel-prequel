@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import re
 from collections import Counter
 from dataclasses import asdict, dataclass
@@ -688,6 +689,7 @@ def validate_review(
     *,
     expected_chapter: int | None = None,
     draft: str | None = None,
+    require_draft_hash: bool = False,
 ) -> list[Issue]:
     issues: list[Issue] = []
     if not isinstance(review, dict):
@@ -698,6 +700,27 @@ def validate_review(
         issues.append(Issue("REVIEW_BAD_VERDICT", "P1", "审查结论无效", str(review.get("verdict"))))
     if expected_chapter is not None and review.get("chapter_number") != expected_chapter:
         issues.append(Issue("REVIEW_CHAPTER_MISMATCH", "P1", f"审查章号应为{expected_chapter}", str(review.get("chapter_number"))))
+    bound_hash = review.get("draft_sha256")
+    if require_draft_hash and not isinstance(bound_hash, str):
+        issues.append(
+            Issue(
+                "REVIEW_DRAFT_HASH_MISSING",
+                "P1",
+                "语义审查没有绑定正文哈希",
+                repr(bound_hash),
+            )
+        )
+    if draft is not None and bound_hash is not None:
+        expected_hash = hashlib.sha256(draft.encode("utf-8")).hexdigest()
+        if bound_hash != expected_hash:
+            issues.append(
+                Issue(
+                    "REVIEW_DRAFT_MISMATCH",
+                    "P1",
+                    "语义审查未绑定当前正文版本",
+                    repr(bound_hash),
+                )
+            )
     evidence = review.get("evidence")
     if not isinstance(evidence, list) or len(evidence) < 3:
         issues.append(Issue("REVIEW_NO_EVIDENCE", "P1", "审查必须提供至少3条原文定位证据", repr(evidence)))
@@ -726,6 +749,108 @@ def _long_sentences(text: str, minimum: int = 24) -> list[str]:
     return [re.sub(r"\s+", "", sentence) for sentence in sentences if len(re.sub(r"\s+", "", sentence)) >= minimum]
 
 
+def _dialogue_segments(text: str) -> list[str]:
+    return re.findall(r"“[^”]*”", text)
+
+
+def _staccato_run(text: str) -> int:
+    paragraphs = [item.strip() for item in re.split(r"\n\s*\n", text) if item.strip()]
+    longest = 0
+    current = 0
+    for paragraph in paragraphs:
+        body = re.sub(r"^第\s*\d+\s*章[^\n]*$", "", paragraph).strip()
+        sentence_count = len(re.findall(r"[。！？!?]", body))
+        is_short_single = bool(body) and sentence_count <= 1 and len(body) <= 70
+        current = current + 1 if is_short_single else 0
+        longest = max(longest, current)
+    return longest
+
+
+def _taste_contract_issues(
+    text: str, contract: dict[str, Any] | None
+) -> tuple[list[Issue], dict[str, Any]]:
+    if not isinstance(contract, dict):
+        return [], {"enabled": False}
+    checks = contract.get("deterministic_checks", {})
+    if not isinstance(checks, dict):
+        return [], {"enabled": False}
+    issues: list[Issue] = []
+    for token in checks.get("forbidden_tokens", []):
+        if isinstance(token, str) and token and token in text:
+            issues.append(
+                Issue(
+                    "USER_TASTE_FORBIDDEN_TOKEN",
+                    "P1",
+                    f"违反累计偏好契约的禁用写法: {token}",
+                    token,
+                )
+            )
+    dialogues = _dialogue_segments(text)
+    for token in checks.get("forbidden_address_tokens", []):
+        if not isinstance(token, str) or not token:
+            continue
+        evidence = next((quote for quote in dialogues if token in quote), None)
+        if evidence is not None:
+            issues.append(
+                Issue(
+                    "USER_TASTE_FORBIDDEN_ADDRESS",
+                    "P1",
+                    f"对白使用用户已否定的称呼: {token}",
+                    evidence[:120],
+                )
+            )
+    for phrase in checks.get("forbidden_pov_phrases", []):
+        if (
+            isinstance(phrase, str)
+            and phrase
+            and phrase in text
+            and not any(item.code == "FORBIDDEN_POV" and item.evidence == phrase for item in issues)
+        ):
+            issues.append(
+                Issue(
+                    "USER_TASTE_FORBIDDEN_POV",
+                    "P1",
+                    f"违反累计偏好契约的越视角写法: {phrase}",
+                    phrase,
+                )
+            )
+    if checks.get("check_obstructed_identification"):
+        obstruction = re.compile(
+            r"(?:门|窗)(?:板|扇)?[^。！？!?\n]{0,24}(?:只|仅|才)[^。！？!?\n]{0,12}(?:缝|开了?一点)"
+        )
+        identification = re.compile(
+            r"(?:一眼)?(?:认出|看清|看出)[^。！？!?\n]{0,28}(?:是谁|是[^，。！？!?\n]{1,12})"
+        )
+        for paragraph in re.split(r"\n\s*\n", text):
+            blocked = obstruction.search(paragraph)
+            identified = identification.search(paragraph)
+            if blocked and identified and identified.start() >= blocked.start():
+                issues.append(
+                    Issue(
+                        "OBSTRUCTED_IDENTIFICATION",
+                        "P1",
+                        "受限门窗视野下直接完成身份识别，须补足可见来源或降低确认程度",
+                        paragraph.strip()[:160],
+                    )
+                )
+    longest_run = _staccato_run(text)
+    warn_run = checks.get("warn_staccato_run", 0)
+    if isinstance(warn_run, int) and not isinstance(warn_run, bool) and longest_run >= warn_run:
+        issues.append(
+            Issue(
+                "STACCATO_PARAGRAPH_RUN",
+                "P2",
+                "连续短句单段形成用户已否定的影视分镜感",
+                f"连续{longest_run}段",
+            )
+        )
+    return issues, {
+        "enabled": True,
+        "dialogue_count": len(dialogues),
+        "longest_staccato_run": longest_run,
+    }
+
+
 def scan_draft(
     text: str,
     recent_texts: list[str],
@@ -733,6 +858,7 @@ def scan_draft(
     plan: dict[str, Any],
     *,
     length_policy: dict[str, int] | None = None,
+    taste_contract: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     issues: list[Issue] = []
     stripped = text.strip() if isinstance(text, str) else ""
@@ -759,6 +885,12 @@ def scan_draft(
     for phrase in FORBIDDEN_POV:
         if phrase in stripped:
             issues.append(Issue("FORBIDDEN_POV", "P1", f"出现越视角句式: {phrase}", phrase))
+
+    taste_issues, taste_metrics = _taste_contract_issues(stripped, taste_contract)
+    existing = {(item.code, item.evidence) for item in issues}
+    issues.extend(
+        item for item in taste_issues if (item.code, item.evidence) not in existing
+    )
 
     recent_paragraphs = set()
     recent_sentences: Counter[str] = Counter()
@@ -823,5 +955,6 @@ def scan_draft(
             "negation_template_count": negation_count,
             "action_counts": action_counts,
             "length_policy": policy,
+            "taste_contract": taste_metrics,
         },
     )

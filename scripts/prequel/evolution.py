@@ -346,6 +346,7 @@ class QualityEvolutionEngine:
                 planner_context["era_bans"],
                 plan,
                 length_policy=self.length_policy,
+                taste_contract=planner_context.get("user_taste_contract"),
             )
             hard = [
                 item["message"]
@@ -1015,6 +1016,7 @@ class QualityEvolutionEngine:
             planner_context["era_bans"],
             plan,
             length_policy=self.length_policy,
+            taste_contract=planner_context.get("user_taste_contract"),
         )
         workspace.write_text(draft_path, revised_draft)
         workspace.write_json(static_path, static)

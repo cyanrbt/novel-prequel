@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .taste_contract import load_taste_contract
 
 
 def _read_json(path: Path) -> dict[str, Any]:
@@ -104,6 +105,7 @@ def build_planner_context(
         if foreshadow_registry_path.exists()
         else {"entries": {}}
     )
+    user_taste_contract = load_taste_contract(project_root)
     result = {
         "chapter": state["chapter"],
         "timeline": state["timeline"],
@@ -125,6 +127,7 @@ def build_planner_context(
             "terms": era_bans.get("terms", []),
             "reason": era_bans.get("reason", ""),
         },
+        "user_taste_contract": user_taste_contract,
     }
     if memory_context is not None:
         result["memory_context"] = memory_context
@@ -418,6 +421,7 @@ def build_authoritative_writer_context(
     trace: list[dict[str, Any]] = []
     configured = {
         "style": ("novel/style/compact_style.yaml", 10000),
+        "user_taste_contract": ("novel/style/user_taste_contract.json", 14000),
         "rulebook": ("novel/rules/rulebook.md", 16000),
         "setting_whitelist": ("novel/rules/setting_whitelist.md", 7000),
         "setting_blacklist": ("novel/rules/setting_blacklist.md", 7000),
@@ -591,6 +595,9 @@ def build_writer_packet(
         for fact in context.get("canon_facts", [])
         if fact.get("id") in set(plan.get("canon_evidence_ids", []))
     ]
+    taste_contract = context.get("user_taste_contract")
+    if taste_contract is None and project_root is not None:
+        taste_contract = load_taste_contract(project_root)
     packet = {
         "story_brief": build_story_brief(plan),
         "hard_constraints": _build_hard_constraints(plan),
@@ -614,6 +621,7 @@ def build_writer_packet(
             "结尾留下针对活人的情绪余震，不把下一项调查任务冒充追读欲",
             "不复制原著标志性句式、段落或对白",
         ],
+        "user_taste_contract": taste_contract or {},
         "recent_repetition_signatures": _recent_signatures(recent_texts),
     }
     if project_root is not None:
@@ -762,6 +770,7 @@ def build_verification_packet(
             "canon_facts": planner_context.get("canon_facts", []),
             "era_bans": planner_context.get("era_bans", {}),
         },
+        "user_taste_contract": planner_context.get("user_taste_contract", {}),
     }
 
 
@@ -774,6 +783,7 @@ def build_reviewer_packet(
 ) -> dict[str, Any]:
     return {
         "chapter_number": plan["chapter_number"],
+        "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "constraint_ledger": build_constraint_ledger(plan),
         "draft": draft,
         "chapter_blueprint": planner_context.get("chapter_blueprint", ""),
@@ -782,4 +792,5 @@ def build_reviewer_packet(
         "canon_facts": planner_context.get("canon_facts", []),
         "era_bans": planner_context.get("era_bans", {}),
         "event_outline": planner_context.get("event_outline", ""),
+        "user_taste_contract": planner_context.get("user_taste_contract", {}),
     }

@@ -7,7 +7,16 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .evidence_hierarchy import (
+    detect_evidence_hierarchy_escalations,
+    reader_factual_claims,
+)
 from .quality import Issue
+from .scene_audit import (
+    extract_scene_audit_anchors,
+    validate_scene_mechanism_audit,
+)
+from .taste_contract import load_taste_contract
 
 
 RECAP_FIELDS = {
@@ -99,6 +108,38 @@ PASS_EXPERIENCE_FLOORS = {
     "ending_compulsion": 4,
 }
 
+# Only precisely located quote-copy errors may receive one report feedback.
+# Primary anchors, verdicts, hashes, scores, pacing claims, and every other
+# reader judgement remain fail-closed.  This narrow allowlist keeps the retry a
+# report repair rather than a second substantive review.
+RETRYABLE_READER_QUOTE_ISSUE_CODES = frozenset(
+    {
+        "SCENE_FALSE_SOURCE_QUOTE",
+        "SCENE_RETROACTIVE_POV_SOURCE",
+        "SCENE_FALSE_BOUNDARY_QUOTE",
+        "READER_FALSE_EVIDENCE",
+        "READER_FALSE_PACING_EVIDENCE",
+        "READER_FALSE_PRESSURE_TURN",
+        "READER_FALSE_BENCHMARK_QUOTE",
+    }
+)
+
+def _reader_factual_escalations(
+    review: dict[str, Any], draft: str
+) -> list[dict[str, Any]]:
+    findings = detect_evidence_hierarchy_escalations(
+        draft, reader_factual_claims(review)
+    )
+    code_map = {
+        "REPORT_EVIDENCE_LEVEL_ESCALATION": "READER_FACT_LEVEL_OVERSTATEMENT",
+        "REPORT_BOUNDARY_STATE_ESCALATION": "READER_BOUNDARY_STATE_CONTRADICTION",
+    }
+    return [
+        {**item, "code": code_map[item["code"]]}
+        for item in findings
+        if item.get("code") in code_map
+    ]
+
 
 def build_blind_reader_packet(
     state: dict[str, Any], chapter_number: int, draft: str,
@@ -118,12 +159,31 @@ def build_blind_reader_packet(
                     "reader_visible_summary": value.get("core", ""),
                 }
             )
+    immediate_prior_chapter: dict[str, Any] | None = None
+    if project_root is not None and chapter_number > 1:
+        previous_number = chapter_number - 1
+        previous_paths = sorted(
+            (project_root / "novel/chapters").glob(
+                f"vol_*/chapter_{previous_number:03d}.txt"
+            )
+        )
+        if len(previous_paths) == 1:
+            try:
+                immediate_prior_chapter = {
+                    "chapter": previous_number,
+                    "published_text": previous_paths[0].read_text(encoding="utf-8"),
+                }
+            except OSError as exc:
+                raise ArtifactValidationError(f"无法读取上一章正式正文: {exc}") from exc
+
     packet = {
         "chapter_number": chapter_number,
         "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "prior_reader_facts": prior[-3:],
+        "immediate_prior_chapter": immediate_prior_chapter,
         "draft": draft,
-        "instruction_boundary": "没有提供的信息不得推断为作者既定设定。",
+        "audit_anchors": extract_scene_audit_anchors(draft),
+        "instruction_boundary": "只可使用当前正文、已发布前文正文与读者摘要；没有提供的信息不得推断为作者既定设定。",
     }
     if project_root is not None:
         benchmark_path = project_root / "novel/benchmarks/opening_compulsion.md"
@@ -131,6 +191,7 @@ def build_blind_reader_packet(
             packet["benchmark_calibration"] = benchmark_path.read_text(encoding="utf-8")
         except OSError as exc:
             raise ArtifactValidationError(f"无法读取开篇追读力标杆卡: {exc}") from exc
+        packet["user_taste_contract"] = load_taste_contract(project_root)
     return packet
 
 
@@ -174,11 +235,15 @@ def _quote_metrics(draft: str, quote: Any) -> tuple[int, float] | None:
     return compact_offset, round(compact_offset / total * 100, 1)
 
 
-def canonicalize_pacing_diagnostics(review: dict[str, Any], draft: str) -> None:
+def canonicalize_pacing_diagnostics(
+    review: dict[str, Any], draft: str
+) -> dict[str, Any] | None:
     """Derive every countable pacing metric from quoted draft evidence."""
     pacing = review.get("pacing_diagnostics")
     if not isinstance(pacing, dict):
-        return
+        return None
+
+    reported_gap = pacing.get("max_pressure_gap_chars")
 
     for field in PACING_MILESTONE_FIELDS:
         item = pacing.get(field)
@@ -189,6 +254,7 @@ def canonicalize_pacing_diagnostics(review: dict[str, Any], draft: str) -> None:
             item["position_percent"] = metrics[1]
 
     turn_positions: list[int] = []
+    turn_anchors: list[dict[str, Any]] = []
     turn_quotes: set[str] = set()
     pressure_turns = pacing.get("pressure_turns")
     if isinstance(pressure_turns, list):
@@ -201,10 +267,29 @@ def canonicalize_pacing_diagnostics(review: dict[str, Any], draft: str) -> None:
                 continue
             turn_quotes.add(quote)
             turn_positions.append(metrics[0])
+            turn_anchors.append(
+                {
+                    "quote": quote,
+                    "offset": metrics[0],
+                    "position_percent": metrics[1],
+                }
+            )
+    gap_windows: list[dict[str, Any]] = []
     if len(turn_positions) >= 2 and turn_positions == sorted(turn_positions):
+        for left, right in zip(turn_anchors, turn_anchors[1:]):
+            gap_windows.append(
+                {
+                    "start_quote": left["quote"],
+                    "start_offset": left["offset"],
+                    "start_position_percent": left["position_percent"],
+                    "end_quote": right["quote"],
+                    "end_offset": right["offset"],
+                    "end_position_percent": right["position_percent"],
+                    "gap_chars": right["offset"] - left["offset"],
+                }
+            )
         pacing["max_pressure_gap_chars"] = max(
-            right - left
-            for left, right in zip(turn_positions, turn_positions[1:])
+            item["gap_chars"] for item in gap_windows
         )
 
     exposition_runs = pacing.get("exposition_runs")
@@ -228,6 +313,476 @@ def canonicalize_pacing_diagnostics(review: dict[str, Any], draft: str) -> None:
             quote = item.get("quote")
             if isinstance(quote, str) and quote and quote in draft:
                 item["approx_chars"] = _compact_length(quote)
+
+    derived_gap = pacing.get("max_pressure_gap_chars")
+    return {
+        "reported_max_pressure_gap_chars": reported_gap,
+        "derived_max_pressure_gap_chars": derived_gap,
+        "limit": PASS_PACING_LIMITS["max_pressure_gap_chars"],
+        "turns_ordered": turn_positions == sorted(turn_positions),
+        "turn_anchors": turn_anchors,
+        "over_limit_gaps": [
+            item
+            for item in gap_windows
+            if item["gap_chars"] > PASS_PACING_LIMITS["max_pressure_gap_chars"]
+        ],
+    }
+
+
+def _repairable_reader_quote_issues(
+    review: dict[str, Any], draft: str
+) -> list[dict[str, Any]]:
+    """Locate the exact allowlisted quote fields eligible for one retry."""
+    audit = review.get("mechanism_audit")
+    found: list[dict[str, Any]] = []
+
+    if isinstance(audit, dict):
+        ledger_specs = (
+            (
+                "pov_source_ledger",
+                ("source_quote",),
+                "SCENE_FALSE_SOURCE_QUOTE",
+            ),
+            (
+                "boundary_action_ledger",
+                ("before_quote", "after_quote"),
+                "SCENE_FALSE_BOUNDARY_QUOTE",
+            ),
+        )
+        for ledger_field, quote_fields, code in ledger_specs:
+            rows = audit.get(ledger_field)
+            if not isinstance(rows, list):
+                continue
+            for index, row in enumerate(rows):
+                if (
+                    not isinstance(row, dict)
+                    or not isinstance(row.get("anchor_id"), str)
+                ):
+                    continue
+                for quote_field in quote_fields:
+                    quote = row.get(quote_field)
+                    # Nulls, non-strings, and empty values are structural
+                    # failures; they cannot gain a retry through this path.
+                    if isinstance(quote, str) and quote and quote not in draft:
+                        found.append(
+                            {
+                                "code": code,
+                                "field_path": (
+                                    "mechanism_audit."
+                                    f"{ledger_field}[{index}].{quote_field}"
+                                ),
+                                "ledger_field": ledger_field,
+                                "anchor_id": row["anchor_id"],
+                                "item_index": index,
+                                "quote_field": quote_field,
+                                "invalid_quote": quote,
+                            }
+                        )
+
+        # A source quote can be copied exactly yet still be invalid evidence
+        # because it occurs after the POV conclusion it is meant to support.
+        # This is a precisely located report-selection defect: one bounded
+        # feedback may replace only that source_quote with a unique source no
+        # later than the claim.  The final scene validator still decides
+        # whether the resulting audit is substantively valid.
+        pov_rows = audit.get("pov_source_ledger")
+        pov_anchors = {
+            item.get("anchor_id"): item
+            for item in extract_scene_audit_anchors(draft).get(
+                "pov_claims", []
+            )
+            if isinstance(item, dict)
+            and isinstance(item.get("anchor_id"), str)
+        }
+        if isinstance(pov_rows, list):
+            for index, row in enumerate(pov_rows):
+                if not isinstance(row, dict):
+                    continue
+                anchor_id = row.get("anchor_id")
+                source_quote = row.get("source_quote")
+                anchor = pov_anchors.get(anchor_id)
+                source_start = (
+                    draft.find(source_quote)
+                    if isinstance(source_quote, str)
+                    else -1
+                )
+                if (
+                    not isinstance(anchor_id, str)
+                    or not isinstance(source_quote, str)
+                    or not source_quote
+                    or source_start < 0
+                    or not isinstance(anchor, dict)
+                    or not isinstance(anchor.get("end"), int)
+                    or source_start + len(source_quote) <= anchor["end"]
+                ):
+                    continue
+                found.append(
+                    {
+                        "code": "SCENE_RETROACTIVE_POV_SOURCE",
+                        "field_path": (
+                            "mechanism_audit.pov_source_ledger"
+                            f"[{index}].source_quote"
+                        ),
+                        "ledger_field": "pov_source_ledger",
+                        "anchor_id": anchor_id,
+                        "item_index": index,
+                        "quote_field": "source_quote",
+                        "invalid_quote": source_quote,
+                        "claim_end": anchor["end"],
+                        "constraint": "source_must_not_follow_claim",
+                    }
+                )
+
+    for list_field, identity_field in (
+        ("blocking_issues", "code"),
+        ("warnings", "code"),
+        ("evidence", "finding"),
+    ):
+        rows = review.get(list_field)
+        if not isinstance(rows, list):
+            continue
+        for index, row in enumerate(rows):
+            if not isinstance(row, dict):
+                continue
+            quote = row.get("quote")
+            identity = row.get(identity_field)
+            if (
+                isinstance(quote, str)
+                and quote
+                and quote not in draft
+                and isinstance(identity, str)
+                and identity
+            ):
+                found.append(
+                    {
+                        "code": "READER_FALSE_EVIDENCE",
+                        "field_path": f"{list_field}[{index}].quote",
+                        "list_field": list_field,
+                        "item_index": index,
+                        "list_length": len(rows),
+                        "identity_field": identity_field,
+                        "item_identity": identity,
+                        "quote_field": "quote",
+                        "invalid_quote": quote,
+                    }
+                )
+    pacing = review.get("pacing_diagnostics")
+    if isinstance(pacing, dict):
+        for field in PACING_MILESTONE_FIELDS:
+            item = pacing.get(field)
+            quote = item.get("quote") if isinstance(item, dict) else None
+            if isinstance(quote, str) and quote and quote not in draft:
+                found.append(
+                    {
+                        "code": "READER_FALSE_PACING_EVIDENCE",
+                        "field_path": f"pacing_diagnostics.{field}.quote",
+                        "field": field,
+                        "pacing_field": field,
+                        "quote_field": "quote",
+                        "invalid_quote": quote,
+                    }
+                )
+        turns = pacing.get("pressure_turns")
+        if isinstance(turns, list):
+            for index, item in enumerate(turns):
+                quote = item.get("quote") if isinstance(item, dict) else None
+                # An exact quote that is duplicated in the draft, repeated in
+                # the report, or submitted out of order remains a substantive
+                # pacing failure.  Only a non-empty report-copy string absent
+                # from the draft is eligible for bounded correction.
+                if isinstance(quote, str) and quote and quote not in draft:
+                    found.append(
+                        {
+                            "code": "READER_FALSE_PRESSURE_TURN",
+                            "field_path": (
+                                "pacing_diagnostics."
+                                f"pressure_turns[{index}].quote"
+                            ),
+                            "field": "pressure_turns",
+                            "pacing_list_field": "pressure_turns",
+                            "item_index": index,
+                            "list_length": len(turns),
+                            "quote_field": "quote",
+                            "invalid_quote": quote,
+                        }
+                    )
+    benchmark = review.get("benchmark_comparison")
+    if isinstance(benchmark, dict):
+        for field in sorted(BENCHMARK_DIMENSIONS):
+            item = benchmark.get(field)
+            quote = item.get("quote") if isinstance(item, dict) else None
+            if isinstance(quote, str) and quote and quote not in draft:
+                found.append(
+                    {
+                        "code": "READER_FALSE_BENCHMARK_QUOTE",
+                        "field_path": f"benchmark_comparison.{field}.quote",
+                        "field": field,
+                        "benchmark_field": field,
+                        "quote_field": "quote",
+                        "invalid_quote": quote,
+                    }
+                )
+    return found
+
+
+def build_reader_validation_diagnostic(
+    review: dict[str, Any],
+    draft: str,
+    issues: list[Issue],
+    pacing_normalization: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Describe a reader report failure without changing its semantic claims.
+
+    The program may correct arithmetic, but it must never invent a missing
+    pressure turn.  ``retry_eligible`` is deliberately narrow: the first report
+    must otherwise be a valid PASS.  It may have a pressure gap, precisely
+    located allowlisted quote-copy errors, or both; every other report or
+    content failure remains ineligible.
+    """
+    p1_issues = [item for item in issues if item.severity == "P1"]
+    pacing = review.get("pacing_diagnostics")
+    normalization = pacing_normalization or {
+        "reported_max_pressure_gap_chars": None,
+        "derived_max_pressure_gap_chars": None,
+        "limit": PASS_PACING_LIMITS["max_pressure_gap_chars"],
+        "turns_ordered": False,
+        "turn_anchors": [],
+        "over_limit_gaps": [],
+    }
+
+    late_milestones: dict[str, float] = {}
+    if isinstance(pacing, dict):
+        for field in PACING_MILESTONE_FIELDS:
+            item = pacing.get(field)
+            metrics = (
+                _quote_metrics(draft, item.get("quote"))
+                if isinstance(item, dict)
+                else None
+            )
+            if metrics and metrics[1] > PASS_PACING_LIMITS[field]:
+                late_milestones[field] = metrics[1]
+
+    turn_anchors = normalization.get("turn_anchors", [])
+    last_turn_percent = (
+        turn_anchors[-1].get("position_percent", 0.0)
+        if turn_anchors
+        else 0.0
+    )
+    long_exposition = bool(
+        isinstance(pacing, dict)
+        and isinstance(pacing.get("exposition_runs"), list)
+        and any(
+            isinstance(item, dict)
+            and isinstance(item.get("paragraph_count"), int)
+            and not isinstance(item.get("paragraph_count"), bool)
+            and item["paragraph_count"] >= 3
+            for item in pacing["exposition_runs"]
+        )
+    )
+    oversized_information = bool(
+        isinstance(pacing, dict)
+        and isinstance(pacing.get("information_only_passages"), list)
+        and any(
+            isinstance(item, dict)
+            and isinstance(item.get("approx_chars"), int)
+            and not isinstance(item.get("approx_chars"), bool)
+            and item["approx_chars"]
+            >= PASS_PACING_LIMITS[
+                "information_only_passage_max_chars"
+            ]
+            for item in pacing["information_only_passages"]
+        )
+    )
+    p1_codes = [item.code for item in p1_issues]
+    repairable_quote_issues = _repairable_reader_quote_issues(review, draft)
+    factual_escalations = _reader_factual_escalations(review, draft)
+    pacing_issue_count = p1_codes.count("READER_PASS_WITH_SLOW_PACING")
+    repairable_quote_codes = [
+        item["code"] for item in repairable_quote_issues
+    ]
+    expected_p1_codes = list(repairable_quote_codes)
+    expected_p1_codes.extend(item["code"] for item in factual_escalations)
+    if pacing_issue_count == 1:
+        expected_p1_codes.append("READER_PASS_WITH_SLOW_PACING")
+    quote_codes_are_allowlisted = all(
+        code in RETRYABLE_READER_QUOTE_ISSUE_CODES
+        for code in repairable_quote_codes
+    )
+    common_pacing_checks = bool(
+        normalization.get("turns_ordered") is True
+        and not late_milestones
+        and last_turn_percent
+        >= PASS_PACING_LIMITS["last_pressure_turn_min_percent"]
+        and not long_exposition
+        and not oversized_information
+    )
+    pressure_quote_repair = any(
+        item.get("pacing_list_field") == "pressure_turns"
+        for item in repairable_quote_issues
+        if isinstance(item, dict)
+    )
+    gap_retry = bool(
+        normalization.get("over_limit_gaps")
+        and common_pacing_checks
+        and (pacing_issue_count == 1 or pressure_quote_repair)
+    )
+    report_repair_present = bool(
+        repairable_quote_issues or factual_escalations
+    )
+    non_gap_retry = bool(
+        pacing_issue_count == 0
+        and report_repair_present
+        and not normalization.get("over_limit_gaps")
+        and common_pacing_checks
+    )
+    retry_eligible = bool(
+        review.get("verdict") == "PASS"
+        and review.get("draft_sha256")
+        == hashlib.sha256(draft.encode("utf-8")).hexdigest()
+        and pacing_issue_count in {0, 1}
+        and quote_codes_are_allowlisted
+        and sorted(p1_codes) == sorted(expected_p1_codes)
+        and (gap_retry or non_gap_retry)
+    )
+    feedback_kind: str | None = None
+    feedback_components: list[str] = []
+    if retry_eligible:
+        if gap_retry:
+            feedback_components.append("GAP")
+        if repairable_quote_issues:
+            feedback_components.append("QUOTE")
+        if factual_escalations:
+            feedback_components.append("FACTUAL")
+        feedback_kind = (
+            "_AND_".join(feedback_components) + "_ONLY"
+            if len(feedback_components) == 1
+            else "_AND_".join(feedback_components)
+        )
+    return {
+        "schema_version": 2,
+        "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
+        "initial_verdict": review.get("verdict"),
+        "pacing_normalization": normalization,
+        "pacing_limit_checks": {
+            "late_milestones": late_milestones,
+            "last_pressure_turn_percent": last_turn_percent,
+            "last_pressure_turn_min_percent": PASS_PACING_LIMITS[
+                "last_pressure_turn_min_percent"
+            ],
+            "long_exposition": long_exposition,
+            "oversized_information": oversized_information,
+        },
+        "p1_issues": [
+            {
+                "code": item.code,
+                "severity": item.severity,
+                "message": item.message,
+                "evidence": item.evidence,
+            }
+            for item in p1_issues
+        ],
+        "repairable_quote_issues": repairable_quote_issues,
+        "factual_escalations": factual_escalations,
+        "feedback_components": feedback_components,
+        "feedback_kind": feedback_kind,
+        "retry_eligible": retry_eligible,
+        "retry_performed": False,
+        "feedback_prompt_version": None,
+    }
+
+
+def build_blind_reader_gap_feedback_prompt(
+    project_root: Path,
+    packet: dict[str, Any],
+    first_report: dict[str, Any],
+    diagnostic: dict[str, Any],
+) -> str:
+    """Request one bounded correction of an otherwise valid blind report."""
+    try:
+        role = (project_root / "agents/reader_reviewer.md").read_text(
+            encoding="utf-8"
+        )
+    except OSError as exc:
+        raise ArtifactValidationError(f"无法读取盲读者指令: {exc}") from exc
+    repairable_quotes = diagnostic.get("repairable_quote_issues", [])
+    feedback_kind = diagnostic.get("feedback_kind")
+    components = set(diagnostic.get("feedback_components", []))
+    if components == {"FACTUAL"}:
+        mode = "FACTUAL_RECAP_VALIDATION_FEEDBACK"
+        opening = (
+            "程序确认首报的正文哈希、评分、节奏、引文与其他内容门禁均已通过，"
+            "唯一硬错误是factual_escalations列出的报告事实层级高于正文证据。"
+        )
+        pacing_action = (
+            "只可修正列出的精确field_path：把已标出的claim降回正文实际达到的"
+            "声称、请求、可见、待交付、待核验或身份未确认层级。不得改动压力"
+            "锚点、评分、其他复述、审计判断或任何未列字段。若原判断无法在该"
+            "证据上成立，必须改判REVISE并给出阻断与修订指令。"
+        )
+    elif components == {"QUOTE"}:
+        mode = "QUOTE_ONLY_VALIDATION_FEEDBACK"
+        opening = (
+            "程序确认首报的正文哈希、PASS评分、节奏和其他内容门禁均已通过，"
+            "唯一硬错误是下列可精确定位的引文没有连续出现在正文。"
+        )
+        pacing_action = "本次没有压力空档反馈，不得借机改动节奏锚点或评分。"
+    else:
+        if components == {"GAP", "QUOTE"}:
+            mode = "PRESSURE_GAP_AND_QUOTE_VALIDATION_FEEDBACK"
+        elif components == {"GAP"}:
+            mode = "PRESSURE_GAP_VALIDATION_FEEDBACK"
+        else:
+            mode = "_AND_".join(sorted(components)) + "_VALIDATION_FEEDBACK"
+        opening = "程序只允许一次联合报告复核，修复范围以deterministic_validation为准。"
+        pacing_action = ""
+        if "GAP" in components:
+            pacing_action += (
+                "请逐一检查反馈中的相邻起止引文和offset：若区间内确有真正改变人物"
+                "选择、关系或危险的转折，把它以唯一正文引文按顺序补入pressure_turns；"
+                "若没有，则必须把verdict改为REVISE并给出对应blocking_issues和"
+                "revision_instructions。"
+            )
+        if "FACTUAL" in components:
+            pacing_action += (
+                "只可在factual_escalations列出的精确field_path把完成态降回正文真实的"
+                "声称、请求、可见、待交付、待退款、待核验、边界未封或身份未确认层级。"
+            )
+    feedback = {
+        "mode": mode,
+        "draft_sha256": packet.get("draft_sha256"),
+        "deterministic_validation": diagnostic,
+        "first_canonicalized_report": first_report,
+        "original_reader_packet": packet,
+        "required_action": (
+            opening
+            + pacing_action
+            + "若repairable_quote_issues非空，必须逐项按field_path，并使用"
+            "field、anchor_id或item_index定位原条目，对照原正文把invalid_quote替换为"
+            "唯一、连续、逐字存在的精确引文；不得删除该条目或引文字段，不得"
+            "改成null、空串或另造证据。找不到支持原判断的真实引文时必须改判"
+            "REVISE，并给出对应blocking_issues和revision_instructions。"
+            "若条目code为SCENE_RETROACTIVE_POV_SOURCE，替换后的source_quote"
+            "还必须出现在对应认知结论之前或与结论同句，不得继续引用事后说明。"
+            "不得只改max_pressure_gap_chars数字，不得虚构转折，不得改变draft_sha256。"
+            "修正pacing引文时必须保持原effect与原有压力行顺序，位置百分比由程序"
+            "重算；若修正后的原压力行真实落在超限空档内，它本身即可成为该空档的"
+            "有效锚点，不得为满足反馈另造转折。"
+            "反馈不代表首报其他陈述已获程序背书，输出前必须逐项重核"
+            "reader_recap、mechanism_audit.first_read_reconstruction与"
+            "adversarial_checks.unsupported_recap_claims。不得把请求、声称、手持、"
+            "亮出或待验证改写成已经取得、已经递入或已经证实，也不得把凭条交付"
+            "写成现金已经退回；物件只在缝边或缝中可见且仍由对方夹、攥，不等于"
+            "已穿过边界或被门内人物接收。不得把仍保留的门缝写成已封闭，也不得把尚未确认身份的人称为已确认"
+            "身份；首报若有这类过述，只有feedback_components包含FACTUAL时允许"
+            "在列出的精确路径修正，其他模式不得借机改写非目标字段。"
+            "只输出一份完整、满足reader_review schema的JSON。"
+        ),
+    }
+    return (
+        role.rstrip()
+        + "\n\n# 一次性确定性校验反馈\n"
+        + json.dumps(feedback, ensure_ascii=False, indent=2)
+    )
 
 
 def _validate_pacing_diagnostics(
@@ -557,6 +1112,7 @@ def validate_blind_reader_review(
         "pacing_diagnostics",
         "reading_experience",
         "benchmark_comparison",
+        "mechanism_audit",
         "blocking_issues",
         "warnings",
         "evidence",
@@ -588,6 +1144,22 @@ def validate_blind_reader_review(
         for value in adversarial_checks.values()
     ):
         issues.append(Issue("READER_BAD_ADVERSARIAL_CHECKS", "P1", "反证检查必须是非空字符串数组的集合", repr(adversarial_checks)))
+
+    mechanism_audit = review.get("mechanism_audit")
+    issues.extend(validate_scene_mechanism_audit(mechanism_audit, draft))
+    if (
+        review.get("verdict") == "PASS"
+        and isinstance(mechanism_audit, dict)
+        and mechanism_audit.get("verdict") != "PASS"
+    ):
+        issues.append(
+            Issue(
+                "READER_PASS_WITH_MECHANISM_FAILURE",
+                "P1",
+                "盲读PASS要求视角、空间、受惊反应与对白机制审计同时PASS",
+                repr(mechanism_audit.get("verdict")),
+            )
+        )
 
     issues.extend(
         _validate_pacing_diagnostics(
@@ -644,7 +1216,7 @@ def validate_blind_reader_review(
     else:
         for dimension in BENCHMARK_DIMENSIONS:
             item = benchmark.get(dimension)
-            if (
+            structurally_valid = not (
                 not isinstance(item, dict)
                 or set(item) != {"score", "quote", "assessment"}
                 or isinstance(item.get("score"), bool)
@@ -652,11 +1224,21 @@ def validate_blind_reader_review(
                 or not 1 <= item["score"] <= 5
                 or not isinstance(item.get("quote"), str)
                 or not item["quote"]
-                or item["quote"] not in draft
                 or not isinstance(item.get("assessment"), str)
                 or not item["assessment"].strip()
-            ):
+            )
+            if not structurally_valid:
                 issues.append(Issue("READER_BAD_BENCHMARK", "P1", f"{dimension}必须给出1到5分、正文引文和判断", repr(item)))
+                benchmark_valid = False
+            elif item["quote"] not in draft:
+                issues.append(
+                    Issue(
+                        "READER_FALSE_BENCHMARK_QUOTE",
+                        "P1",
+                        f"{dimension}的标杆引文必须连续出现在正文中",
+                        repr(item["quote"]),
+                    )
+                )
                 benchmark_valid = False
         if benchmark.get("evidence_payoff_mode") not in {"HUMAN_CHANGE", "MIXED", "EVIDENCE_ONLY"}:
             issues.append(Issue("READER_BAD_BENCHMARK", "P1", "evidence_payoff_mode取值无效", repr(benchmark.get("evidence_payoff_mode"))))
@@ -786,4 +1368,22 @@ def validate_blind_reader_review(
                 "未通过必须给出阻断问题，或由标杆低分/重大差距提供诊断，并同时给出修订指令",
                 repr(review),
             ))
+    for finding in _reader_factual_escalations(review, draft):
+        messages = {
+            "READER_FACT_LEVEL_OVERSTATEMENT": (
+                "盲读报告不得把声称、请求或待核验动作升级成已持有、"
+                "已交付、已验证或已转移"
+            ),
+            "READER_BOUNDARY_STATE_CONTRADICTION": (
+                "盲读报告不得把仍保留的边界开口写成已关闭或封死"
+            ),
+        }
+        issues.append(
+            Issue(
+                finding["code"],
+                "P1",
+                messages[finding["code"]],
+                json.dumps(finding, ensure_ascii=False, sort_keys=True),
+            )
+        )
     return issues

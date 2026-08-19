@@ -3,9 +3,10 @@
   "$id": "review.schema.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["chapter_number", "verdict", "grade", "p1_failures", "p2_warnings", "evidence", "character_assessment", "canon_assessment", "style_assessment", "revision_instructions"],
+  "required": ["chapter_number", "draft_sha256", "verdict", "grade", "p1_failures", "p2_warnings", "evidence", "character_assessment", "canon_assessment", "style_assessment", "revision_instructions"],
   "properties": {
     "chapter_number": {"type": "integer", "minimum": 1},
+    "draft_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
     "verdict": {"type": "string", "enum": ["PASS", "REVISE", "REPLAN"]},
     "grade": {"type": "string", "enum": ["A", "B", "C", "D"]},
     "p1_failures": {

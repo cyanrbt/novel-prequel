@@ -464,6 +464,24 @@ class QualityGateTests(unittest.TestCase):
         self.assertFalse(result["passed"])
         self.assertIn("WORD_COUNT_HARD_FAIL", {item["code"] for item in result["issues"]})
 
+    def test_taste_contract_remains_active(self):
+        result = scan_draft(
+            "第1章\n\n这段文字包含禁用表达。",
+            [],
+            {"characters": [], "terms": []},
+            {"chapter_number": 1, "prohibited_elements": []},
+            taste_contract={
+                "deterministic_checks": {
+                    "forbidden_tokens": ["禁用表达"],
+                    "warn_staccato_run": 99,
+                }
+            },
+        )
+        self.assertIn(
+            "USER_TASTE_FORBIDDEN_TOKEN",
+            {item["code"] for item in result["issues"]},
+        )
+
     def test_plan_must_match_next_chapter_and_change_state(self):
         state = _state()
         issues = validate_plan({"chapter_number": 2, "event_id": "event_1"}, state)

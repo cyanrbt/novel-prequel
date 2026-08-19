@@ -6,7 +6,28 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .evidence_hierarchy import (
+    detect_evidence_hierarchy_escalations,
+    settlement_factual_claims,
+)
 from .quality import Issue
+
+
+def _state_factual_escalations(
+    settlement: dict[str, Any], draft: str
+) -> list[dict[str, Any]]:
+    findings = detect_evidence_hierarchy_escalations(
+        draft, settlement_factual_claims(settlement)
+    )
+    code_map = {
+        "REPORT_EVIDENCE_LEVEL_ESCALATION": "SETTLEMENT_FACT_LEVEL_OVERSTATEMENT",
+        "REPORT_BOUNDARY_STATE_ESCALATION": "SETTLEMENT_BOUNDARY_STATE_CONTRADICTION",
+    }
+    return [
+        {**item, "code": code_map[item["code"]]}
+        for item in findings
+        if item.get("code") in code_map
+    ]
 
 
 def _render_value(value: Any) -> str:
@@ -222,6 +243,163 @@ def build_state_settlement_prompt(project_root: Path, packet: dict[str, Any]) ->
     return role.rstrip() + "\n\n# 唯一输入工件\n" + json.dumps(packet, ensure_ascii=False, indent=2)
 
 
+def build_state_settlement_validation_diagnostic(
+    settlement: dict[str, Any],
+    state: dict[str, Any],
+    plan: dict[str, Any],
+    draft: str,
+    issues: list[Issue],
+    foreshadow_registry: dict[str, Any] | None = None,
+    arc_registry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Describe the one narrow report-coverage failure eligible for feedback."""
+    expected_items = expected_state_changes(
+        state, plan, foreshadow_registry, arc_registry
+    )
+    expected_by_path = {
+        item["path"]: item
+        for item in expected_items
+        if isinstance(item.get("path"), str)
+    }
+    missing = settlement.get("missing_changes")
+    missing_paths = (
+        list(missing)
+        if isinstance(missing, list)
+        and all(isinstance(item, str) for item in missing)
+        else []
+    )
+    missing_obligations = [
+        expected_by_path[path]
+        for path in missing_paths
+        if path in expected_by_path
+    ]
+    required_missing = [
+        item
+        for item in missing_obligations
+        if item.get("required_for_promotion") is True
+    ]
+    p1_issues = [item for item in issues if item.severity == "P1"]
+    p1_codes = [item.code for item in p1_issues]
+    evidence = settlement.get("change_evidence")
+    retry_eligible = bool(
+        settlement.get("draft_sha256")
+        == hashlib.sha256(draft.encode("utf-8")).hexdigest()
+        and settlement.get("verdict") == "PASS"
+        and p1_codes == ["SETTLEMENT_PASS_WITH_GAPS"]
+        and missing_paths
+        and len(set(missing_paths)) == len(missing_paths)
+        and len(missing_obligations) == len(missing_paths)
+        and required_missing
+        and settlement.get("hook") is not None
+        and isinstance(evidence, list)
+        and bool(evidence)
+    )
+    return {
+        "schema_version": 1,
+        "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
+        "initial_verdict": settlement.get("verdict"),
+        "p1_issues": [
+            {
+                "code": item.code,
+                "severity": item.severity,
+                "message": item.message,
+                "evidence": item.evidence,
+            }
+            for item in p1_issues
+        ],
+        "missing_obligations": missing_obligations,
+        "required_missing_paths": [item["path"] for item in required_missing],
+        "retry_eligible": retry_eligible,
+        "retry_performed": False,
+        "feedback_prompt_version": None,
+    }
+
+
+def build_state_settlement_missing_feedback_prompt(
+    project_root: Path,
+    packet: dict[str, Any],
+    first_settlement: dict[str, Any],
+    diagnostic: dict[str, Any],
+) -> str:
+    """Request one complete re-settlement for precisely identified omissions."""
+    try:
+        role = (project_root / "agents/state_settler.md").read_text(
+            encoding="utf-8"
+        )
+    except OSError as exc:
+        raise ArtifactValidationError(f"无法读取状态结算指令: {exc}") from exc
+    feedback = {
+        "mode": "MISSING_REQUIRED_STATE_EVIDENCE_FEEDBACK",
+        "draft_sha256": packet.get("draft_sha256"),
+        "deterministic_validation": diagnostic,
+        "first_canonicalized_settlement": first_settlement,
+        "original_settlement_packet": packet,
+        "required_action": (
+            "程序确认首报的唯一硬错误是PASS遗漏了计划中的待举证状态义务。"
+            "逐项检查missing_obligations给出的精确path和value；只有当一条唯一、"
+            "连续、逐字存在于draft的正文引文足以支持整个value时，才能把该义务"
+            "加入change_evidence，并从missing_changes移除。不得拼接引文、改写value、"
+            "复用不支持整项结论的短语，也不得只删missing_changes。"
+            "required_missing_paths中的任一路径若没有这种证据，必须按本schema把"
+            "verdict改为INSUFFICIENT_EVIDENCE，不得维持PASS。draft_sha256不得改变。"
+            "请重新输出一份完整的状态结算JSON，并重新核对摘要、钩子、全部已有证据"
+            "及missing_changes覆盖关系；反馈不代表首报其他陈述已获程序背书。"
+        ),
+    }
+    return (
+        role.rstrip()
+        + "\n\n# 一次性状态结算缺项反馈\n"
+        + json.dumps(feedback, ensure_ascii=False, indent=2)
+    )
+
+
+def validate_state_settlement_feedback_contract(
+    final_settlement: dict[str, Any],
+    draft: str,
+    diagnostic: dict[str, Any],
+) -> list[Issue]:
+    """A repaired PASS must add exact, uniquely grounded required evidence."""
+    if final_settlement.get("verdict") != "PASS":
+        return []
+    evidence = final_settlement.get("change_evidence")
+    rows = evidence if isinstance(evidence, list) else []
+    issues: list[Issue] = []
+    for obligation in diagnostic.get("missing_obligations", []):
+        if (
+            not isinstance(obligation, dict)
+            or obligation.get("required_for_promotion") is not True
+        ):
+            continue
+        matching = [
+            row
+            for row in rows
+            if isinstance(row, dict)
+            and row.get("path") == obligation.get("path")
+            and row.get("value") == obligation.get("value")
+        ]
+        quote = matching[0].get("quote") if len(matching) == 1 else None
+        if (
+            not isinstance(quote, str)
+            or not quote
+            or draft.count(quote) != 1
+        ):
+            issues.append(
+                Issue(
+                    "SETTLEMENT_FEEDBACK_OBLIGATION_UNRESOLVED",
+                    "P1",
+                    "缺项反馈后的PASS必须为每项关键义务提供唯一连续正文引文",
+                    repr(
+                        {
+                            "path": obligation.get("path"),
+                            "value": obligation.get("value"),
+                            "quote": quote,
+                        }
+                    ),
+                )
+            )
+    return issues
+
+
 def validate_state_settlement(
     settlement: dict[str, Any],
     state: dict[str, Any],
@@ -325,4 +503,22 @@ def validate_state_settlement(
         )
     if verdict == "INSUFFICIENT_EVIDENCE" and not promotion_gaps:
         issues.append(Issue("SETTLEMENT_FAIL_WITHOUT_GAPS", "P1", "关键证据充足时不得判定证据不足", repr(settlement)))
+    for finding in _state_factual_escalations(settlement, draft):
+        messages = {
+            "SETTLEMENT_FACT_LEVEL_OVERSTATEMENT": (
+                "状态结算不得把声称、请求或待核验动作升级成已持有、"
+                "已交付、已验证或已转移"
+            ),
+            "SETTLEMENT_BOUNDARY_STATE_CONTRADICTION": (
+                "状态结算不得把仍保留的边界开口写成已关闭或封死"
+            ),
+        }
+        issues.append(
+            Issue(
+                finding["code"],
+                "P1",
+                messages[finding["code"]],
+                json.dumps(finding, ensure_ascii=False, sort_keys=True),
+            )
+        )
     return issues

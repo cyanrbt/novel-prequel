@@ -43,6 +43,21 @@ class RunManifestTests(unittest.TestCase):
                 manifest.can_reuse("candidate.01.generate", "input-hash")
             )
 
+    def test_promotion_integrity_check_rejects_modified_stage_output(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace = ChapterWorkspace.create(Path(tmp), 3, 1)
+            manifest = RunManifest.create(workspace, 3, "state-hash")
+            path = "draft.txt"
+            workspace.write_text(path, "正文")
+            manifest.complete("manual_import", "input-hash", [path])
+            self.assertEqual(
+                manifest.require_stage_outputs("manual_import")["status"],
+                "COMPLETED",
+            )
+            workspace.write_text(path, "被修改")
+            with self.assertRaises(ArtifactValidationError):
+                manifest.require_stage_outputs("manual_import")
+
     def test_fingerprint_is_stable_for_key_order(self):
         self.assertEqual(
             fingerprint({"b": 2, "a": 1}),

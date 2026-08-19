@@ -113,6 +113,106 @@ class EvaluationTests(unittest.TestCase):
         )
         self.assertIn("REVIEW_FALSE_EVIDENCE", {issue.code for issue in issues})
 
+    def test_quote_canonicalization_repairs_paired_ascii_dialogue_quotes(self):
+        draft = '那人抽走荐帖，塞进账袋：“押钱退了，空位给别人。”'
+        artifact = {
+            "evidence": [
+                {
+                    "quote": '那人抽走荐帖，塞进账袋："押钱退了，空位给别人。"',
+                    "finding": "对话引号字形",
+                }
+            ]
+        }
+
+        repaired = canonicalize_artifact_quotes(artifact, draft)
+
+        self.assertEqual(repaired, 1)
+        self.assertEqual(artifact["evidence"][0]["quote"], draft)
+
+    def test_quote_canonicalization_rejects_ambiguous_or_unpaired_ascii_quotes(self):
+        draft = (
+            '甲说：“押钱退了。”乙也说：“押钱退了。”\n'
+            '那人把押钱退回来了。\n'
+            '那人说：“押钱退了。”\n'
+            '那人说:"押钱退了。'
+        )
+        quotes = [
+            '"押钱退了。"',
+            '那人把押钱退回来了"',
+            '那人说:"押钱退了。',
+            '"那人说:"押钱退了。"',
+            '那人说："押金退了。"',
+            '那人说:"押钱退了。"',
+        ]
+        artifact = {
+            "evidence": [
+                {"quote": quote, "finding": "不得修复"} for quote in quotes
+            ]
+        }
+
+        repaired = canonicalize_artifact_quotes(artifact, draft)
+
+        self.assertEqual(repaired, 0)
+        self.assertEqual(
+            [item["quote"] for item in artifact["evidence"]], quotes
+        )
+
+    def test_quote_canonicalization_can_drop_only_a_short_unique_prefix(self):
+        draft = (
+            "她按住父亲手里的荐帖：“这趟不去了。押钱也退回来。”\n"
+            "他的手已经碰到木栓，脚跟也退出鞋帮半寸。"
+        )
+        artifact = {
+            "evidence": [
+                {
+                    "quote": "那人按住父亲手里的荐帖：“这趟不去了。押钱也退回来。”",
+                    "finding": "主语前缀复制错误",
+                },
+                {
+                    "quote": "张洞的手已经碰到木栓。",
+                    "finding": "主语前缀与句末标点错误",
+                },
+            ]
+        }
+
+        repaired = canonicalize_artifact_quotes(artifact, draft)
+
+        self.assertEqual(repaired, 2)
+        self.assertEqual(
+            artifact["evidence"][0]["quote"],
+            "按住父亲手里的荐帖：“这趟不去了。押钱也退回来。”",
+        )
+        self.assertEqual(
+            artifact["evidence"][1]["quote"], "手已经碰到木栓"
+        )
+
+    def test_quote_prefix_trim_rejects_internal_short_or_ambiguous_matches(self):
+        draft = (
+            "她按住父亲手里的荐帖。\n"
+            "他按住父亲手里的荐帖。\n"
+            "张洞接住钱。"
+        )
+        quotes = [
+            "那人按住母亲手里的荐帖。",  # internal word change
+            "那人按住父亲手里的荐帖。",  # suffix ambiguous
+            "那个门外人张洞接住钱。",  # prefix longer than four
+            "甲乙丙丁张洞接住钱。",  # surviving suffix below 70%
+            "那人，张洞接住钱。",  # removed prefix contains punctuation
+        ]
+        artifact = {
+            "evidence": [
+                {"quote": quote, "finding": "必须保持原样"}
+                for quote in quotes
+            ]
+        }
+
+        repaired = canonicalize_artifact_quotes(artifact, draft)
+
+        self.assertEqual(repaired, 0)
+        self.assertEqual(
+            [item["quote"] for item in artifact["evidence"]], quotes
+        )
+
     def test_candidate_classes_are_deterministic(self):
         hard = scorecard_from_integrated(integrated(hard=True))
         self.assertEqual(classify_candidate(hard), "HARD_FAIL")

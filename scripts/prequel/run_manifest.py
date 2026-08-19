@@ -97,6 +97,16 @@ class RunManifest:
     def begin(self, stage: str) -> None:
         self.mutate(lambda data: data.__setitem__("current_stage", stage))
 
+    def reopen(self, stage: str) -> None:
+        """Mark a previously waiting run active again without changing budget."""
+        def update(data: dict[str, Any]) -> None:
+            data["status"] = "RUNNING"
+            data["current_stage"] = stage
+            data["waiting_reason"] = None
+            data["finished_at"] = None
+
+        self.mutate(update)
+
     def stage_failed(self, stage: str) -> bool:
         with self._lock:
             return self.data.get("stages", {}).get(stage, {}).get("status") == "FAILED"
@@ -124,6 +134,34 @@ class RunManifest:
             and self.workspace.digest(path) == digest
             for path, digest in record.get("outputs", {}).items()
         )
+
+    def require_stage_outputs(self, stage: str) -> dict[str, Any]:
+        """Return a completed stage record only when every output still matches.
+
+        ``can_reuse`` answers whether a stage may be resumed for a particular
+        input.  Promotion needs a stricter, input-independent integrity check:
+        the reviewed artifacts themselves must still be the bytes recorded by
+        the manifest.
+        """
+        with self._lock:
+            record = dict(self.data.get("stages", {}).get(stage) or {})
+        if record.get("status") != "COMPLETED":
+            raise ArtifactValidationError(f"运行阶段未完成: {stage}")
+        outputs = record.get("outputs")
+        if not isinstance(outputs, dict) or not outputs:
+            raise ArtifactValidationError(f"运行阶段没有可验证输出: {stage}")
+        for path, expected in outputs.items():
+            if not isinstance(path, str) or not isinstance(expected, str):
+                raise ArtifactValidationError(f"运行阶段输出记录无效: {stage}")
+            if not self.workspace.exists(path):
+                raise ArtifactValidationError(f"运行阶段输出缺失: {stage} / {path}")
+            actual = self.workspace.digest(path)
+            if actual != expected:
+                raise ArtifactValidationError(
+                    f"运行阶段输出哈希失配: {stage} / {path} "
+                    f"(expected={expected}, actual={actual})"
+                )
+        return record
 
     def complete(
         self,

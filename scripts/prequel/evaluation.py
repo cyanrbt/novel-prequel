@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+import re
 from typing import Any
 
 from .quality import Issue
@@ -29,13 +30,20 @@ class SelectionAction:
     selection_confident: bool
 
 
-def _canonical_quote(quote: str, draft: str) -> str:
+_PREFIX_TRIM_FORBIDDEN_RE = re.compile(r"[\s，。！？!?；;：:“”‘’\"']")
+_PREFIX_TRIM_ORPHANED_PARTICLES = frozenset("的地得")
+
+
+def canonicalize_quote(quote: str, draft: str) -> str:
     """Repair only deterministic boundary/whitespace errors in model quotes.
 
     This does not fuzzy-match words or invent evidence.  A repaired quote must
     still map to one unique, contiguous source slice in the draft.
     """
     if quote in draft:
+        return quote
+    straight_quote_count = quote.count('"')
+    if straight_quote_count % 2:
         return quote
     candidates = [quote.strip()]
     wrappers = {"“": "”", "‘": "’", '"': '"', "'": "'"}
@@ -50,9 +58,48 @@ def _canonical_quote(quote: str, draft: str) -> str:
         candidates.append(candidates[0][:-1])
     if candidates[0].endswith(("。", "！", "？", "；")) and len(candidates[0]) >= 8:
         candidates.append(candidates[0][:-1])
+    for candidate in list(candidates):
+        straight_quote_positions = [
+            index for index, character in enumerate(candidate) if character == '"'
+        ]
+        if straight_quote_positions and len(straight_quote_positions) % 2 == 0:
+            rendered = list(candidate)
+            for pair_index, position in enumerate(straight_quote_positions):
+                rendered[position] = "“" if pair_index % 2 == 0 else "”"
+            curly_variant = "".join(rendered)
+            if curly_variant not in candidates:
+                candidates.append(curly_variant)
+    prefix_trimmed: set[str] = set()
+    # A frequent report-copy defect is a short, wrong speaker/subject prefix
+    # before an otherwise exact quote.  We may discard that prefix, but never
+    # replace it or repair words inside the evidence.  The surviving suffix
+    # must remain substantial and map to one exact, contiguous source slice.
+    for candidate in list(candidates):
+        for prefix_length in range(1, min(4, len(candidate) - 1) + 1):
+            removed = candidate[:prefix_length]
+            suffix = candidate[prefix_length:]
+            if (
+                _PREFIX_TRIM_FORBIDDEN_RE.search(removed)
+                or len(suffix) < 6
+                or len(suffix) / len(candidate) < 0.70
+                or suffix[:1] in _PREFIX_TRIM_ORPHANED_PARTICLES
+                or draft.count(suffix) != 1
+            ):
+                continue
+            if suffix not in candidates:
+                candidates.append(suffix)
+                prefix_trimmed.add(suffix)
+            break
+
     for candidate in candidates:
-        if candidate in draft:
+        if candidate.count('"') % 2:
+            continue
+        if draft.count(candidate) == 1:
             return candidate
+        if candidate in prefix_trimmed:
+            # Prefix repair is stricter than the legacy whitespace repair: it
+            # must already be an exact contiguous source substring.
+            continue
         compact_quote = "".join(candidate.split())
         if len(compact_quote) < 8:
             continue
@@ -81,7 +128,7 @@ def canonicalize_artifact_quotes(artifact: Any, draft: str) -> int:
         if isinstance(value, dict):
             for key, item in value.items():
                 if key == "quote" and isinstance(item, str):
-                    canonical = _canonical_quote(item, draft)
+                    canonical = canonicalize_quote(item, draft)
                     if canonical != item:
                         value[key] = canonical
                         repaired += 1
@@ -92,7 +139,7 @@ def canonicalize_artifact_quotes(artifact: Any, draft: str) -> int:
                 isinstance(item, str) for item in value
             ):
                 for index, item in enumerate(value):
-                    canonical = _canonical_quote(item, draft)
+                    canonical = canonicalize_quote(item, draft)
                     if canonical != item:
                         value[index] = canonical
                         repaired += 1

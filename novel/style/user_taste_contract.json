@@ -1,0 +1,72 @@
+{
+  "schema": "novel-user-taste-contract",
+  "version": 3,
+  "updated_at": "2026-08-19",
+  "target_experience": {
+    "primary": "极致的惊悚与刺激",
+    "reader_state": "读者与张洞共享有限信息，在日常解释短暂成立后，被紧邻的反例夺走安全判断",
+    "benchmark": "对标优秀灵异网文的叙事机制，不复制任何原著句子、场面或标志性意象"
+  },
+  "hard_constraints": [
+    {
+      "id": "TASTE-POV-001",
+      "category": "pov",
+      "rule": "严格第三人称限知；叙述只能写张洞当下能够感知、回忆或有证据推断的信息，未知身份不得由叙述者提前命名。"
+    },
+    {
+      "id": "TASTE-SPACE-001",
+      "category": "blocking",
+      "rule": "身份识别、看见、听见和普通人物移动必须受门缝、门板、距离、光线与站位约束；灵异造成的不可能转移可以隐去过程，但必须写清前态、后态、视线中断窗口与已知普通通路，使读者确认是刻意反例而非作者漏写。"
+    },
+    {
+      "id": "TASTE-REACTION-001",
+      "category": "reaction",
+      "rule": "疑似死人现身、死人声音叫门或死亡事实突然被证实时，在场普通人必须出现与认知冲击相称的即时反应；不能立刻平静地进入程序化问答。"
+    },
+    {
+      "id": "TASTE-DIALOGUE-001",
+      "category": "dialogue",
+      "rule": "对白采用现代读者顺口的自然口语，时代感由处境、物件和利益提供，不使用文言化、规则说明书式或刻意民国腔。"
+    },
+    {
+      "id": "TASTE-HORROR-001",
+      "category": "horror",
+      "rule": "恐怖递进采用日常解释—暂时按该解释行动—反例击穿—行动目标改变的因果链；升级必须改变安全判断或行动机制。"
+    },
+    {
+      "id": "TASTE-CLARITY-001",
+      "category": "clarity",
+      "rule": "空间与动作先清楚后惊悚；不得让读者靠反复回读复杂门缝、站位和动作顺序才能理解发生了什么。"
+    }
+  ],
+  "rejected_patterns": [
+    "上帝视角解释死人为何来、想做什么或下一步会发生什么",
+    "隔着受限视野却直接认出远处来人",
+    "普通人听见已死之人的声音后仍冷静核验流程",
+    "一问一答逐项验证异常，把惊悚场景写成调查表",
+    "每句单独成段、摔东西、统一后退、撞家具等编排整齐的影视化反应",
+    "三声敲门、没有脚、没有影子、熟悉声音说秘密等固定恐怖套件",
+    "用灰、怪声、黑影、尸体数量或形容词升级代替行动机制变化",
+    "所有人物使用书面化民国腔、文言腔或亲属敬称"
+  ],
+  "deterministic_checks": {
+    "forbidden_tokens": [],
+    "forbidden_address_tokens": [],
+    "forbidden_pov_phrases": ["他不知道的是", "她不知道的是", "与此同时，在", "在另一边", "另一边却"],
+    "warn_staccato_run": 5,
+    "check_obstructed_identification": true
+  },
+  "review_policy": {
+    "pov_claim_coverage_required": true,
+    "boundary_action_coverage_required": true,
+    "shock_trigger_coverage_required": true,
+    "dialogue_sample_coverage_required": true,
+    "pass_requires_zero_blocking_findings": true
+  },
+  "retired_constraints": [
+    {
+      "id": "TASTE-NAME-001",
+      "reason": "只约束已归档的1908年周秀兰版本；新版正文从第0章重启，不得把旧人物姓名或称呼禁令带入1911连续性。"
+    }
+  ]
+}

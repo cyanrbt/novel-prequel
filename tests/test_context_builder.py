@@ -122,6 +122,11 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertIn("schema: novel-prequel-style", sources["style"])
         self.assertEqual(sources["protagonist_runtime_profile"], self.state["protagonist"])
         self.assertIn("张洞", sources["character_voice_fallbacks"])
+        self.assertEqual(
+            packet["user_taste_contract"]["schema"],
+            "novel-user-taste-contract",
+        )
+        self.assertIn("TASTE-POV-001", sources["user_taste_contract"])
         self.assertTrue(sources["recent_prose"][0].endswith("旧章结尾"))
         self.assertNotIn("style_anchors", sources)
         anchor_trace = next(

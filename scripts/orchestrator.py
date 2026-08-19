@@ -20,8 +20,11 @@ from scripts.prequel.pipeline import (
     WritingPipeline,
     accept_dry_run,
     formal_chapter_paths,
+    formal_review_binding_status,
+    import_manual_candidate,
     load_config,
     merge_formal_chapters,
+    review_manual_candidate,
     run_preflight,
 )
 from scripts.prequel.quality import scan_draft
@@ -38,7 +41,14 @@ from scripts.prequel.reader_review import (
     canonicalize_pacing_diagnostics,
     validate_blind_reader_review,
 )
+from scripts.prequel.scene_audit import (
+    build_scene_audit_packet,
+    build_scene_audit_prompt,
+    canonicalize_scene_audit_anchor_quotes,
+    validate_scene_mechanism_audit,
+)
 from scripts.prequel.state_store import atomic_save_json, atomic_save_text, load_state
+from scripts.prequel.taste_contract import load_taste_contract
 
 
 STATE_FILE = PROJECT_ROOT / "novel/state/current.json"
@@ -92,9 +102,19 @@ def _era_bans(year: int) -> dict:
 def command_status(args) -> int:
     state = load_state(STATE_FILE)
     chapter = state["chapter"]
+    config = load_config(PROJECT_ROOT)
+    binding = formal_review_binding_status(PROJECT_ROOT, state, config)
     print("《神秘复苏前传》创作状态")
     print(f"状态: {state['machine_state']}")
-    print(f"进度: 第{chapter['last_chapter']}章完成 → 第{chapter['next_chapter']}章待写")
+    if binding["status"] == "VALID":
+        print(f"进度: 第{chapter['last_chapter']}章完成 → 第{chapter['next_chapter']}章待写")
+        print("正式稿审核绑定: VALID")
+    else:
+        print(
+            f"进度: 第{chapter['last_chapter']}章正式文件存在，"
+            f"但不能开始第{chapter['next_chapter']}章"
+        )
+        print(f"正式稿审核绑定: STALE / {binding.get('reason')}")
     print(f"当前事件: {chapter['current_event_name']} / {chapter['current_phase']}")
     print(f"时间地点: {state['timeline']['current_year']}年 / {state['protagonist']['location']}")
     chapter_work = PROJECT_ROOT / "novel/work" / f"chapter_{chapter['next_chapter']:03d}"
@@ -151,6 +171,7 @@ def command_lint(args) -> int:
         _era_bans(args.year),
         {"chapter_number": args.chapter, "prohibited_elements": []},
         length_policy=length_policy,
+        taste_contract=load_taste_contract(PROJECT_ROOT),
     )
     _print_review(result)
     return 0 if result["passed"] else 2
@@ -171,6 +192,7 @@ def command_review(args) -> int:
             _era_bans(state["timeline"]["current_year"]),
             {"chapter_number": number, "prohibited_elements": []},
             length_policy=length_policy,
+            taste_contract=load_taste_contract(PROJECT_ROOT),
         )
         print(f"\n第{number}章: {'PASS' if result['passed'] else 'FAIL'}")
         _print_review(result)
@@ -317,6 +339,42 @@ def command_accept(args) -> int:
     return 0
 
 
+def command_manual_import(args) -> int:
+    result = import_manual_candidate(
+        PROJECT_ROOT,
+        args.path,
+        plan_attempt=args.plan_attempt,
+    )
+    manifest = json.loads(
+        (result.workspace / "run_manifest.json").read_text(encoding="utf-8")
+    )
+    provenance = manifest["manual_import"]
+    print(f"[OK] 手工稿已导入全新尝试: {result.workspace}")
+    print(f"正文SHA-256: {provenance['imported_draft_sha256']}")
+    print("下一步: python3 scripts/orchestrator.py manual-review "
+          f"--attempt {int(result.workspace.name.split('_')[-1])}")
+    return 0
+
+
+def command_manual_review(args) -> int:
+    result = review_manual_candidate(
+        PROJECT_ROOT,
+        attempt=args.attempt,
+        progress=_cli_progress,
+    )
+    review = result.semantic_review or {}
+    print(f"[OK] 手工稿全部启用审查已绑定: {result.workspace}")
+    print(f"正文SHA-256: {review.get('draft_sha256', 'missing')}")
+    print(f"结论: {review.get('verdict', 'UNKNOWN')}")
+    if review.get("verdict") == "PASS":
+        print(
+            "下一步: python3 scripts/orchestrator.py accept "
+            f"--attempt {args.attempt}"
+        )
+        return 0
+    return 2
+
+
 def command_audit(args) -> int:
     state = load_state(STATE_FILE)
     through = state["chapter"]["last_chapter"]
@@ -352,6 +410,7 @@ def command_reader_review(args) -> int:
     atomic_save_text(raw_target, raw)
     report = parse_json_artifact(raw, f"reader-review-chapter-{chapter}")
     canonicalize_artifact_quotes(report, draft)
+    canonicalize_scene_audit_anchor_quotes(report.get("mechanism_audit"), draft)
     canonicalize_pacing_diagnostics(report, draft)
     failures = [
         issue.message
@@ -364,6 +423,63 @@ def command_reader_review(args) -> int:
     target = PROJECT_ROOT / "novel/work/reader_reviews" / f"chapter_{chapter:03d}.json"
     atomic_save_json(target, report)
     print(f"[OK] 盲读者报告: {target}")
+    print(json.dumps(report, ensure_ascii=False, indent=2))
+    return 0 if report["verdict"] == "PASS" else 2
+
+
+def command_demo_review(args) -> int:
+    prior_reader_facts: list[dict] = []
+    if str(args.path) == "-":
+        draft = sys.stdin.read()
+        source_label = args.label or "stdin"
+    else:
+        draft = args.path.read_text(encoding="utf-8")
+        source_label = args.label or args.path.name
+        requested = args.path.resolve()
+        for formal_path in formal_chapter_paths(PROJECT_ROOT):
+            if formal_path.resolve() != requested:
+                continue
+            chapter_number = int(formal_path.stem.split("_")[1])
+            prior_reader_facts = build_blind_reader_packet(
+                load_state(STATE_FILE), chapter_number, draft
+            )["prior_reader_facts"]
+            break
+    if not draft.strip():
+        raise StateValidationError("待审片段为空")
+    contract = load_taste_contract(PROJECT_ROOT)
+    packet = build_scene_audit_packet(
+        draft,
+        contract,
+        artifact_label=source_label,
+        prior_reader_facts=prior_reader_facts,
+    )
+    config = load_config(PROJECT_ROOT)
+    raw = StageModelRouter.from_config(config, PROJECT_ROOT).provider_for(
+        "demo_scene_reviewer"
+    ).generate(
+        build_scene_audit_prompt(PROJECT_ROOT, packet),
+        PROJECT_ROOT / "schemas/scene_audit.schema.json",
+    )
+    digest = packet["artifact_sha256"][:12]
+    target_dir = PROJECT_ROOT / "novel/work/demo_reviews"
+    raw_target = target_dir / f"{digest}.raw.txt"
+    atomic_save_text(raw_target, raw)
+    report = parse_json_artifact(raw, f"demo-scene-review-{digest}")
+    canonicalize_artifact_quotes(report, draft)
+    canonicalize_scene_audit_anchor_quotes(report, draft)
+    failures = [
+        issue.message
+        for issue in validate_scene_mechanism_audit(
+            report, draft, taste_contract=contract
+        )
+        if issue.severity == "P1"
+    ]
+    if failures:
+        print(f"[STOP] 无效片段审查原始输出: {raw_target}")
+        raise StateValidationError("片段场景审查证据无效: " + "；".join(failures))
+    target = target_dir / f"{digest}.json"
+    atomic_save_json(target, report)
+    print(f"[OK] 片段场景审查: {target}")
     print(json.dumps(report, ensure_ascii=False, indent=2))
     return 0 if report["verdict"] == "PASS" else 2
 
@@ -419,6 +535,26 @@ def build_parser() -> argparse.ArgumentParser:
     accept.add_argument("--candidate", type=_positive_int, help="人工选择工作区中已通过硬门禁的候选")
     accept.set_defaults(handler=command_accept)
 
+    manual_import = sub.add_parser(
+        "manual-import", help="把手工精修稿导入全新、可审计的章节尝试"
+    )
+    manual_import.add_argument("path", type=Path, help="UTF-8手工精修正文路径")
+    manual_import.add_argument(
+        "--plan-attempt",
+        type=_positive_int,
+        required=True,
+        help="显式复制并重新验证该尝试的plan.json",
+    )
+    manual_import.set_defaults(handler=command_manual_import)
+
+    manual_review = sub.add_parser(
+        "manual-review", help="对手工导入稿执行同一预算内的语义、盲读与状态审查"
+    )
+    manual_review.add_argument(
+        "--attempt", type=_positive_int, required=True, help="手工导入尝试序号"
+    )
+    manual_review.set_defaults(handler=command_manual_review)
+
     audit = sub.add_parser("audit", help="对正式章节执行阶段审计，不改写历史正文")
     audit.add_argument("--arc", action="store_true", help="执行二十章级阶段复审；默认十章健康检查")
     audit.set_defaults(handler=command_audit)
@@ -437,6 +573,11 @@ def build_parser() -> argparse.ArgumentParser:
     reader = sub.add_parser("reader-review", help="以盲读者身份审查一章正式正文，不读取大纲")
     reader.add_argument("--chapter", type=_positive_int, help="默认审查最新正式章节")
     reader.set_defaults(handler=command_reader_review)
+
+    demo = sub.add_parser("demo-review", help="用Luna在交付前审查短片段的视角、空间、反应和对白")
+    demo.add_argument("path", type=Path, help="片段文件；使用 - 从标准输入读取")
+    demo.add_argument("--label", help="报告中的片段名称")
+    demo.set_defaults(handler=command_demo_review)
 
     recover = sub.add_parser("recover", help="从已验证的状态备份恢复")
     recover.set_defaults(handler=command_recover)

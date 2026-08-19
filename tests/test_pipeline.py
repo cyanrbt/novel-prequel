@@ -12,9 +12,16 @@ from scripts.prequel.evolution import EvolutionResult
 from scripts.prequel.artifacts import ChapterWorkspace
 from scripts.prequel.run_manifest import RunManifest, fingerprint
 from scripts.prequel.memory import MemoryStore
-from scripts.prequel.pipeline import WritingPipeline, _new_state_after_chapter, accept_dry_run, merge_formal_chapters
+from scripts.prequel.pipeline import (
+    WritingPipeline,
+    _new_state_after_chapter,
+    accept_dry_run,
+    formal_review_binding_status,
+    merge_formal_chapters,
+)
 from scripts.prequel.quality import scan_draft
 from scripts.prequel.reader_review import canonicalize_pacing_diagnostics
+from scripts.prequel.scene_audit import extract_scene_audit_anchors
 from scripts.prequel.state_settlement import expected_state_changes
 
 
@@ -174,6 +181,30 @@ def review_json(verdict: str) -> str:
 
 
 def blind_reader_json(draft: str) -> str:
+    anchors = extract_scene_audit_anchors(draft)
+    mechanism_audit = {
+        "artifact_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
+        "verdict": "PASS",
+        "pov_source_ledger": [
+            {"anchor_id": item["anchor_id"], "claim_quote": item["quote"], "information_source": "当场观察", "source_quote": item["quote"], "verdict": "SUPPORTED", "explanation": "来源成立"}
+            for item in anchors["pov_claims"]
+        ],
+        "boundary_action_ledger": [
+            {"anchor_id": item["anchor_id"], "action_quote": item["quote"], "before_quote": item["quote"], "after_quote": item["quote"], "visible_to_pov": True, "verdict": "COHERENT", "explanation": "动作连续"}
+            for item in anchors["boundary_actions"]
+        ],
+        "shock_response_ledger": [
+            {"anchor_id": item["anchor_id"], "trigger_quote": item["quote"], "response_quote": None, "response_window": "旧事实", "verdict": "NOT_NEW_INFORMATION", "explanation": "没有新冲击"}
+            for item in anchors["shock_triggers"]
+        ],
+        "dialogue_register_ledger": [
+            {"anchor_id": item["anchor_id"], "dialogue_quote": item["quote"], "speaker": "人物", "goal": "行动", "verdict": "NATURAL", "explanation": "自然"}
+            for item in anchors["dialogue_samples"]
+        ],
+        "first_read_reconstruction": {"reader_can_reconstruct": True, "required_rereads": 0, "character_positions": "张洞在门边", "visibility_limits": "只见门内", "action_chain": "纸灰进入门内", "confusing_quotes": []},
+        "blocking_issues": [],
+        "revision_instructions": [],
+    }
     report = {
             "chapter_number": 1,
             "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
@@ -192,6 +223,7 @@ def blind_reader_json(draft: str) -> str:
                 "physical_or_spatial_gaps": [],
                 "unsupported_recap_claims": [],
             },
+            "mechanism_audit": mechanism_audit,
             "pacing_diagnostics": {
                 "first_1000_chars_result": "张洞检查家门，灰的位置迫使他改变处置。",
                 "first_active_pressure": {
@@ -290,6 +322,7 @@ def make_project_fixture(root: Path) -> Path:
         "novel/state",
         "novel/knowledge",
         "novel/benchmarks",
+        "novel/style",
         "novel/plots",
         "novel/chapters/vol_01",
         "novel/chapters/meta",
@@ -313,6 +346,10 @@ def make_project_fixture(root: Path) -> Path:
     (root / "novel/plots/series_architecture.md").write_text("# test architecture\n", encoding="utf-8")
     (root / "novel/benchmarks/opening_compulsion.md").write_text(
         "# test benchmark\n\n## 五项硬校准\n", encoding="utf-8"
+    )
+    (root / "novel/style/user_taste_contract.json").write_text(
+        Path("novel/style/user_taste_contract.json").read_text(encoding="utf-8"),
+        encoding="utf-8",
     )
     (root / "novel/knowledge/arc_registry.json").write_text(
         json.dumps({"schema": "novel-arc-registry", "milestones": {"M1-TEST": {}}}, ensure_ascii=False),
@@ -706,6 +743,31 @@ class PipelineTests(unittest.TestCase):
                 state["chapter_summaries"]["summaries"]["1"]["irreversible_changes"],
                 ["protagonist_known_info_add", "timeline_elapsed_days", "world_hypotheses_add"],
             )
+
+    def test_formal_review_binding_detects_manual_edit_after_promotion(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
+            result = WritingPipeline(root, provider).run_next()
+            self.assertTrue(result.promoted)
+            state = json.loads(
+                (root / "novel/state/current.json").read_text(encoding="utf-8")
+            )
+            config = json.loads(
+                (root / "config/prequel_config.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                formal_review_binding_status(root, state, config)["status"],
+                "VALID",
+            )
+            chapter = root / "novel/chapters/vol_01/chapter_001.txt"
+            chapter.write_text(
+                chapter.read_text(encoding="utf-8") + "手工改动。\n",
+                encoding="utf-8",
+            )
+            binding = formal_review_binding_status(root, state, config)
+            self.assertEqual(binding["status"], "STALE")
+            self.assertIn("审核后发生改动", binding["reason"])
 
     def test_foreshadow_note_is_normalized_to_stable_id(self):
         with tempfile.TemporaryDirectory() as tmp:
