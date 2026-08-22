@@ -98,8 +98,10 @@ class AgyCliProvider:
         cmd = list(self.command)
         if self.model:
             cmd.extend(["--model", self.model])
-        if self.reasoning_effort:
-            cmd.extend(["--effort", self.reasoning_effort])
+        if self.reasoning_effort and self.reasoning_effort not in ("none", ""):
+            model_slug = (self.model or "").lower()
+            if not any(kw in model_slug for kw in ("claude", "gpt-oss")):
+                cmd.extend(["--effort", self.reasoning_effort])
 
         schema_temp_file: Path | None = None
         try:

@@ -232,7 +232,8 @@ def discover_agy_capabilities(
         raise ProviderError(f"AGY模型列表命令失败: {detail}")
 
     models: list[DiscoveredModel] = []
-    standard_efforts = ["low", "medium", "high"]
+    gemini_efforts = ["low", "medium", "high"]
+    none_efforts = ["none"]
     for line in result.stdout.splitlines():
         line = line.strip()
         if not line or "Fetching" in line:
@@ -240,11 +241,15 @@ def discover_agy_capabilities(
         parts = line.split(maxsplit=1)
         slug = parts[0]
         name = parts[1] if len(parts) > 1 else slug
+        if any(kw in slug.lower() for kw in ("claude", "gpt-oss")):
+            efforts = none_efforts
+        else:
+            efforts = gemini_efforts
         models.append(
             DiscoveredModel(
                 slug=slug,
                 display_name=name,
-                supported_efforts=standard_efforts,
+                supported_efforts=efforts,
             )
         )
     return ProviderCapabilities(
