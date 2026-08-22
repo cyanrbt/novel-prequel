@@ -72,6 +72,44 @@ class ModelRouterTests(unittest.TestCase):
         with self.assertRaises(ProviderError):
             StageModelRouter.from_config(config, Path.cwd())
 
+    def test_multi_provider_router_with_agy_opencode_grok(self):
+        config = {
+            "provider": {
+                "type": "agy_cli",
+                "model": "gemini-3.7-flash-high",
+                "reasoning_effort": "high",
+            },
+            "model_profiles": {
+                "default": {},
+                "opencode_stage": {
+                    "type": "opencode_cli",
+                    "model": "deepseek/deepseek-chat",
+                },
+                "grok_stage": {
+                    "type": "grok_cli",
+                    "model": "grok-4.6",
+                    "reasoning_effort": "high",
+                },
+            },
+            "stage_routes": {
+                "planner": "default",
+                "candidate_writer": "opencode_stage",
+                "verifier": "grok_stage",
+            },
+        }
+        router = StageModelRouter.from_config(config, Path.cwd())
+        from scripts.prequel.provider import (
+            AgyCliProvider,
+            GrokCliProvider,
+            OpenCodeCliProvider,
+        )
+
+        self.assertIsInstance(router.provider_for("planner"), AgyCliProvider)
+        self.assertIsInstance(
+            router.provider_for("candidate_writer"), OpenCodeCliProvider
+        )
+        self.assertIsInstance(router.provider_for("verifier"), GrokCliProvider)
+
 
 if __name__ == "__main__":
     unittest.main()

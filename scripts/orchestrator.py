@@ -494,6 +494,58 @@ def command_recover(args) -> int:
     return 0
 
 
+def command_models(args) -> int:
+    from scripts.prequel.cli_capabilities import (
+        discover_all_capabilities,
+        discover_capabilities,
+    )
+
+    if args.provider:
+        caps = {args.provider: discover_capabilities(args.provider)}
+    else:
+        caps = discover_all_capabilities()
+
+    if getattr(args, "json", False):
+        data = {
+            k: {
+                "provider": v.provider_type,
+                "version": v.version,
+                "command": v.cli_command,
+                "models": [
+                    {
+                        "slug": m.slug,
+                        "name": m.display_name,
+                        "efforts": m.supported_efforts,
+                        "is_default": m.is_default,
+                    }
+                    for m in v.models
+                ],
+            }
+            for k, v in caps.items()
+        }
+        print(json.dumps(data, ensure_ascii=False, indent=2))
+        return 0
+
+    if not caps:
+        print("[WARN] 未发现任何可用的 AI Provider")
+        return 1
+
+    print("================================================================")
+    print(" 已发现的 AI Agent CLI 提供商及支持的模型与思考强度 (Auto-Discovery)")
+    print("================================================================")
+    for ptype, info in caps.items():
+        print(f"\n【Provider: {ptype}】")
+        print(f"  版本/命令: {info.version} ({info.cli_command})")
+        print("  支持的模型与思考强度:")
+        for m in info.models:
+            default_tag = " [默认]" if m.is_default else ""
+            efforts_str = ", ".join(m.supported_efforts) if m.supported_efforts else "none"
+            print(f"    - {m.slug:<32} {m.display_name}{default_tag}")
+            print(f"      思考强度: [{efforts_str}]")
+    print("\n提示: 可直接在 config/prequel_config.json 中的 model_profiles 和 stage_routes 中引用上述模型。")
+    return 0
+
+
 def _positive_int(value: str) -> int:
     number = int(value)
     if number < 1:
@@ -510,6 +562,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     preflight = sub.add_parser("preflight", help="写作前完整预检")
     preflight.set_defaults(handler=command_preflight)
+
+    models_parser = sub.add_parser("models", aliases=["discover"], help="自发现已安装 AI Agent 的模型与思考强度")
+    models_parser.add_argument("--provider", choices=("codex_cli", "agy_cli", "opencode_cli", "grok_cli"), help="指定要自发现的 Provider 类型")
+    models_parser.add_argument("--json", action="store_true", help="以 JSON 格式输出")
+    models_parser.set_defaults(handler=command_models)
 
     next_parser = sub.add_parser("next", help="规划、生成、审查并提升下一章")
     next_parser.add_argument("--dry-run", action="store_true", help="生成全部工件但不提升正式章节")

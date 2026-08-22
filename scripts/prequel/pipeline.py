@@ -290,14 +290,14 @@ def run_preflight(
     checks.append("cumulative user taste contract validated")
     if check_cli_capabilities:
         from .cli_capabilities import (
-            bundled_model_catalog,
-            codex_version,
+            discover_capabilities,
             validate_requested_routes,
         )
 
-        command = config.get("provider", {}).get("command", ["codex"])
-        executable = command[0] if isinstance(command, list) and command else "codex"
-        catalog = bundled_model_catalog(executable)
+        provider_type = config.get("provider", {}).get("type", "codex_cli")
+        command = config.get("provider", {}).get("command", [])
+        executable = command[0] if isinstance(command, list) and command else None
+
         requested = {
             stage: (
                 router.settings_for(stage).model,
@@ -305,15 +305,28 @@ def run_preflight(
             )
             for stage in sorted(config.get("stage_routes", {}))
         }
-        errors = validate_requested_routes(catalog, requested)
-        if errors:
-            raise QualityGateError("Codex模型能力预检失败: " + "；".join(errors))
-        checks.append(f"Codex CLI: {codex_version(executable)}")
-        checks.extend(
-            f"route {stage}: {model}/{effort}"
-            for stage, (model, effort) in requested.items()
-        )
-        checks.append("Codex model and reasoning capabilities validated")
+
+        try:
+            caps = discover_capabilities(provider_type, executable)
+            errors = validate_requested_routes(caps, requested)
+            if errors:
+                raise QualityGateError(
+                    f"{provider_type} 模型能力预检失败: " + "；".join(errors)
+                )
+            checks.append(f"{caps.provider_type} CLI: {caps.version}")
+            checks.extend(
+                f"route {stage}: {model}/{effort}"
+                for stage, (model, effort) in requested.items()
+            )
+            checks.append(
+                f"{caps.provider_type} model and reasoning capabilities validated"
+            )
+        except Exception as exc:
+            if isinstance(exc, QualityGateError):
+                raise
+            raise QualityGateError(
+                f"{provider_type} 能力自发现与预检失败: {exc}"
+            ) from exc
 
     if "quality_evolution" in config:
         for filename, field in (

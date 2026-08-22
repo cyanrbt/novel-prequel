@@ -6,8 +6,15 @@ from pathlib import Path
 
 from scripts.prequel.artifacts import ChapterWorkspace
 from scripts.prequel.errors import ArtifactValidationError, ProviderError
-from scripts.prequel.provider import CodexCliProvider
-from scripts.prequel.provider import provider_from_spec
+from scripts.prequel.provider import (
+    AgyCliProvider,
+    CodexCliProvider,
+    GrokCliProvider,
+    OpenCodeCliProvider,
+    clean_schema_for_cli,
+    provider_from_spec,
+    strip_markdown_fence,
+)
 
 
 class ProviderTests(unittest.TestCase):
@@ -21,6 +28,7 @@ class ProviderTests(unittest.TestCase):
             },
             Path.cwd(),
         )
+        self.assertIsInstance(provider, CodexCliProvider)
         self.assertEqual(provider.model, "gpt-5.6-terra")
         self.assertEqual(provider.reasoning_effort, "medium")
         self.assertIn("--model", provider.command)
@@ -37,6 +45,66 @@ class ProviderTests(unittest.TestCase):
                 },
                 Path.cwd(),
             )
+
+    def test_provider_spec_creates_agy_provider(self):
+        provider = provider_from_spec(
+            {
+                "type": "agy_cli",
+                "model": "gemini-3.7-flash-high",
+                "reasoning_effort": "high",
+            },
+            Path.cwd(),
+        )
+        self.assertIsInstance(provider, AgyCliProvider)
+        self.assertEqual(provider.model, "gemini-3.7-flash-high")
+        self.assertEqual(provider.reasoning_effort, "high")
+
+    def test_provider_spec_creates_opencode_provider(self):
+        provider = provider_from_spec(
+            {
+                "type": "opencode_cli",
+                "model": "deepseek/deepseek-chat",
+            },
+            Path.cwd(),
+        )
+        self.assertIsInstance(provider, OpenCodeCliProvider)
+        self.assertEqual(provider.model, "deepseek/deepseek-chat")
+
+    def test_provider_spec_creates_grok_provider(self):
+        provider = provider_from_spec(
+            {
+                "type": "grok_cli",
+                "model": "grok-4.6",
+                "reasoning_effort": "high",
+            },
+            Path.cwd(),
+        )
+        self.assertIsInstance(provider, GrokCliProvider)
+        self.assertEqual(provider.model, "grok-4.6")
+        self.assertEqual(provider.reasoning_effort, "high")
+
+    def test_clean_schema_removes_id_and_schema(self):
+        raw = {
+            "$schema": "http://json-schema.org/draft-07/schema#",
+            "$id": "test.schema.json",
+            "type": "object",
+            "properties": {
+                "sub": {
+                    "$id": "sub.json",
+                    "type": "string",
+                }
+            },
+        }
+        cleaned = clean_schema_for_cli(raw)
+        self.assertNotIn("$schema", cleaned)
+        self.assertNotIn("$id", cleaned)
+        self.assertNotIn("$id", cleaned["properties"]["sub"])
+        self.assertEqual(cleaned["type"], "object")
+
+    def test_strip_markdown_fence(self):
+        self.assertEqual(strip_markdown_fence("```json\n{\"a\": 1}\n```"), "{\"a\": 1}")
+        self.assertEqual(strip_markdown_fence("```\nhello\n```"), "hello")
+        self.assertEqual(strip_markdown_fence("normal text"), "normal text")
 
     def test_output_schemas_use_openai_supported_object_contract(self):
         unsupported = {"minProperties", "maxProperties", "minLength", "maxLength"}
@@ -85,6 +153,21 @@ class ProviderTests(unittest.TestCase):
         source = "import time; time.sleep(2); print('late')"
         with self.assertRaises(ProviderError):
             self.provider_for(source, timeout=1).generate("测试")
+
+    def test_agy_provider_parses_json_output(self):
+        source = "import json; print(json.dumps({'status': 'SUCCESS', 'response': 'agy response'}))"
+        provider = AgyCliProvider([sys.executable, "-c", source], timeout_seconds=2)
+        self.assertEqual(provider.generate("prompt"), "agy response")
+
+    def test_opencode_provider_parses_stream_json(self):
+        source = "import json; print(json.dumps({'type': 'text', 'part': {'text': 'opencode output'}}))"
+        provider = OpenCodeCliProvider([sys.executable, "-c", source], timeout_seconds=2)
+        self.assertEqual(provider.generate("prompt"), "opencode output")
+
+    def test_grok_provider_parses_plain_and_json(self):
+        source = "print('grok plain output')"
+        provider = GrokCliProvider([sys.executable, "-c", source], timeout_seconds=2)
+        self.assertEqual(provider.generate("prompt"), "grok plain output")
 
     def test_workspace_rejects_unknown_artifact(self):
         with tempfile.TemporaryDirectory() as tmp:
