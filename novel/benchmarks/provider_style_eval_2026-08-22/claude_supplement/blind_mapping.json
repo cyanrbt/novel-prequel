@@ -1,0 +1,98 @@
+{
+  "benchmark_id": "provider-style-eval-2026-08-22-claude-supplement",
+  "seed_sha256": "4a001ba704e1ab306381b9fea9da76f2f39d0a2aaea2bb0cfd208f9889f8e007",
+  "created_at": "2026-08-22T08:47:44.196868+00:00",
+  "mapping": {
+    "A": {
+      "id": "codex_sol_xhigh",
+      "provider": "codex_cli",
+      "model": "gpt-5.6-sol",
+      "effort": "xhigh",
+      "metered": false,
+      "source": "reused_base_output",
+      "source_sha256": "57e295af7712e5fe108fdb364e6a31d0793b89e8c5ad3c43aafbf2f684525546",
+      "blind_sha256": "57e295af7712e5fe108fdb364e6a31d0793b89e8c5ad3c43aafbf2f684525546"
+    },
+    "B": {
+      "id": "agy_gemini_3_7_flash_high",
+      "provider": "agy_cli",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "metered": false,
+      "source": "reused_base_output",
+      "source_sha256": "9f76c3ee4ba9ac659c468200bc062877b10fb2b1871482fdd606287e0352598c",
+      "blind_sha256": "9f76c3ee4ba9ac659c468200bc062877b10fb2b1871482fdd606287e0352598c"
+    },
+    "C": {
+      "id": "opencode_mimo_v2_5",
+      "provider": "opencode_cli",
+      "model": "xiaomi/mimo-v2.5",
+      "effort": "none",
+      "metered": true,
+      "source": "reused_base_output",
+      "source_sha256": "2cd2c6ebfb1a4e17d70ee55b8917c77c777982dfdec897aacf9b5a4c0f089431",
+      "blind_sha256": "2cd2c6ebfb1a4e17d70ee55b8917c77c777982dfdec897aacf9b5a4c0f089431"
+    },
+    "D": {
+      "id": "agy_claude_sonnet_4_6_thinking",
+      "provider": "agy_cli",
+      "model": "claude-sonnet-4-6",
+      "effort": "none",
+      "metered": false,
+      "source": "generated_after_b2d8fca",
+      "source_sha256": "70f18a622d6f16a5718bccf67d0a9425b026a7f9cdf29ec47875d01f7cb45bd2",
+      "blind_sha256": "70f18a622d6f16a5718bccf67d0a9425b026a7f9cdf29ec47875d01f7cb45bd2"
+    },
+    "E": {
+      "id": "opencode_deepseek_v4_flash",
+      "provider": "opencode_cli",
+      "model": "deepseek/deepseek-v4-flash",
+      "effort": "none",
+      "metered": true,
+      "source": "reused_base_output",
+      "source_sha256": "f26752e278b159394ec57cdbaccb373f8ce0fb66b49ae314a1c63927ec9b84b1",
+      "blind_sha256": "f26752e278b159394ec57cdbaccb373f8ce0fb66b49ae314a1c63927ec9b84b1"
+    },
+    "F": {
+      "id": "agy_gemini_3_1_pro_high",
+      "provider": "agy_cli",
+      "model": "gemini-3.1-pro-high",
+      "effort": "high",
+      "metered": false,
+      "source": "reused_base_output",
+      "source_sha256": "961efef6b2fbedc1fd72adb5fafc846202c51b77f25e6110893108a867a98686",
+      "blind_sha256": "961efef6b2fbedc1fd72adb5fafc846202c51b77f25e6110893108a867a98686"
+    },
+    "G": {
+      "id": "codex_luna_max",
+      "provider": "codex_cli",
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "metered": false,
+      "source": "reused_base_output",
+      "source_sha256": "15a716e93015b6309ee7ec66ca5a77dc6689718c47d0079bf0207589b465f411",
+      "blind_sha256": "15a716e93015b6309ee7ec66ca5a77dc6689718c47d0079bf0207589b465f411"
+    },
+    "H": {
+      "id": "agy_claude_opus_4_6_thinking",
+      "provider": "agy_cli",
+      "model": "claude-opus-4-6-thinking",
+      "effort": "none",
+      "metered": false,
+      "source": "generated_after_b2d8fca",
+      "source_sha256": "3432273aadc39adcc562e2a2f7a2c03b414d83752dad42f17dce2bc26cd47b3c",
+      "blind_sha256": "3432273aadc39adcc562e2a2f7a2c03b414d83752dad42f17dce2bc26cd47b3c"
+    },
+    "I": {
+      "id": "grok_4_6_xhigh",
+      "provider": "grok_cli",
+      "model": "grok-4.6",
+      "effort": "xhigh",
+      "metered": false,
+      "source": "reused_base_output",
+      "source_sha256": "953b9ad7ebb9312d7cd6eb851ceb5bad732a0fbd8e141234c508766f33fa39cd",
+      "blind_sha256": "953b9ad7ebb9312d7cd6eb851ceb5bad732a0fbd8e141234c508766f33fa39cd"
+    }
+  },
+  "excluded_candidates": []
+}

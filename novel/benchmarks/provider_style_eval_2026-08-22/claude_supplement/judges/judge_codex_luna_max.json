@@ -1,0 +1,228 @@
+{
+  "ranking": [
+    "G",
+    "D",
+    "H",
+    "A",
+    "E",
+    "B",
+    "C",
+    "F",
+    "I"
+  ],
+  "candidates": {
+    "A": {
+      "plot_fidelity": 19,
+      "character_voice": 13,
+      "horror_pacing": 13,
+      "spatial_clarity": 10,
+      "serial_readability": 14,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 89,
+      "hard_failures": [],
+      "strengths": [
+        "节点覆盖完整",
+        "前后门与压制动作清楚",
+        "结尾追读钩子有效"
+      ],
+      "weaknesses": [
+        "解释腔略重",
+        "修辞密度偏高",
+        "学生群像略功能化"
+      ],
+      "reader_verdict": "完整稳妥，基本可以作为连载正文使用。"
+    },
+    "B": {
+      "plot_fidelity": 17,
+      "character_voice": 12,
+      "horror_pacing": 12,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 10,
+      "anti_template": 6,
+      "total": 80,
+      "hard_failures": [
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "剧情推进直接",
+        "关键动作易读",
+        "商业节奏明确"
+      ],
+      "weaknesses": [
+        "把敲门周期说成过实的结论",
+        "惊恐描写套话偏多",
+        "学生反应较模板化"
+      ],
+      "reader_verdict": "骨架合格而好读，但规则推断过早坐实。"
+    },
+    "C": {
+      "plot_fidelity": 14,
+      "character_voice": 13,
+      "horror_pacing": 13,
+      "spatial_clarity": 6,
+      "serial_readability": 13,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 79,
+      "hard_failures": [
+        "missing_node",
+        "knowledge_leak",
+        "spatial_error"
+      ],
+      "strengths": [
+        "限知视角较稳",
+        "恐怖递进依靠事实",
+        "语言相对克制"
+      ],
+      "weaknesses": [
+        "王老师误开前门，替换了关键门位因果",
+        "过早把敲门认定为条件",
+        "部分群像信息不足"
+      ],
+      "reader_verdict": "文字自然，但关键门位和信息边界问题影响定稿可信度。"
+    },
+    "D": {
+      "plot_fidelity": 18,
+      "character_voice": 14,
+      "horror_pacing": 14,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 15,
+      "anti_template": 9,
+      "total": 93,
+      "hard_failures": [],
+      "strengths": [
+        "日常反应最像真实现场",
+        "推断保留了不确定性",
+        "压制失败的转折有力"
+      ],
+      "weaknesses": [
+        "电话警报信息交代偏省",
+        "个别长句略显自我解释",
+        "群像位置描写稍简"
+      ],
+      "reader_verdict": "自然、克制而有追读力，接近可直接连载的成稿。"
+    },
+    "E": {
+      "plot_fidelity": 16,
+      "character_voice": 13,
+      "horror_pacing": 12,
+      "spatial_clarity": 9,
+      "serial_readability": 13,
+      "web_vitality": 11,
+      "anti_template": 7,
+      "total": 81,
+      "hard_failures": [
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "节点链条完整",
+        "敲门到死亡再到压制清楚",
+        "现场杂音有生活感"
+      ],
+      "weaknesses": [
+        "凭七次计数擅补老人意图",
+        "情绪词和比喻偏满",
+        "后半段解释规律过多"
+      ],
+      "reader_verdict": "场面完整好读，但新增线索削弱了应有的悬念。"
+    },
+    "F": {
+      "plot_fidelity": 17,
+      "character_voice": 11,
+      "horror_pacing": 11,
+      "spatial_clarity": 9,
+      "serial_readability": 12,
+      "web_vitality": 8,
+      "anti_template": 5,
+      "total": 73,
+      "hard_failures": [],
+      "strengths": [
+        "剧情骨架齐全",
+        "危险警报交代明确",
+        "动作结果容易理解"
+      ],
+      "weaknesses": [
+        "套话、形容词和惊叹号堆叠",
+        "学生声音偏功能化",
+        "压制后的黑暗回返略显抢先"
+      ],
+      "reader_verdict": "节点基本齐全，但语言加工痕迹明显，临场感不足。"
+    },
+    "G": {
+      "plot_fidelity": 19,
+      "character_voice": 14,
+      "horror_pacing": 14,
+      "spatial_clarity": 10,
+      "serial_readability": 14,
+      "web_vitality": 14,
+      "anti_template": 9,
+      "total": 94,
+      "hard_failures": [],
+      "strengths": [
+        "信息边界和推断尺度稳",
+        "递进主要由现场事实推动",
+        "前后门与逃生路线清楚"
+      ],
+      "weaknesses": [
+        "少数学生插话仍略模板化",
+        "腐坏描写有连续堆叠",
+        "个别句式过于整齐"
+      ],
+      "reader_verdict": "完成度最高，紧张、清楚且最接近可直接连载。"
+    },
+    "H": {
+      "plot_fidelity": 19,
+      "character_voice": 14,
+      "horror_pacing": 14,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 14,
+      "anti_template": 8,
+      "total": 92,
+      "hard_failures": [],
+      "strengths": [
+        "剧情节点完整",
+        "王老师的日常逻辑可信",
+        "结尾行动钩子有效"
+      ],
+      "weaknesses": [
+        "敲击轮次略显重复",
+        "有几处自我修正和解释腔",
+        "群像仍依赖少数标签"
+      ],
+      "reader_verdict": "整体成熟顺畅，空间小瑕疵不妨碍追读。"
+    },
+    "I": {
+      "plot_fidelity": 18,
+      "character_voice": 12,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 7,
+      "web_vitality": 3,
+      "anti_template": 1,
+      "total": 63,
+      "hard_failures": [],
+      "strengths": [
+        "正文节点基本齐全",
+        "动作因果大体成立",
+        "现场细节较丰富"
+      ],
+      "weaknesses": [
+        "开头直接泄露写作过程",
+        "元叙述打断正文进入",
+        "整体像未清理的生成稿"
+      ],
+      "reader_verdict": "正文段落本身成立，但元话语严重破坏了匿名连载文本的可用性。"
+    }
+  },
+  "overall_observations": [
+    "G、D、H完整保留了黑暗侵入、后门消失、敲门致死和短暂压制的链条。",
+    "A节点最全且空间最稳，但修辞和说明腔略重。",
+    "B、E把敲门规律说得过实，C则改动王老师开门位置，直接伤及信息边界与因果。",
+    "F剧情骨架完整，却有明显套话堆叠和临场杂音不足的问题。",
+    "I的正文尚可，但开头元叙述显著破坏了成稿感。"
+  ]
+}

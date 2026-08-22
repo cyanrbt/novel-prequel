@@ -1,0 +1,16 @@
+{
+  "id": "agy_claude_sonnet_4_6_thinking",
+  "provider": "agy_cli",
+  "model": "claude-sonnet-4-6",
+  "effort": "none",
+  "prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "started_at": "2026-08-22T08:19:13.960103+00:00",
+  "status": "complete",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22-claude-supplement/agy_claude_sonnet_4_6_thinking",
+  "finished_at": "2026-08-22T08:22:51.216661+00:00",
+  "elapsed_seconds": 217.257,
+  "output_sha256": "70f18a622d6f16a5718bccf67d0a9425b026a7f9cdf29ec47875d01f7cb45bd2",
+  "output_characters": 3622,
+  "output_cjk_characters": 2991
+}

@@ -1,0 +1,257 @@
+{
+  "benchmark_id": "provider-style-eval-2026-08-22-claude-supplement",
+  "generated_at": "2026-08-22T08:47:44.408941+00:00",
+  "valid_judges": [
+    "judge_codex_sol_xhigh",
+    "judge_codex_luna_max",
+    "judge_grok_4_6_xhigh",
+    "judge_agy_claude_opus_4_6_thinking"
+  ],
+  "invalid_judges": {
+    "judge_agy_gemini_3_1_pro_high": [
+      "missing"
+    ]
+  },
+  "excluded_candidates": [],
+  "ranking": [
+    {
+      "label": "G",
+      "id": "codex_luna_max",
+      "provider": "codex_cli",
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "metered": false,
+      "mean_total": 88.75,
+      "score_stddev": 6.3,
+      "top2_votes": 3,
+      "dimensions": {
+        "plot_fidelity": 18.5,
+        "character_voice": 13.5,
+        "horror_pacing": 13.5,
+        "spatial_clarity": 9.0,
+        "serial_readability": 13.5,
+        "web_vitality": 12.5,
+        "anti_template": 8.25
+      },
+      "hard_failures": {},
+      "metered_adoption_gate": null
+    },
+    {
+      "label": "A",
+      "id": "codex_sol_xhigh",
+      "provider": "codex_cli",
+      "model": "gpt-5.6-sol",
+      "effort": "xhigh",
+      "metered": false,
+      "mean_total": 88.25,
+      "score_stddev": 1.92,
+      "top2_votes": 2,
+      "dimensions": {
+        "plot_fidelity": 18.75,
+        "character_voice": 12.75,
+        "horror_pacing": 13.5,
+        "spatial_clarity": 9.75,
+        "serial_readability": 13.75,
+        "web_vitality": 12.0,
+        "anti_template": 7.75
+      },
+      "hard_failures": {},
+      "metered_adoption_gate": null
+    },
+    {
+      "label": "H",
+      "id": "agy_claude_opus_4_6_thinking",
+      "provider": "agy_cli",
+      "model": "claude-opus-4-6-thinking",
+      "effort": "none",
+      "metered": false,
+      "mean_total": 88.25,
+      "score_stddev": 3.34,
+      "top2_votes": 2,
+      "dimensions": {
+        "plot_fidelity": 17.75,
+        "character_voice": 13.25,
+        "horror_pacing": 13.25,
+        "spatial_clarity": 9.0,
+        "serial_readability": 13.25,
+        "web_vitality": 13.25,
+        "anti_template": 8.5
+      },
+      "hard_failures": {
+        "causal_reorder": 1,
+        "missing_node": 1
+      },
+      "metered_adoption_gate": null
+    },
+    {
+      "label": "D",
+      "id": "agy_claude_sonnet_4_6_thinking",
+      "provider": "agy_cli",
+      "model": "claude-sonnet-4-6",
+      "effort": "none",
+      "metered": false,
+      "mean_total": 86.5,
+      "score_stddev": 5.41,
+      "top2_votes": 1,
+      "dimensions": {
+        "plot_fidelity": 16.5,
+        "character_voice": 13.5,
+        "horror_pacing": 12.75,
+        "spatial_clarity": 7.75,
+        "serial_readability": 13.0,
+        "web_vitality": 14.25,
+        "anti_template": 8.75
+      },
+      "hard_failures": {
+        "missing_node": 2
+      },
+      "metered_adoption_gate": null
+    },
+    {
+      "label": "E",
+      "id": "opencode_deepseek_v4_flash",
+      "provider": "opencode_cli",
+      "model": "deepseek/deepseek-v4-flash",
+      "effort": "none",
+      "metered": true,
+      "mean_total": 77.75,
+      "score_stddev": 3.11,
+      "top2_votes": 0,
+      "dimensions": {
+        "plot_fidelity": 14.75,
+        "character_voice": 12.0,
+        "horror_pacing": 12.5,
+        "spatial_clarity": 8.0,
+        "serial_readability": 12.75,
+        "web_vitality": 11.0,
+        "anti_template": 6.75
+      },
+      "hard_failures": {
+        "knowledge_leak": 3,
+        "spatial_error": 1
+      },
+      "metered_adoption_gate": {
+        "passed": false,
+        "checks": {
+          "total_lead_at_least_3": false,
+          "vitality_or_anti_template_lead_at_least_2": false,
+          "top2_votes_at_least_3": false,
+          "no_majority_same_hard_failure": false
+        },
+        "compared_to": "codex_luna_max"
+      }
+    },
+    {
+      "label": "I",
+      "id": "grok_4_6_xhigh",
+      "provider": "grok_cli",
+      "model": "grok-4.6",
+      "effort": "xhigh",
+      "metered": false,
+      "mean_total": 74.5,
+      "score_stddev": 7.53,
+      "top2_votes": 0,
+      "dimensions": {
+        "plot_fidelity": 17.25,
+        "character_voice": 13.0,
+        "horror_pacing": 13.0,
+        "spatial_clarity": 8.5,
+        "serial_readability": 9.0,
+        "web_vitality": 10.25,
+        "anti_template": 3.5
+      },
+      "hard_failures": {
+        "knowledge_leak": 1,
+        "source_reconstruction_risk": 1
+      },
+      "metered_adoption_gate": null
+    },
+    {
+      "label": "B",
+      "id": "agy_gemini_3_7_flash_high",
+      "provider": "agy_cli",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "metered": false,
+      "mean_total": 73.75,
+      "score_stddev": 4.26,
+      "top2_votes": 0,
+      "dimensions": {
+        "plot_fidelity": 15.75,
+        "character_voice": 11.25,
+        "horror_pacing": 11.25,
+        "spatial_clarity": 8.5,
+        "serial_readability": 12.5,
+        "web_vitality": 9.25,
+        "anti_template": 5.25
+      },
+      "hard_failures": {
+        "knowledge_leak": 3
+      },
+      "metered_adoption_gate": null
+    },
+    {
+      "label": "C",
+      "id": "opencode_mimo_v2_5",
+      "provider": "opencode_cli",
+      "model": "xiaomi/mimo-v2.5",
+      "effort": "none",
+      "metered": true,
+      "mean_total": 72.25,
+      "score_stddev": 5.07,
+      "top2_votes": 0,
+      "dimensions": {
+        "plot_fidelity": 12.5,
+        "character_voice": 11.5,
+        "horror_pacing": 12.25,
+        "spatial_clarity": 5.75,
+        "serial_readability": 12.0,
+        "web_vitality": 10.75,
+        "anti_template": 7.5
+      },
+      "hard_failures": {
+        "causal_reorder": 2,
+        "spatial_error": 4,
+        "missing_node": 2,
+        "knowledge_leak": 1,
+        "rule_changed": 1
+      },
+      "metered_adoption_gate": {
+        "passed": false,
+        "checks": {
+          "total_lead_at_least_3": false,
+          "vitality_or_anti_template_lead_at_least_2": false,
+          "top2_votes_at_least_3": false,
+          "no_majority_same_hard_failure": false
+        },
+        "compared_to": "codex_luna_max"
+      }
+    },
+    {
+      "label": "F",
+      "id": "agy_gemini_3_1_pro_high",
+      "provider": "agy_cli",
+      "model": "gemini-3.1-pro-high",
+      "effort": "high",
+      "metered": false,
+      "mean_total": 66.0,
+      "score_stddev": 4.42,
+      "top2_votes": 0,
+      "dimensions": {
+        "plot_fidelity": 15.75,
+        "character_voice": 10.0,
+        "horror_pacing": 10.25,
+        "spatial_clarity": 8.25,
+        "serial_readability": 10.75,
+        "web_vitality": 7.25,
+        "anti_template": 3.75
+      },
+      "hard_failures": {
+        "length_violation": 2,
+        "knowledge_leak": 1,
+        "rule_changed": 1
+      },
+      "metered_adoption_gate": null
+    }
+  ]
+}

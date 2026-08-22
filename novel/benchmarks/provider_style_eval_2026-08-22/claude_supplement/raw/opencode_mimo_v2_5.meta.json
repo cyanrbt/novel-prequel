@@ -1,0 +1,13 @@
+{
+  "id": "opencode_mimo_v2_5",
+  "provider": "opencode_cli",
+  "model": "xiaomi/mimo-v2.5",
+  "effort": "none",
+  "status": "reused_from_base_benchmark",
+  "source_path": "novel/benchmarks/provider_style_eval_2026-08-22/raw/opencode_mimo_v2_5.txt",
+  "source_prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "source_output_sha256": "2cd2c6ebfb1a4e17d70ee55b8917c77c777982dfdec897aacf9b5a4c0f089431",
+  "output_sha256": "2cd2c6ebfb1a4e17d70ee55b8917c77c777982dfdec897aacf9b5a4c0f089431",
+  "output_characters": 4119,
+  "output_cjk_characters": 3492
+}

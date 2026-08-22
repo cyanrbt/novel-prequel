@@ -1,0 +1,16 @@
+{
+  "id": "judge_grok_4_6_xhigh",
+  "provider": "grok_cli",
+  "model": "grok-4.6",
+  "effort": "xhigh",
+  "prompt_sha256": "796df61c53642c2e3dfcd5907db50c17154b274de8e18c4152f4b124584c8ffa",
+  "started_at": "2026-08-22T08:24:15.814300+00:00",
+  "status": "complete",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22-claude-supplement/judge_grok_4_6_xhigh",
+  "finished_at": "2026-08-22T08:36:04.909199+00:00",
+  "elapsed_seconds": 709.095,
+  "output_sha256": "a5e55adace1459601f3d30fe19a31233266912640d867753bce388c7cd3d3071",
+  "output_characters": 3874,
+  "output_cjk_characters": 1312
+}

@@ -1,0 +1,13 @@
+{
+  "id": "codex_luna_max",
+  "provider": "codex_cli",
+  "model": "gpt-5.6-luna",
+  "effort": "max",
+  "status": "reused_from_base_benchmark",
+  "source_path": "novel/benchmarks/provider_style_eval_2026-08-22/raw/codex_luna_max.txt",
+  "source_prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "source_output_sha256": "15a716e93015b6309ee7ec66ca5a77dc6689718c47d0079bf0207589b465f411",
+  "output_sha256": "15a716e93015b6309ee7ec66ca5a77dc6689718c47d0079bf0207589b465f411",
+  "output_characters": 3752,
+  "output_cjk_characters": 3119
+}

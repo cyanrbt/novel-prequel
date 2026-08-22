@@ -1,0 +1,228 @@
+{
+  "ranking": [
+    "H",
+    "A",
+    "D",
+    "G",
+    "C",
+    "B",
+    "I",
+    "E",
+    "F"
+  ],
+  "candidates": {
+    "A": {
+      "plot_fidelity": 18,
+      "character_voice": 12,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 13,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 85,
+      "hard_failures": [],
+      "strengths": [
+        "三只怪手的创意选择在视觉上极具辨识度，与所有其他候选拉开差异",
+        "粉笔字少了一撇、手机差点脱手等小细节增添了未经打磨的现场感",
+        "结尾老人站起的三阶段递进（脚动→坐起→站直）形成精确的追读钩子"
+      ],
+      "weaknesses": [
+        "学生群像偏功能化，去掉名字标签后难以区分个体",
+        "三只怪手与其余候选的单手设定差异较大，可能偏离剧情规格",
+        "部分段落的组织节拍过于均匀，匠气略大于粗粝感"
+      ],
+      "reader_verdict": "全组完成度最高的候选之一，节奏精准、钩子有力，几乎可直接作为连载正文使用。"
+    },
+    "B": {
+      "plot_fidelity": 17,
+      "character_voice": 11,
+      "horror_pacing": 11,
+      "spatial_clarity": 8,
+      "serial_readability": 12,
+      "web_vitality": 9,
+      "anti_template": 6,
+      "total": 74,
+      "hard_failures": [],
+      "strengths": [
+        "剧情节点覆盖完整，因果链清晰无遗漏",
+        "周正腹部撕裂伸出怪手的动作描写有血腥视觉冲击力",
+        "结尾台词'都给老子往外跑'符合角色极限状态下的粗暴感"
+      ],
+      "weaknesses": [
+        "方镜的台词过于直白戏剧化（'你怎么可能还活着'），削弱悬念层次",
+        "大量套用惊悚库存短语（'如钢箍般''凄厉的咆哮''灵魂战栗'），生成感明显",
+        "叙述始终处于最高声调，无松紧变化，读久产生疲劳"
+      ],
+      "reader_verdict": "节点完整但语言模板感重，像AI改写过的高分大纲而非手写连载正文。"
+    },
+    "C": {
+      "plot_fidelity": 14,
+      "character_voice": 11,
+      "horror_pacing": 13,
+      "spatial_clarity": 7,
+      "serial_readability": 12,
+      "web_vitality": 10,
+      "anti_template": 7,
+      "total": 74,
+      "hard_failures": [
+        "spatial_error"
+      ],
+      "strengths": [
+        "恐怖递进节制有效，衰败描写用日常类比（'像在水里泡过很久'）传递不安",
+        "怪手指节从反方向弯折的细节在众候选中独一无二",
+        "叙述视角紧贴杨间，信息边界控制干净"
+      ],
+      "weaknesses": [
+        "王老师打开的是老人正站其外的前门，空间逻辑不成立",
+        "方镜被改写为半协助者角色（'别让它完成''你是不是有东西没给它看'），与应有的敌意形象严重不符",
+        "怪手压制到老人站起的高潮段描写偏简略，力度不够"
+      ],
+      "reader_verdict": "氛围营造出色但关键空间逻辑和人物定位有偏差，需修正后方可使用。"
+    },
+    "D": {
+      "plot_fidelity": 16,
+      "character_voice": 13,
+      "horror_pacing": 11,
+      "spatial_clarity": 7,
+      "serial_readability": 11,
+      "web_vitality": 13,
+      "anti_template": 8,
+      "total": 79,
+      "hard_failures": [],
+      "strengths": [
+        "叙述口吻最接近网文作者的现场写作状态，不齐整感高度自然",
+        "'他说话很快，省了很多字'等观察极其传神，非刻意安排",
+        "方镜的对峙短促且不完整，恰好符合这个场景里应有的碎片式展现"
+      ],
+      "weaknesses": [
+        "老人站起后的关键段落过于简略，恐怖高潮被压扁",
+        "空间布局交代不足，前后门位置和学生分布不够清晰",
+        "部分节点之间的衔接松散，节奏在中段有一小段空转"
+      ],
+      "reader_verdict": "网文腔最正的候选，若补强高潮段落和空间描写，可成为极佳连载文本。"
+    },
+    "E": {
+      "plot_fidelity": 15,
+      "character_voice": 11,
+      "horror_pacing": 12,
+      "spatial_clarity": 7,
+      "serial_readability": 12,
+      "web_vitality": 10,
+      "anti_template": 6,
+      "total": 73,
+      "hard_failures": [
+        "spatial_error"
+      ],
+      "strengths": [
+        "论坛帖中'我数了七次，然后我的室友……'的引用为杨间推理提供了额外证据层",
+        "许凯从起哄到暴毙的转折具有情感冲击力",
+        "方镜结尾催促（'快一点！快一点啊！'）展现恐惧中的合作面，增加了人物层次"
+      ],
+      "weaknesses": [
+        "敲门声用三个相同的'咚'表现'一重两轻'，音效描写与节奏说明自相矛盾",
+        "杨间称周正为'周队长'，与讲座场景中的称谓设定不一致",
+        "王老师被改为女性且后门位置临近讲台，空间设定偏离常规教室布局"
+      ],
+      "reader_verdict": "中规中矩的写法，推理部分有闪光但细节一致性不足，需要二次校对。"
+    },
+    "F": {
+      "plot_fidelity": 16,
+      "character_voice": 10,
+      "horror_pacing": 9,
+      "spatial_clarity": 8,
+      "serial_readability": 10,
+      "web_vitality": 7,
+      "anti_template": 4,
+      "total": 64,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "剧情节点完整无遗漏，因果链可追溯",
+        "黑暗入侵后桌椅直接散架的极端化描写有冲击力",
+        "周正体内怪手伸出时的肉体撕裂感在众候选中最强烈"
+      ],
+      "weaknesses": [
+        "全文中文字符数约3950，明显超出3600上限",
+        "大量使用套路化惊悚修辞（'极其刺鼻''极度的恐惧像冰水''睚眦欲裂'），AI模板痕迹全组最重",
+        "情绪始终处于最高档位，恐怖感因持续过度渲染反而钝化"
+      ],
+      "reader_verdict": "剧情结构完整但语言高度模板化、篇幅超限，是本组最典型的AI生成文本。"
+    },
+    "G": {
+      "plot_fidelity": 17,
+      "character_voice": 12,
+      "horror_pacing": 12,
+      "spatial_clarity": 8,
+      "serial_readability": 12,
+      "web_vitality": 10,
+      "anti_template": 7,
+      "total": 78,
+      "hard_failures": [],
+      "strengths": [
+        "各节点交代清晰完整，信息量分配均匀不堆砌",
+        "怪手扣住老人手腕后被从门框上缓慢撑开的画面具体可视化",
+        "方镜的台词（'你现在改不了，到了未来也一样'）神秘感恰到好处"
+      ],
+      "weaknesses": [
+        "叙述过于规整干净，缺乏粗糙感和意外感",
+        "学生群像的反应偏程序化，缺少让人记住的个人细节",
+        "整体像一篇高分规范作文而非一个作者正在讲的故事"
+      ],
+      "reader_verdict": "四平八稳的合格文本，信息传递可靠但缺少让读者在凌晨追读的个人印记。"
+    },
+    "H": {
+      "plot_fidelity": 18,
+      "character_voice": 13,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 13,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 86,
+      "hard_failures": [],
+      "strengths": [
+        "杨间反复掏手机又放回的动作精准传递犹豫心理，无需任何心理描写辅助",
+        "王老师作为四十多岁物理教师、没收手机、催交周练的日常刻画使其推门行为完全可信",
+        "'死了。这个事实跳过了所有中间环节直接到达杨间的认知'——叙述节奏与认知冲击完美同步"
+      ],
+      "weaknesses": [
+        "方镜的对抗性偏弱，敌意呈现不如其他候选鲜明",
+        "怪手出现时的描写偏克制，视觉冲击力略低于戏剧性更强的候选",
+        "结尾周正的台词'快走'极简，追读推力稍弱"
+      ],
+      "reader_verdict": "全组最接近'活的连载正文'的候选，叙述视角扎实、信息分配自然，几乎不需编辑即可上线。"
+    },
+    "I": {
+      "plot_fidelity": 16,
+      "character_voice": 12,
+      "horror_pacing": 12,
+      "spatial_clarity": 8,
+      "serial_readability": 9,
+      "web_vitality": 13,
+      "anti_template": 3,
+      "total": 73,
+      "hard_failures": [
+        "source_reconstruction_risk"
+      ],
+      "strengths": [
+        "方镜无意识在桌沿敲了两下又猛然停住——全组最精彩的人物微动作",
+        "衰败描写极度具体（'拉链拉到一半卡住，橡胶已经发黏'），生活感最强",
+        "王老师的点名册从手肘滑落、封面烂一角的细节兼具叙事功能和现场质感"
+      ],
+      "weaknesses": [
+        "正文开头残留完整的AI规划与修改笔记（'先按节点把场景写满……改掉残留的编辑痕迹'），直接暴露生成过程",
+        "王老师性别在文中为女性，与主流设定不一致",
+        "因规划笔记泄露，反模板维度几乎归零，无法以当前形态发表"
+      ],
+      "reader_verdict": "故事文本本身具有全组最高的生猛质感，但正文中残留的AI规划笔记构成致命缺陷。"
+    }
+  },
+  "overall_observations": [
+    "网络生命力（维度6）是本组区分度最高的维度，D、I、H的粗粝质感与F、B的套路化修辞形成鲜明对比",
+    "反模板（维度7）的分差最大（3—8分），低分候选反复出现感官轮播、库存形容和整齐排比结构，高分候选则以不齐整的观察和独立措辞取胜",
+    "方镜的人物处理是最能暴露模型差异的节点：C将其写成协助者、B与F将其写成歇斯底里的疯子、D与H将其写成碎片化的谜面，处理水平直接影响群像可信度",
+    "王老师推门消失的段落考验空间因果一致性，C让王老师打开老人正在敲的前门导致逻辑崩坏，E将后门放在讲台旁同样不合常理",
+    "I的故事文本在感官细节和人物杂音方面可能领先全组，但开头残留的AI规划笔记是所有候选中最严重的单项硬伤"
+  ]
+}

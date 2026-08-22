@@ -1,0 +1,16 @@
+{
+  "id": "judge_codex_luna_max",
+  "provider": "codex_cli",
+  "model": "gpt-5.6-luna",
+  "effort": "max",
+  "prompt_sha256": "796df61c53642c2e3dfcd5907db50c17154b274de8e18c4152f4b124584c8ffa",
+  "started_at": "2026-08-22T08:24:15.767120+00:00",
+  "status": "complete",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22-claude-supplement/judge_codex_luna_max",
+  "finished_at": "2026-08-22T08:33:02.479186+00:00",
+  "elapsed_seconds": 526.712,
+  "output_sha256": "fba5038e485bf8df7dab3f2b581f23b200353b4c20ca64e64da0a08a35c93032",
+  "output_characters": 3165,
+  "output_cjk_characters": 758
+}

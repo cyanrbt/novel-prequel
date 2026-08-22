@@ -1,0 +1,14 @@
+{
+  "id": "judge_agy_gemini_3_1_pro_high",
+  "provider": "agy_cli",
+  "model": "gemini-3.1-pro-high",
+  "effort": "high",
+  "prompt_sha256": "796df61c53642c2e3dfcd5907db50c17154b274de8e18c4152f4b124584c8ffa",
+  "started_at": "2026-08-22T08:25:30.445120+00:00",
+  "status": "failed",
+  "attempt": 2,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22-claude-supplement/judge_agy_gemini_3_1_pro_high",
+  "finished_at": "2026-08-22T08:25:38.865443+00:00",
+  "elapsed_seconds": 8.421,
+  "error": "ProviderError: AGY 返回了空内容或占位内容"
+}

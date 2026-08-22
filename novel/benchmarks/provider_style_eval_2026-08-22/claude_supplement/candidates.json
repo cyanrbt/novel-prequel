@@ -16,6 +16,7 @@
     {"id": "judge_codex_sol_xhigh", "provider": "codex_cli", "model": "gpt-5.6-sol", "effort": "xhigh"},
     {"id": "judge_agy_gemini_3_1_pro_high", "provider": "agy_cli", "model": "gemini-3.1-pro-high", "effort": "high"},
     {"id": "judge_codex_luna_max", "provider": "codex_cli", "model": "gpt-5.6-luna", "effort": "max"},
-    {"id": "judge_grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh"}
+    {"id": "judge_grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh"},
+    {"id": "judge_agy_claude_opus_4_6_thinking", "provider": "agy_cli", "model": "claude-opus-4-6-thinking", "effort": "none", "note": "Gemini Pro 连续两次无法处理九候选统一提示后的补位评审"}
   ]
 }

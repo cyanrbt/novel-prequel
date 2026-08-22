@@ -1,0 +1,13 @@
+{
+  "id": "grok_4_6_xhigh",
+  "provider": "grok_cli",
+  "model": "grok-4.6",
+  "effort": "xhigh",
+  "status": "reused_from_base_benchmark",
+  "source_path": "novel/benchmarks/provider_style_eval_2026-08-22/raw/grok_4_6_xhigh.txt",
+  "source_prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "source_output_sha256": "953b9ad7ebb9312d7cd6eb851ceb5bad732a0fbd8e141234c508766f33fa39cd",
+  "output_sha256": "953b9ad7ebb9312d7cd6eb851ceb5bad732a0fbd8e141234c508766f33fa39cd",
+  "output_characters": 3570,
+  "output_cjk_characters": 2937
+}

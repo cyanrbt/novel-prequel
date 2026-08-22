@@ -1,0 +1,16 @@
+{
+  "id": "agy_claude_opus_4_6_thinking",
+  "provider": "agy_cli",
+  "model": "claude-opus-4-6-thinking",
+  "effort": "none",
+  "prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "started_at": "2026-08-22T08:14:44.076306+00:00",
+  "status": "complete",
+  "attempt": 2,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22-claude-supplement/agy_claude_opus_4_6_thinking",
+  "finished_at": "2026-08-22T08:19:07.251802+00:00",
+  "elapsed_seconds": 263.176,
+  "output_sha256": "3432273aadc39adcc562e2a2f7a2c03b414d83752dad42f17dce2bc26cd47b3c",
+  "output_characters": 4407,
+  "output_cjk_characters": 3662
+}

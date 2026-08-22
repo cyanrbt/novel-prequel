@@ -1,0 +1,14 @@
+{
+  "id": "agy_claude_opus_4_6_thinking",
+  "provider": "agy_cli",
+  "model": "claude-opus-4-6-thinking",
+  "effort": "none",
+  "prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "started_at": "2026-08-22T08:08:33.354938+00:00",
+  "status": "failed",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22-claude-supplement/agy_claude_opus_4_6_thinking",
+  "finished_at": "2026-08-22T08:13:41.696364+00:00",
+  "elapsed_seconds": 308.342,
+  "error": "ProviderError: AGY 返回了空内容或占位内容"
+}
