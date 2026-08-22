@@ -100,6 +100,9 @@ class ContextBuilderTests(unittest.TestCase):
             "父亲不再信任张洞",
         )
         self.assertEqual(packet["story_brief"]["scenes"][0]["goal"], "取账本")
+        self.assertNotIn("pressure_change", packet["story_brief"]["scenes"][0])
+        self.assertNotIn("threat_action", packet["story_brief"]["scenes"][0])
+        self.assertNotIn("payoff_type", packet["story_brief"]["scenes"][0])
         self.assertEqual(
             packet["hard_constraints"]["knowledge_boundaries"][0]["constraint"],
             "不知道声音来源",
@@ -139,10 +142,16 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertIn("周正", context["era_bans"]["characters"])
         self.assertIn("负责人", context["era_bans"]["terms"])
 
-    def test_focus_library_prioritizes_serial_compulsion_and_selects_two(self):
+    def test_focus_library_always_pairs_structure_with_lived_voice(self):
         self.assertEqual(
             {item["name"] for item in CANDIDATE_FOCUSES},
-            {"causal_tension", "character_pressure", "atmospheric_precision", "serial_compulsion"},
+            {
+                "causal_tension",
+                "character_pressure",
+                "atmospheric_precision",
+                "serial_compulsion",
+                "lived_voice",
+            },
         )
         plan = {
             "chapter_number": 3,
@@ -154,6 +163,7 @@ class ContextBuilderTests(unittest.TestCase):
         selected = select_candidate_focuses(plan, 3)
         self.assertEqual(len(selected), 2)
         self.assertIn("causal_tension", {item["name"] for item in selected})
+        self.assertIn("lived_voice", {item["name"] for item in selected})
 
     def test_ambiguous_plan_rotates_focus_pair_by_chapter(self):
         plan = {"chapter_purpose": "推进", "scenes": []}
@@ -162,6 +172,7 @@ class ContextBuilderTests(unittest.TestCase):
             for number in (1, 2, 3)
         ]
         self.assertEqual(len(set(pairs)), 3)
+        self.assertTrue(all("lived_voice" in pair for pair in pairs))
 
     def test_integrated_reviewer_gets_full_draft(self):
         plan = {

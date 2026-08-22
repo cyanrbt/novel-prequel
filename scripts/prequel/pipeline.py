@@ -900,6 +900,14 @@ def _reader_quote_feedback_contract_issues(
                     and _mask_report_path(final_scope, position_path, position_sentinel)
                 ):
                     target_paths_valid = False
+            if item.get("pacing_list_field") == "pressure_turns":
+                gap_path = "pacing_diagnostics.max_pressure_gap_chars"
+                gap_sentinel = "__QUOTE_DERIVED_PRESSURE_GAP__"
+                if not (
+                    _mask_report_path(first_scope, gap_path, gap_sentinel)
+                    and _mask_report_path(final_scope, gap_path, gap_sentinel)
+                ):
+                    target_paths_valid = False
 
         # The retry may alter only the exact false-quote leaves.  Recaps,
         # reconstructions, scores, pacing, evidence findings, ordering, and
@@ -953,15 +961,21 @@ def _reader_feedback_scope_issues(
     final_scope = copy.deepcopy(final_report)
     targets: list[str] = []
     if "QUOTE" in components:
+        repairs_pressure_turn = False
         for item in diagnostic.get("repairable_quote_issues", []):
             if not isinstance(item, dict):
                 continue
             targets.append(item.get("field_path"))
+            repairs_pressure_turn = repairs_pressure_turn or (
+                item.get("pacing_list_field") == "pressure_turns"
+            )
             pacing_field = item.get("pacing_field")
             if isinstance(pacing_field, str):
                 targets.append(
                     f"pacing_diagnostics.{pacing_field}.position_percent"
                 )
+        if repairs_pressure_turn:
+            targets.append("pacing_diagnostics.max_pressure_gap_chars")
     if "FACTUAL" in components:
         factual_paths = [
             item.get("field_path")
@@ -1046,12 +1060,16 @@ def _reader_feedback_contract_issues(
     diagnostic: dict[str, Any],
     final_pacing_normalization: dict[str, Any] | None,
 ) -> list[Issue]:
-    issues = _gap_feedback_contract_issues(
-        first_report,
-        final_report,
-        diagnostic,
-        final_pacing_normalization,
-    )
+    issues = []
+    if "GAP" in set(diagnostic.get("feedback_components", [])):
+        issues.extend(
+            _gap_feedback_contract_issues(
+                first_report,
+                final_report,
+                diagnostic,
+                final_pacing_normalization,
+            )
+        )
     issues.extend(
         _reader_quote_feedback_contract_issues(
             first_report, final_report, draft, diagnostic

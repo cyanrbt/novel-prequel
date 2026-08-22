@@ -159,13 +159,18 @@ CANDIDATE_FOCUSES = (
         "name": "serial_compulsion",
         "instruction": "优先强化主动威胁、揭示变形和情绪余震；结尾要让读者惦记活人的命运，而不只是知道人物下一项调查任务。",
     },
+    {
+        "name": "lived_voice",
+        "instruction": "优先保留人物有限认知造成的声纹、跑题、改口、局部重复和暂时不回收的生活细节；不要让每句话都显露作者用途，也不得用随机错字、无动机矛盾或大段填充伪造现场感。",
+    },
 )
 
 
 FOCUS_PAIRS = (
-    ("serial_compulsion", "character_pressure"),
-    ("serial_compulsion", "causal_tension"),
-    ("serial_compulsion", "atmospheric_precision"),
+    ("serial_compulsion", "lived_voice"),
+    ("character_pressure", "lived_voice"),
+    ("causal_tension", "lived_voice"),
+    ("atmospheric_precision", "lived_voice"),
 )
 
 
@@ -188,7 +193,7 @@ def select_candidate_focuses(
         },
         ensure_ascii=False,
     )
-    groups = {
+    structural_groups = {
         "causal_tension": ("调查", "规则", "证据", "试错", "异常", "因果", "线索"),
         "character_pressure": ("关系", "人物", "争执", "对话", "利益", "亲缘", "选择"),
         "atmospheric_precision": ("空间", "声音", "气味", "黑暗", "夜", "门", "压迫", "恐惧"),
@@ -196,14 +201,14 @@ def select_candidate_focuses(
     }
     scores = {
         name: sum(rendered.count(keyword) for keyword in keywords)
-        for name, keywords in groups.items()
+        for name, keywords in structural_groups.items()
     }
     ordered = sorted(scores, key=lambda name: (-scores[name], name))
-    if scores[ordered[1]] == 0 or scores[ordered[0]] == scores[ordered[2]]:
+    if scores[ordered[0]] == 0 or scores[ordered[0]] == scores[ordered[1]]:
         selected_names = FOCUS_PAIRS[(chapter_number - 1) % len(FOCUS_PAIRS)]
         reason = "chapter_rotation"
     else:
-        selected_names = (ordered[0], ordered[1])
+        selected_names = (ordered[0], "lived_voice")
         reason = "plan_keywords"
     by_name = {item["name"]: item for item in CANDIDATE_FOCUSES}
     return tuple(
@@ -222,13 +227,47 @@ WRITER_SCENE_FIELDS = (
     "characters",
     "goal",
     "conflict",
-    "function",
-    "pressure_change",
     "irreversible_change",
-    "threat_action",
     "human_turn",
-    "payoff_type",
 )
+
+
+def _build_writer_narrative_engine(investment: dict[str, Any]) -> dict[str, Any]:
+    """Expose story intent without handing the Writer the full beat solution."""
+
+    engine = {
+        key: investment.get(key)
+        for key in (
+            "attachment_anchor",
+            "protagonist_contradiction",
+            "threat_in_motion",
+            "emotional_afterimage",
+        )
+        if investment.get(key)
+    }
+    nested_fields = {
+        "core_threat_continuation": (
+            "prior_hook",
+            "current_effect",
+            "local_answer",
+            "forced_change",
+        ),
+        "revelation_shift": (
+            "from",
+            "on_page_answer",
+            "to",
+            "changes",
+            "executed_change",
+        ),
+    }
+    for section, fields in nested_fields.items():
+        source = investment.get(section)
+        if not isinstance(source, dict):
+            continue
+        reduced = {key: source.get(key) for key in fields if source.get(key)}
+        if reduced:
+            engine[section] = reduced
+    return engine
 
 
 def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
@@ -254,7 +293,7 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
             "hook",
         )
     } | {
-        "narrative_engine": investment,
+        "narrative_engine": _build_writer_narrative_engine(investment),
         "dramatic_contract": {
             key: spine.get(key)
             for key in (
@@ -616,6 +655,12 @@ def build_writer_packet(
             "先让人物值得在乎，再让异常或选择伤到活人的身体、身份、关系或迫切愿望",
             "规则线在人物求生与犯错中抵达；不要把正文写成验证未知的实验报告",
             "张洞的理性是尚未成熟的应对方式和缺点，不是永远正确的答案",
+            "第三人称限知还要让张洞的欲望、偏见和难堪筛选观察焦点，不能只做跟拍他的摄像机",
+            "空间清楚靠一次场景锚定和关键状态变化；状态未变时不重复播报门窗、左右、步数与站位",
+            "无歧义的普通移动允许省略，精确动作留给有阻力、有误差或会付代价的瞬间",
+            "同一人物连续掌握段落焦点时自然使用代词、承前省略和句式变化，避免称谓加动作的记录体",
+            "允许少量只建立人物声纹、生活基线、社会质地或误判来源的内容，不要求每句都推动剧情或在以后回收",
+            "人物可以跑题、改口、重复和漏掉重要信息后再补充；这些偏斜必须来自有限认知，不能靠随机错字和无动机矛盾伪造",
             "每个重要揭示必须改变人物行为、关系或危险种类；只让证据更可靠的场景应压缩",
             "关键线索必须由选择、交换、对抗或损失换来，避免恰好未锁、恰好掉出、恰好无人看守",
             "结尾留下针对活人的情绪余震，不把下一项调查任务冒充追读欲",

@@ -82,9 +82,9 @@
 - `exposition_runs`：列出所有疑似连续纯解释段，每项为 `{quote, paragraph_count, approx_chars, explanation}`；引文需完整覆盖被判断的连续段；若没有则为空数组；
 - `information_only_passages`：列出所有删除后只少一点资料、却不改变当前选择、关系、危险或情绪落点的连续文字，每项为 `{quote, approx_chars, explanation}`；若没有则为空数组。
 
-`PASS` 的节奏硬门禁是：首个有效压力不晚于25%，核心威胁不晚于30%，首个高代价选择不晚于60%；相邻压力变化最大空档不超过800字，最后一次压力变化不早于85%；不得出现连续三段纯解释，也不得保留120字及以上的纯信息段。任一不满足，必须降低相应体验分并判为 `REVISE` 或 `REPLAN`。
+这些数字只用于描述节奏轮廓，不是 `PASS` 的机械门禁。25%／30%／60%、800字、85%和120字可以作为风险参照，但超出参照不自动降分或判失败。先判断相应段落是否仍在建立人物声纹、关系温度、社会质地、误判、等待压力或必要余波；只有普通读者确实会在这里失去兴趣，才降低对应体验分并引用实际弃读原因。不要为了满足数字要求把玩笑、生活细节或人物不够高效的表达虚报成压力转折。
 
-在输出 `PASS` 前，必须按所选 `pressure_turns` 引文重新检查相邻起点；不能因为正文中其实还有一次压力变化，就在没有把它列入数组时主观填报较小空档。若两个已选转折相隔超过800字，应把中间真实改变选择、关系或危险的转折补入数组；不得虚构转折或只改数字。
+在输出 `PASS` 前，仍须按所选 `pressure_turns` 引文如实计算相邻起点；不能因为正文中其实还有一次变化，就在没有列入数组时主观缩小空档。超过参考值可以保留，但不得虚构转折或只改数字，评价中应说明这段低谷为何仍可读，或它具体从哪里开始令人失去兴趣。
 
 在决定结论前，必须主动做五类反证检查，并将结果分别写入 `adversarial_checks`：
 
@@ -98,7 +98,7 @@
 
 ## 结论规则
 
-- `PASS`：目标、空间、人物与因果都可从正文自行理解，且 `mechanism_audit` 同时为 `PASS`；除可被正文诚实保留的普通解释外，没有阻断继续阅读的前置、知识、空间或复述缺口；满足全部节奏硬门禁；八项体验分均至少4，五项标杆诊断均至少4，`competitive_readiness` 必须为 `MATCH`，`evidence_payoff_mode` 不能是 `EVIDENCE_ONLY`，`would_choose_over_competent_peer` 为 true，`major_gaps` 为空，`continue_reading` 为 true 且没有弃读点或重大摩擦。`PASS` 可以诚实保留轻微摩擦和非阻断 warning，但 `blocking_issues` 与 `revision_instructions` 必须为空。
+- `PASS`：目标、空间、人物与因果都可从正文自行理解，且 `mechanism_audit` 同时为 `PASS`；除可被正文诚实保留的普通解释外，没有阻断继续阅读的前置、知识、空间或复述缺口；节奏诊断如实且没有造成实际弃读；八项体验分均至少4，五项标杆诊断均至少4，`competitive_readiness` 必须为 `MATCH`，`evidence_payoff_mode` 不能是 `EVIDENCE_ONLY`，`would_choose_over_competent_peer` 为 true，`major_gaps` 为空，`continue_reading` 为 true 且没有弃读点或重大摩擦。`PASS` 可以诚实保留轻微摩擦和非阻断 warning，但 `blocking_issues` 与 `revision_instructions` 必须为空。
 - `REVISE`：主线仍成立，但存在会令普通读者停下来发问的关键缺口。
 - `REPLAN`：目标、人物动机、场景因果或异常机制无法建立，局部修句不能解决。
 

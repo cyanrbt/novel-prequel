@@ -88,6 +88,9 @@ PACING_MILESTONE_FIELDS = {
     "first_costly_choice",
 }
 
+# Diagnostic reference bands only.  Exceeding one is not a deterministic
+# PASS failure; the blind reader must tie any downgrade to an actual reading
+# problem such as lost interest, obscured intent, or broken tension.
 PASS_PACING_LIMITS = {
     "first_active_pressure": 25.0,
     "core_threat_activation": 30.0,
@@ -534,10 +537,10 @@ def build_reader_validation_diagnostic(
     """Describe a reader report failure without changing its semantic claims.
 
     The program may correct arithmetic, but it must never invent a missing
-    pressure turn.  ``retry_eligible`` is deliberately narrow: the first report
-    must otherwise be a valid PASS.  It may have a pressure gap, precisely
-    located allowlisted quote-copy errors, or both; every other report or
-    content failure remains ineligible.
+    pressure turn. ``retry_eligible`` is deliberately narrow: the first report
+    must otherwise be a valid PASS with precisely located allowlisted
+    quote-copy errors. Pacing reference bands remain visible in diagnostics but
+    never create or expand a retry by themselves.
     """
     p1_issues = [item for item in issues if item.severity == "P1"]
     pacing = review.get("pacing_diagnostics")
@@ -596,59 +599,29 @@ def build_reader_validation_diagnostic(
     p1_codes = [item.code for item in p1_issues]
     repairable_quote_issues = _repairable_reader_quote_issues(review, draft)
     factual_escalations = _reader_factual_escalations(review, draft)
-    pacing_issue_count = p1_codes.count("READER_PASS_WITH_SLOW_PACING")
     repairable_quote_codes = [
         item["code"] for item in repairable_quote_issues
     ]
     expected_p1_codes = list(repairable_quote_codes)
     expected_p1_codes.extend(item["code"] for item in factual_escalations)
-    if pacing_issue_count == 1:
-        expected_p1_codes.append("READER_PASS_WITH_SLOW_PACING")
     quote_codes_are_allowlisted = all(
         code in RETRYABLE_READER_QUOTE_ISSUE_CODES
         for code in repairable_quote_codes
     )
-    common_pacing_checks = bool(
-        normalization.get("turns_ordered") is True
-        and not late_milestones
-        and last_turn_percent
-        >= PASS_PACING_LIMITS["last_pressure_turn_min_percent"]
-        and not long_exposition
-        and not oversized_information
-    )
-    pressure_quote_repair = any(
-        item.get("pacing_list_field") == "pressure_turns"
-        for item in repairable_quote_issues
-        if isinstance(item, dict)
-    )
-    gap_retry = bool(
-        normalization.get("over_limit_gaps")
-        and common_pacing_checks
-        and (pacing_issue_count == 1 or pressure_quote_repair)
-    )
     report_repair_present = bool(
         repairable_quote_issues or factual_escalations
-    )
-    non_gap_retry = bool(
-        pacing_issue_count == 0
-        and report_repair_present
-        and not normalization.get("over_limit_gaps")
-        and common_pacing_checks
     )
     retry_eligible = bool(
         review.get("verdict") == "PASS"
         and review.get("draft_sha256")
         == hashlib.sha256(draft.encode("utf-8")).hexdigest()
-        and pacing_issue_count in {0, 1}
         and quote_codes_are_allowlisted
         and sorted(p1_codes) == sorted(expected_p1_codes)
-        and (gap_retry or non_gap_retry)
+        and report_repair_present
     )
     feedback_kind: str | None = None
     feedback_components: list[str] = []
     if retry_eligible:
-        if gap_retry:
-            feedback_components.append("GAP")
         if repairable_quote_issues:
             feedback_components.append("QUOTE")
         if factual_escalations:
@@ -727,21 +700,9 @@ def build_blind_reader_gap_feedback_prompt(
         )
         pacing_action = "本次没有压力空档反馈，不得借机改动节奏锚点或评分。"
     else:
-        if components == {"GAP", "QUOTE"}:
-            mode = "PRESSURE_GAP_AND_QUOTE_VALIDATION_FEEDBACK"
-        elif components == {"GAP"}:
-            mode = "PRESSURE_GAP_VALIDATION_FEEDBACK"
-        else:
-            mode = "_AND_".join(sorted(components)) + "_VALIDATION_FEEDBACK"
+        mode = "_AND_".join(sorted(components)) + "_VALIDATION_FEEDBACK"
         opening = "程序只允许一次联合报告复核，修复范围以deterministic_validation为准。"
         pacing_action = ""
-        if "GAP" in components:
-            pacing_action += (
-                "请逐一检查反馈中的相邻起止引文和offset：若区间内确有真正改变人物"
-                "选择、关系或危险的转折，把它以唯一正文引文按顺序补入pressure_turns；"
-                "若没有，则必须把verdict改为REVISE并给出对应blocking_issues和"
-                "revision_instructions。"
-            )
         if "FACTUAL" in components:
             pacing_action += (
                 "只可在factual_escalations列出的精确field_path把完成态降回正文真实的"
@@ -763,10 +724,9 @@ def build_blind_reader_gap_feedback_prompt(
             "REVISE，并给出对应blocking_issues和revision_instructions。"
             "若条目code为SCENE_RETROACTIVE_POV_SOURCE，替换后的source_quote"
             "还必须出现在对应认知结论之前或与结论同句，不得继续引用事后说明。"
-            "不得只改max_pressure_gap_chars数字，不得虚构转折，不得改变draft_sha256。"
-            "修正pacing引文时必须保持原effect与原有压力行顺序，位置百分比由程序"
-            "重算；若修正后的原压力行真实落在超限空档内，它本身即可成为该空档的"
-            "有效锚点，不得为满足反馈另造转折。"
+            "不得为了接近节奏参考值虚构转折，不得改变draft_sha256。"
+            "修正pacing引文时必须保持原effect与原有压力行顺序，位置百分比和空档"
+            "由程序重算；节奏参考值本身不是本次报告修复目标。"
             "反馈不代表首报其他陈述已获程序背书，输出前必须逐项重核"
             "reader_recap、mechanism_audit.first_read_reconstruction与"
             "adversarial_checks.unsupported_recap_claims。不得把请求、声称、手持、"
@@ -1082,9 +1042,9 @@ def _validate_pacing_diagnostics(
         ):
             issues.append(
                 Issue(
-                    "READER_PASS_WITH_SLOW_PACING",
-                    "P1",
-                    "PASS必须满足威胁、选择、压力空档和解释密度门禁",
+                    "READER_PACING_REFERENCE_EXCEEDED",
+                    "P2",
+                    "节奏位置超出参考区间；仅作诊断，不得脱离实际读感否决PASS",
                     repr(
                         {
                             "late_milestones": late_milestones,

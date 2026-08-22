@@ -135,6 +135,15 @@ def repaired_reader_report(draft: str) -> str:
     return json.dumps(report, ensure_ascii=False)
 
 
+def repaired_false_boundary_quote_report(draft: str) -> str:
+    report = json.loads(reader_report_with_gap_and_false_boundary_quote(draft))
+    valid = json.loads(blind_reader_json(draft))
+    report["mechanism_audit"]["boundary_action_ledger"][0][
+        "after_quote"
+    ] = valid["mechanism_audit"]["boundary_action_ledger"][0]["after_quote"]
+    return json.dumps(report, ensure_ascii=False)
+
+
 def retroactive_source_gap_reader_draft() -> str:
     return retryable_reader_draft().replace(
         "灰正落在张洞手上。",
@@ -156,13 +165,6 @@ def repaired_gap_and_retroactive_source_report(draft: str) -> str:
     report["mechanism_audit"]["pov_source_ledger"][0][
         "source_quote"
     ] = "张洞看见门板上的灰。"
-    report["pacing_diagnostics"]["pressure_turns"].insert(
-        2,
-        {
-            "quote": "张洞把簸箕移到门边。",
-            "effect": "张洞改变处置位置并接手现场。",
-        },
-    )
     return json.dumps(report, ensure_ascii=False)
 
 
@@ -222,7 +224,7 @@ def reader_report_with_gap_and_factual_overclaim(draft: str) -> str:
 
 
 def repaired_gap_and_factual_reader_report(draft: str) -> str:
-    report = json.loads(repaired_reader_report(draft))
+    report = json.loads(reader_report_with_gap_and_factual_overclaim(draft))
     report["reader_recap"]["current_goal"] = (
         "张洞要处置门外声称银簪在包里、但尚未递入的人。"
     )
@@ -777,7 +779,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             ):
                 accept_dry_run(root, attempt=2)
 
-    def test_reader_gap_feedback_repairs_once_and_accepts_without_model_calls(self):
+    def test_reader_gap_is_diagnostic_and_accepts_without_feedback_call(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
             self._enable_final_gates(root)
@@ -801,7 +803,6 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     bound_review_json(draft),
                     reader_report_with_omitted_middle_turn(draft),
-                    repaired_reader_report(draft),
                     state_settlement_json(state, plan, draft),
                 ]
             )
@@ -817,10 +818,10 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
-            self.assertEqual(len(provider.prompts), 4)
+            self.assertEqual(len(provider.prompts), 3)
             self.assertEqual(manifest["budget"]["limit"], 5)
-            self.assertEqual(manifest["budget"]["spent"], 4)
-            self.assertEqual(manifest["budget"]["remaining"], 1)
+            self.assertEqual(manifest["budget"]["spent"], 3)
+            self.assertEqual(manifest["budget"]["remaining"], 2)
             self.assertEqual(manifest["budget"]["active"], [])
             calls = list(manifest["budget"]["calls"].values())
             self.assertEqual(
@@ -828,45 +829,25 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     "manual_semantic_reviewer",
                     "blind_reader_reviewer",
-                    "blind_reader_reviewer",
                     "state_settler",
-                ],
-            )
-            self.assertEqual(
-                [item["reason_code"] for item in calls[1:3]],
-                [
-                    "MANUAL_BLIND_READER_REVIEW",
-                    "MANUAL_BLIND_READER_GAP_FEEDBACK",
                 ],
             )
             self.assertTrue(all(item["status"] == "COMPLETED" for item in calls))
             reader_stage = manifest["stages"]["manual_blind_reader_review"]
             self.assertEqual(reader_stage["status"], "COMPLETED")
-            self.assertEqual(reader_stage["call_count"], 2)
-            expected_outputs = {
-                "reader_review.first.raw.txt",
-                "reader_review.first.canonical.json",
-                "reader_review.validation.json",
-                "reader_review.retry.raw.txt",
-                "reader_review.final.canonical.json",
-                "reader_review.json",
-            }
-            self.assertTrue(expected_outputs.issubset(reader_stage["outputs"]))
+            self.assertEqual(reader_stage["call_count"], 1)
+            self.assertNotIn("reader_review.retry.raw.txt", reader_stage["outputs"])
             diagnostic = json.loads(
                 imported.workspace.joinpath(
                     "reader_review.validation.json"
                 ).read_text(encoding="utf-8")
             )
-            self.assertTrue(diagnostic["retry_eligible"])
-            self.assertTrue(diagnostic["retry_performed"])
+            self.assertFalse(diagnostic["retry_eligible"])
+            self.assertFalse(diagnostic["retry_performed"])
             gap = diagnostic["pacing_normalization"]["over_limit_gaps"][0]
             self.assertEqual(gap["gap_chars"], 1097)
             self.assertEqual(gap["start_quote"], "门闩仍在原处。")
             self.assertEqual(gap["end_quote"], "天黑前，那层灰到了门内。")
-            self.assertIn(str(gap["start_offset"]), provider.prompts[2])
-            self.assertIn(str(gap["end_offset"]), provider.prompts[2])
-            self.assertIn('"limit": 800', provider.prompts[2])
-            self.assertIn("不得只改max_pressure_gap_chars数字", provider.prompts[2])
             first_raw = json.loads(
                 imported.workspace.joinpath(
                     "reader_review.first.raw.txt"
@@ -882,13 +863,9 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 )
             )
             self.assertEqual(final_reader["verdict"], "PASS")
-            self.assertLessEqual(
-                final_reader["pacing_diagnostics"]["max_pressure_gap_chars"],
-                800,
-            )
             self.assertEqual(
                 final_reader["pacing_diagnostics"]["max_pressure_gap_chars"],
-                550,
+                1097,
             )
             self.assertTrue(
                 imported.workspace.joinpath("state_settlement.json").exists()
@@ -926,7 +903,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     bound_review_json(draft),
                     reader_report_with_gap_and_false_boundary_quote(draft),
-                    repaired_reader_report(draft),
+                    repaired_false_boundary_quote_report(draft),
                     state_settlement_json(state, plan, draft),
                 ]
             )
@@ -943,8 +920,10 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             self.assertTrue(diagnostic["retry_performed"])
             self.assertEqual(
                 diagnostic["feedback_prompt_version"],
-                "manual-blind-reader-gap-and-quote-feedback",
+                "manual-blind-reader-quote-only-feedback",
             )
+            self.assertEqual(diagnostic["feedback_components"], ["QUOTE"])
+            self.assertEqual(diagnostic["feedback_kind"], "QUOTE_ONLY")
             self.assertEqual(
                 diagnostic["repairable_quote_issues"],
                 [
@@ -968,7 +947,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     "MANUAL_SEMANTIC_REVIEW",
                     "MANUAL_BLIND_READER_REVIEW",
-                    "MANUAL_BLIND_READER_GAP_AND_QUOTE_FEEDBACK",
+                    "MANUAL_BLIND_READER_QUOTE_ONLY_FEEDBACK",
                     "MANUAL_STATE_SETTLEMENT",
                 ],
             )
@@ -979,7 +958,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 2,
             )
             feedback_prompt = provider.prompts[2]
-            self.assertIn("PRESSURE_GAP_AND_QUOTE_VALIDATION_FEEDBACK", feedback_prompt)
+            self.assertIn("QUOTE_ONLY_VALIDATION_FEEDBACK", feedback_prompt)
             self.assertIn("BOUNDARY-001", feedback_prompt)
             self.assertIn(FALSE_BOUNDARY_QUOTE, feedback_prompt)
             self.assertIn("不得删除该条目或引文字段", feedback_prompt)
@@ -994,9 +973,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             )
             self.assertIn("已经取得、已经递入或已经证实", feedback_prompt)
             self.assertIn("不得把尚未确认身份的人称为已确认身份", feedback_prompt)
-            gap = diagnostic["pacing_normalization"]["over_limit_gaps"][0]
-            self.assertIn(str(gap["start_offset"]), feedback_prompt)
-            self.assertIn(str(gap["end_offset"]), feedback_prompt)
+            self.assertIn("本次没有压力空档反馈", feedback_prompt)
             self.assertEqual(workspace.read_json("reader_review.json")["verdict"], "PASS")
 
             class NoCallRouter:
@@ -1043,8 +1020,8 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             )
 
             diagnostic = workspace.read_json("reader_review.validation.json")
-            self.assertEqual(diagnostic["feedback_components"], ["GAP", "QUOTE"])
-            self.assertEqual(diagnostic["feedback_kind"], "GAP_AND_QUOTE")
+            self.assertEqual(diagnostic["feedback_components"], ["QUOTE"])
+            self.assertEqual(diagnostic["feedback_kind"], "QUOTE_ONLY")
             self.assertEqual(diagnostic["factual_escalations"], [])
             self.assertEqual(
                 diagnostic["repairable_quote_issues"],
@@ -1073,7 +1050,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     "MANUAL_SEMANTIC_REVIEW",
                     "MANUAL_BLIND_READER_REVIEW",
-                    "MANUAL_BLIND_READER_GAP_AND_QUOTE_FEEDBACK",
+                    "MANUAL_BLIND_READER_QUOTE_ONLY_FEEDBACK",
                     "MANUAL_STATE_SETTLEMENT",
                 ],
             )
@@ -1186,8 +1163,8 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             )
 
             diagnostic = workspace.read_json("reader_review.validation.json")
-            self.assertEqual(diagnostic["feedback_components"], ["GAP", "FACTUAL"])
-            self.assertEqual(diagnostic["feedback_kind"], "GAP_AND_FACTUAL")
+            self.assertEqual(diagnostic["feedback_components"], ["FACTUAL"])
+            self.assertEqual(diagnostic["feedback_kind"], "FACTUAL_ONLY")
             self.assertTrue(diagnostic["retry_eligible"])
             self.assertEqual(
                 [item["field_path"] for item in diagnostic["factual_escalations"]],
@@ -1202,7 +1179,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     "MANUAL_SEMANTIC_REVIEW",
                     "MANUAL_BLIND_READER_REVIEW",
-                    "MANUAL_BLIND_READER_GAP_FACTUAL_FEEDBACK",
+                    "MANUAL_BLIND_READER_FACTUAL_FEEDBACK",
                 ],
             )
             self.assertIn(
@@ -1355,8 +1332,8 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             final_report = workspace.read_json("reader_review.json")
             manifest = workspace.read_json("run_manifest.json")
             self.assertTrue(diagnostic["retry_eligible"])
-            self.assertEqual(diagnostic["feedback_components"], ["GAP", "QUOTE"])
-            self.assertEqual(diagnostic["feedback_kind"], "GAP_AND_QUOTE")
+            self.assertEqual(diagnostic["feedback_components"], ["QUOTE"])
+            self.assertEqual(diagnostic["feedback_kind"], "QUOTE_ONLY")
             self.assertEqual(
                 [item["field_path"] for item in diagnostic["repairable_quote_issues"]],
                 [
@@ -1387,11 +1364,11 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [
                     "MANUAL_SEMANTIC_REVIEW",
                     "MANUAL_BLIND_READER_REVIEW",
-                    "MANUAL_BLIND_READER_GAP_AND_QUOTE_FEEDBACK",
+                    "MANUAL_BLIND_READER_QUOTE_ONLY_FEEDBACK",
                 ],
             )
             self.assertIn("field、anchor_id或item_index", provider.prompts[2])
-            self.assertIn("它本身即可成为该空档的有效锚点", provider.prompts[2])
+            self.assertIn("节奏参考值本身不是本次报告修复目标", provider.prompts[2])
             self.assertIn("不等于已穿过边界", provider.prompts[2])
 
             class NoCallRouter:
@@ -1455,6 +1432,8 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                         "READER_QUOTE_FEEDBACK_NOT_REPAIRED",
                         "READER_GAP_FEEDBACK_REPLACED_TURNS",
                         "READER_FALSE_PRESSURE_TURN",
+                        "READER_QUOTE_FEEDBACK_SCOPE_DRIFT",
+                        "READER_FEEDBACK_SCOPE_DRIFT",
                     }
                 )
                 self.assertEqual(len(provider.prompts), 3)
@@ -1970,7 +1949,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 [item["code"] for item in final_diagnostic["p1_issues"]],
             )
 
-    def test_accept_requires_retry_when_first_reader_report_is_retry_eligible(self):
+    def test_accept_does_not_require_retry_for_pacing_reference_gap(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
             self._enable_final_gates(root)
@@ -1993,7 +1972,6 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                         [
                             bound_review_json(draft),
                             reader_report_with_omitted_middle_turn(draft),
-                            repaired_reader_report(draft),
                             state_settlement_json(state, plan, draft),
                         ]
                     )
@@ -2001,33 +1979,11 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             )
 
             diagnostic = workspace.read_json("reader_review.validation.json")
-            diagnostic["retry_performed"] = False
-            workspace.write_json("reader_review.validation.json", diagnostic)
-            manifest = workspace.read_json("run_manifest.json")
-            reader_stage = manifest["stages"]["manual_blind_reader_review"]
-            reader_stage["call_count"] = 1
-            reader_stage["outputs"].pop("reader_review.retry.raw.txt")
-            reader_stage["outputs"]["reader_review.validation.json"] = (
-                workspace.digest("reader_review.validation.json")
-            )
-            retry_call_id = next(
-                call_id
-                for call_id, record in manifest["budget"]["calls"].items()
-                if record["reason_code"] == "MANUAL_BLIND_READER_GAP_FEEDBACK"
-            )
-            del manifest["budget"]["calls"][retry_call_id]
-            manifest["budget"]["spent"] = 3
-            manifest["budget"]["remaining"] = 2
-            workspace.write_json("run_manifest.json", manifest)
-
-            with self.assertRaisesRegex(
-                ArtifactValidationError,
-                "反馈调用数与首报诊断不一致",
-            ):
-                accept_dry_run(root, attempt=2)
-            self.assertFalse(
-                (root / "novel/chapters/vol_01/chapter_001.txt").exists()
-            )
+            self.assertFalse(diagnostic["retry_eligible"])
+            self.assertFalse(diagnostic["retry_performed"])
+            self.assertTrue(diagnostic["pacing_normalization"]["over_limit_gaps"])
+            accepted = accept_dry_run(root, attempt=2)
+            self.assertTrue(accepted.promoted)
 
     def test_accept_rebuilds_canonical_reader_report_from_bound_raw_output(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -2075,7 +2031,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             ):
                 accept_dry_run(root, attempt=2)
 
-    def test_reader_gap_feedback_may_honestly_downgrade_and_stops_settlement(self):
+    def test_reader_can_still_downgrade_for_actual_pacing_harm(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
             self._enable_final_gates(root)
@@ -2090,7 +2046,6 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             provider = RecordingFakeProvider(
                 [
                     bound_review_json(draft),
-                    reader_report_with_omitted_middle_turn(draft),
                     revised_reader_report(draft),
                 ]
             )
@@ -2107,16 +2062,16 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                     encoding="utf-8"
                 )
             )
-            self.assertEqual(len(provider.prompts), 3)
-            self.assertEqual(manifest["budget"]["spent"], 3)
-            self.assertEqual(manifest["budget"]["remaining"], 2)
+            self.assertEqual(len(provider.prompts), 2)
+            self.assertEqual(manifest["budget"]["spent"], 2)
+            self.assertEqual(manifest["budget"]["remaining"], 3)
             self.assertEqual(
                 manifest["stages"]["manual_blind_reader_review"]["status"],
                 "COMPLETED",
             )
             self.assertEqual(
                 manifest["stages"]["manual_blind_reader_review"]["call_count"],
-                2,
+                1,
             )
             self.assertEqual(
                 json.loads(
@@ -2136,7 +2091,7 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
                 )
             )
 
-    def test_reader_gap_feedback_fails_closed_after_one_retry(self):
+    def test_reader_gap_does_not_consume_a_feedback_call(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
             self._enable_final_gates(root)
@@ -2148,21 +2103,26 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             draft = imported.workspace.joinpath("draft.txt").read_text(
                 encoding="utf-8"
             )
-            invalid_reader = reader_report_with_omitted_middle_turn(draft)
+            state = json.loads(
+                (root / "novel/state/current.json").read_text(encoding="utf-8")
+            )
+            plan = json.loads(
+                imported.workspace.joinpath("plan.json").read_text(encoding="utf-8")
+            )
             provider = RecordingFakeProvider(
                 [
                     bound_review_json(draft),
-                    invalid_reader,
+                    reader_report_with_omitted_middle_turn(draft),
+                    state_settlement_json(state, plan, draft),
                     blind_reader_json(draft),
                 ]
             )
 
-            with self.assertRaises(QualityGateError):
-                review_manual_candidate(
-                    root,
-                    attempt=2,
-                    router=StageModelRouter.single(provider),
-                )
+            review_manual_candidate(
+                root,
+                attempt=2,
+                router=StageModelRouter.single(provider),
+            )
 
             manifest = json.loads(
                 imported.workspace.joinpath("run_manifest.json").read_text(
@@ -2176,24 +2136,14 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             self.assertEqual(manifest["budget"]["active"], [])
             self.assertEqual(
                 manifest["stages"]["manual_blind_reader_review"]["status"],
-                "FAILED",
+                "COMPLETED",
             )
-            self.assertFalse(
-                imported.workspace.joinpath("state_settlement.json").exists()
+            self.assertEqual(
+                manifest["stages"]["manual_blind_reader_review"]["call_count"],
+                1,
             )
             self.assertTrue(
-                imported.workspace.joinpath(
-                    "reader_review.final.validation.json"
-                ).exists()
-            )
-            final_diagnostic = json.loads(
-                imported.workspace.joinpath(
-                    "reader_review.final.validation.json"
-                ).read_text(encoding="utf-8")
-            )
-            self.assertIn(
-                "READER_GAP_FEEDBACK_REPLACED_TURNS",
-                [item["code"] for item in final_diagnostic["p1_issues"]],
+                imported.workspace.joinpath("state_settlement.json").exists()
             )
 
     def test_reader_feedback_does_not_retry_any_other_p1(self):

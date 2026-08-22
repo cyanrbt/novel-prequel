@@ -285,16 +285,17 @@ class BlindReaderReviewTests(unittest.TestCase):
             0.0,
         )
 
-    def test_pass_rejects_late_core_threat(self):
+    def test_pass_reports_late_core_threat_as_nonblocking_reference(self):
         self.report["pacing_diagnostics"]["core_threat_activation"]["quote"] = "来。"
         canonicalize_pacing_diagnostics(self.report, self.draft)
         codes = {
             item.code
             for item in validate_blind_reader_review(self.report, self.draft, 1)
         }
-        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+        self.assertIn("READER_PACING_REFERENCE_EXCEEDED", codes)
+        self.assertNotIn("READER_PASS_WITH_SLOW_PACING", codes)
 
-    def test_pass_rejects_three_paragraph_exposition_run(self):
+    def test_pass_reports_three_paragraph_exposition_run_as_nonblocking_reference(self):
         self.report["pacing_diagnostics"]["exposition_runs"] = [{
             "quote": self.draft,
             "paragraph_count": 0,
@@ -306,9 +307,10 @@ class BlindReaderReviewTests(unittest.TestCase):
             item.code
             for item in validate_blind_reader_review(self.report, self.draft, 1)
         }
-        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+        self.assertIn("READER_PACING_REFERENCE_EXCEEDED", codes)
+        self.assertNotIn("READER_PASS_WITH_SLOW_PACING", codes)
 
-    def test_pass_rejects_oversized_information_only_passage(self):
+    def test_pass_reports_oversized_information_only_passage_as_nonblocking_reference(self):
         passage = "账册旧目" * 30
         self.draft = (
             "张洞要上船。\n\n舱门没有开。\n\n"
@@ -328,9 +330,10 @@ class BlindReaderReviewTests(unittest.TestCase):
             item.code
             for item in validate_blind_reader_review(self.report, self.draft, 1)
         }
-        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+        self.assertIn("READER_PACING_REFERENCE_EXCEEDED", codes)
+        self.assertNotIn("READER_PASS_WITH_SLOW_PACING", codes)
 
-    def test_pass_rejects_pressure_gap_over_800_chars(self):
+    def test_pass_reports_pressure_gap_over_800_chars_as_nonblocking_reference(self):
         passage = "旧账" * 420
         self.draft = (
             "张洞要上船。\n\n舱门没有开。\n\n"
@@ -348,7 +351,8 @@ class BlindReaderReviewTests(unittest.TestCase):
         self.assertGreater(
             self.report["pacing_diagnostics"]["max_pressure_gap_chars"], 800
         )
-        self.assertIn("READER_PASS_WITH_SLOW_PACING", codes)
+        self.assertIn("READER_PACING_REFERENCE_EXCEEDED", codes)
+        self.assertNotIn("READER_PASS_WITH_SLOW_PACING", codes)
 
     def test_report_rejects_falsified_pacing_position(self):
         self.report["pacing_diagnostics"]["first_active_pressure"][
