@@ -92,15 +92,16 @@ flowchart LR
 
 ## 当前进度
 
-当前处于开篇因果链重构基线；章号、事件、年代和已提升正文数量均以 [`novel/state/current.json`](novel/state/current.json) 与 `novel/chapters/` 的连续正式文件为准，不在 README 中维护容易失真的副本。
+正式连载已按1911年、十七岁张洞重启。当前章号、事件、年代和已提升正文以 [`novel/state/current.json`](novel/state/current.json) 与 [`novel/chapters/`](novel/chapters/) 的连续正式文件为准，不在 README 中维护容易失真的副本。撤出的旧稿见 [`novel/archive/`](novel/archive/)。
 
 ## 开始使用
 
 ### 环境要求
 
 - Python 3.10 或更高版本
-- 已安装并完成认证的 Codex CLI
 - Git
+- 默认生产路径需要已安装并完成认证的 Codex CLI
+- 可选：AGY、OpenCode 或 Grok CLI。改配置前先用 `models` 确认本机可用模型
 
 ### 获取项目
 
@@ -109,6 +110,7 @@ git clone https://github.com/cyanrbt/novel-prequel.git
 cd novel-prequel
 python3 scripts/orchestrator.py status
 python3 scripts/orchestrator.py preflight
+python3 scripts/orchestrator.py models
 ```
 
 ### 安全生成下一章
@@ -125,7 +127,7 @@ python3 scripts/orchestrator.py next --dry-run
 python3 scripts/orchestrator.py next --mode fast --dry-run
 ```
 
-快速模式最多 3 次调用（规划、单候选、集成初筛），不会自动提升。
+快速模式在盲读与状态证据门禁开启时最多 5 次调用（规划、单候选、集成初筛、盲读、状态结算），始终等待人工确认，不会自动提升。
 
 中断后可按输入和工件哈希恢复，不会重复执行已完成阶段：
 
@@ -156,17 +158,27 @@ python3 scripts/orchestrator.py next
 ### 审查、合并与恢复
 
 ```bash
+# 列出本机已安装的模型提供方
+python3 scripts/orchestrator.py models
+
 # 审查最近五章
 python3 scripts/orchestrator.py review --last 5
 
 # 为最近两章生成四维只读校准报告
 python3 scripts/orchestrator.py review --last 2 --specialists
 
+# 对已发布章节做无大纲盲读
+python3 scripts/orchestrator.py reader-review
+
 # 用 Luna 对准备交付的短片段做低成本场景预审
 python3 scripts/orchestrator.py demo-review /tmp/demo.txt
 
 # 也可从标准输入读取
 printf '待审片段' | python3 scripts/orchestrator.py demo-review - --label 对话样稿
+
+# 把手工精修稿导入可审计尝试，再走同一套语义、盲读与状态审查
+python3 scripts/orchestrator.py manual-import PATH --plan-attempt N
+python3 scripts/orchestrator.py manual-review --attempt M
 
 # 显式执行到期审计；审计使用独立的单次调用预算
 python3 scripts/orchestrator.py audit
@@ -188,9 +200,14 @@ python3 -m unittest discover -v
 
 ### 模型路由与运行状态
 
+默认生产路由使用 Codex：
+
 - Terra medium：Planner、集成初筛；Terra high：专项复核、盲读、状态结算和复杂验证。
 - Sol medium：候选正文与 Selector；Sol high：定向修订。
 - Luna high：局部差分验证与短片段交付前场景预审。
+
+引擎同时支持 AGY、OpenCode 和 Grok。先运行 `python3 scripts/orchestrator.py models`，再改 `config/prequel_config.json` 中的 `provider`、`model_profiles` 与 `stage_routes`。
+
 - `status` 会逐章核对正式正文哈希、盲读结果和累计偏好合同版本；任何正式章在审核后被手工改动，都会显示 `STALE` 并阻断下一章生成。
 - `WAITING_USER`：已有可检查工件，但自动提升条件不足。
 - `BUDGET_EXHAUSTED`：预算已封顶；可无新增调用地查看或人工比较，也可显式创建新预算运行。
@@ -243,7 +260,10 @@ novel-prequel/
     ├── knowledge/                  # 事实等级、长期索引、质量经验与创作债务
     ├── characters/                 # 人物卡
     ├── anomalies/                  # 异常设计卡
-    ├── plots/                      # 事件大纲
+    ├── plots/                      # 事件大纲与全书剧情圣经
+    ├── reviews/                    # 试读与设定审查
+    ├── benchmarks/                 # 文风标杆与 Provider 评测
+    ├── archive/                    # 撤出的旧连续性
     ├── world.md                    # 世界背景
     ├── timeline.md                 # 六卷时间线
     └── foreshadow_tracker.md       # 伏笔登记与回收
@@ -272,6 +292,7 @@ novel-prequel/
 
 - [第一卷正式章节](novel/chapters/vol_01/)
 - [连续阅读合订本](novel/full_novel.txt)
+- [全书剧情圣经](novel/plots/full_series_plot_bible.md)
 - [张洞人物卡](novel/characters/protagonist.md)
 - [事件大纲](novel/plots/)
 - [六卷时间线](novel/timeline.md)

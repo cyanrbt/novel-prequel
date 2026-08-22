@@ -110,7 +110,7 @@ Writer 并发生成两份正文
        正文章节 + 元数据 + 当前状态
 ```
 
-平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次模型调用，最大并发固定为 2；快速模式正文路径最多 3 次且必须人工确认，接受时仍须重新执行最终门禁。启动 Provider 后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。
+平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次模型调用，最大并发固定为 2；快速模式在盲读与状态证据门禁开启时最多 5 次（规划、单候选、集成初筛、盲读、状态结算），始终人工确认。启动 Provider 后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。
 
 ## 工作区与原子提升
 
@@ -200,7 +200,7 @@ python3 scripts/orchestrator.py preflight
 # 生成下一章的全部工件，但不提升正式章节
 python3 scripts/orchestrator.py next --dry-run
 
-# 三调用快速模式；始终等待人工确认
+# 五调用快速模式；始终等待人工确认
 python3 scripts/orchestrator.py next --mode fast --dry-run
 
 # 按运行清单恢复，输入或正式状态变化时拒绝复用
