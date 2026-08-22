@@ -15,7 +15,7 @@
   "judges": [
     {"id": "judge_codex_sol_xhigh", "provider": "codex_cli", "model": "gpt-5.6-sol", "effort": "xhigh"},
     {"id": "judge_agy_gemini_3_1_pro_high", "provider": "agy_cli", "model": "gemini-3.1-pro-high", "effort": "high"},
-    {"id": "judge_agy_claude_opus_4_6_thinking", "provider": "agy_cli", "model": "claude-opus-4-6-thinking", "effort": "high"},
+    {"id": "judge_codex_luna_max", "provider": "codex_cli", "model": "gpt-5.6-luna", "effort": "max", "note": "Claude 两个候选连续空响应后启用的预备评审"},
     {"id": "judge_grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh"}
   ]
 }

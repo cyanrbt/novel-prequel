@@ -1,0 +1,16 @@
+{
+  "id": "judge_codex_sol_xhigh",
+  "provider": "codex_cli",
+  "model": "gpt-5.6-sol",
+  "effort": "xhigh",
+  "prompt_sha256": "801f20d47985783afc66ac0cf868f5b74bd33f713277676bd48107cd43002211",
+  "started_at": "2026-08-22T07:29:43.160880+00:00",
+  "status": "complete",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22/judge_codex_sol_xhigh",
+  "finished_at": "2026-08-22T07:36:39.403584+00:00",
+  "elapsed_seconds": 416.243,
+  "output_sha256": "b21ee1656bfe59d3c0185f844bfdb6f5e26ee73b8b94dfaf76b2d588a2889622",
+  "output_characters": 3624,
+  "output_cjk_characters": 767
+}

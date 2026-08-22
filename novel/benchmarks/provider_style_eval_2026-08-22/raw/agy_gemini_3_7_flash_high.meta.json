@@ -1,0 +1,16 @@
+{
+  "id": "agy_gemini_3_7_flash_high",
+  "provider": "agy_cli",
+  "model": "gemini-3.7-flash-high",
+  "effort": "high",
+  "prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "started_at": "2026-08-22T07:19:20.592745+00:00",
+  "status": "complete",
+  "attempt": 2,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22/agy_gemini_3_7_flash_high",
+  "finished_at": "2026-08-22T07:22:10.008358+00:00",
+  "elapsed_seconds": 169.416,
+  "output_sha256": "9f76c3ee4ba9ac659c468200bc062877b10fb2b1871482fdd606287e0352598c",
+  "output_characters": 3730,
+  "output_cjk_characters": 3150
+}

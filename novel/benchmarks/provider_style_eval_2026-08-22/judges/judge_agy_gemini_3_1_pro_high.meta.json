@@ -1,0 +1,16 @@
+{
+  "id": "judge_agy_gemini_3_1_pro_high",
+  "provider": "agy_cli",
+  "model": "gemini-3.1-pro-high",
+  "effort": "high",
+  "prompt_sha256": "801f20d47985783afc66ac0cf868f5b74bd33f713277676bd48107cd43002211",
+  "started_at": "2026-08-22T07:30:22.187532+00:00",
+  "status": "complete",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22/judge_agy_gemini_3_1_pro_high",
+  "finished_at": "2026-08-22T07:31:48.349659+00:00",
+  "elapsed_seconds": 86.162,
+  "output_sha256": "5a0e539de4a8c9a1c1f33402430e26ddb3921a513100b22ec6389e46832ea09d",
+  "output_characters": 4455,
+  "output_cjk_characters": 1072
+}

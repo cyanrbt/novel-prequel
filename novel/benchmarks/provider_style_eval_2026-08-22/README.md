@@ -31,13 +31,20 @@
 
 ## 评审与汇总
 
-四名评审分别为 Sol xhigh、Gemini 3.1 Pro high、Claude Opus 4.6 Thinking high、Grok 4.6 xhigh。它们接收完全相同的候选顺序、评分规程和 JSON 输出要求。最终报告同时展示：
+原计划四名评审为 Sol xhigh、Gemini 3.1 Pro high、Claude Opus 4.6 Thinking high、Grok 4.6 xhigh。实际生成时 Claude Opus 与 Sonnet 在 AGY 通道各连续两次得到空响应，无法形成可评分正文；为避免同一故障使评审缺位，第四评审改用 Luna max。四名有效评审仍接收完全相同的候选顺序、评分规程和 JSON 输出要求。最终报告同时展示：
 
 1. 各维度四评审均值；
 2. 总分均值、评审离散度和前二票数；
 3. 硬伤标签分布；
 4. 按量模型是否跨过预先冻结的“明显优势”门槛；
 5. 单样本不确定性与下一步建议。
+
+结果入口：
+
+- `report.md`：机器汇总的主排名、七维均分、离散度、硬伤与按量门槛。
+- `conclusions.md`：结合评审分歧、确定性字符计数和原始正文复核后的路由建议。
+- `raw/`：实名原始正文与调用元数据；`blind/`：提交给评审的匿名副本。
+- `judges/`：四份原始评审输出、规范化 JSON 与校验记录。
 
 ## 复现命令
 
@@ -49,4 +56,4 @@ python3 scripts/provider_style_benchmark.py judge --judge <judge_id>
 python3 scripts/provider_style_benchmark.py aggregate
 ```
 
-脚本默认拒绝覆盖既有原始输出，避免不小心把一次性结果重抽。
+脚本默认拒绝覆盖既有原始输出，避免不小心把一次性结果重抽。传输失败最多允许一次技术重试，失败元数据会归档；连续两次技术失败的候选会进入排除清单，不会被伪装成低分正文。

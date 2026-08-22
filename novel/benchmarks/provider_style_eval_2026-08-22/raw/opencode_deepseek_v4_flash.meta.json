@@ -1,0 +1,16 @@
+{
+  "id": "opencode_deepseek_v4_flash",
+  "provider": "opencode_cli",
+  "model": "deepseek/deepseek-v4-flash",
+  "effort": "none",
+  "prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "started_at": "2026-08-22T07:17:10.947737+00:00",
+  "status": "complete",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22/opencode_deepseek_v4_flash",
+  "finished_at": "2026-08-22T07:18:34.732858+00:00",
+  "elapsed_seconds": 83.785,
+  "output_sha256": "f26752e278b159394ec57cdbaccb373f8ce0fb66b49ae314a1c63927ec9b84b1",
+  "output_characters": 4200,
+  "output_cjk_characters": 3449
+}

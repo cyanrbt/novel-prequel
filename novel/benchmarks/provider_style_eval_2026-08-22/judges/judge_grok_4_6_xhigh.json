@@ -1,0 +1,190 @@
+{
+  "ranking": [
+    "A",
+    "B",
+    "G",
+    "D",
+    "F",
+    "E",
+    "C"
+  ],
+  "candidates": {
+    "A": {
+      "plot_fidelity": 19,
+      "character_voice": 13,
+      "horror_pacing": 14,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 89,
+      "hard_failures": [],
+      "strengths": [
+        "必须节点齐、顺序对，杨间假说始终停在不确定。",
+        "王老师的日常逻辑和教室杂音能托住现场。",
+        "敲门、消失、死亡、压制之间有蓄力，收在逃跑指令。"
+      ],
+      "weaknesses": [
+        "通篇过顺，更像一次把提纲写满的完成稿。",
+        "腐坏与对照片的铺陈略密，节奏少毛边。",
+        "腹部连出三只手，动作信息偏满。"
+      ],
+      "reader_verdict": "可直接当连载正文读，是本组最完整也最稳的一版现场。"
+    },
+    "B": {
+      "plot_fidelity": 18,
+      "character_voice": 12,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 13,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 85,
+      "hard_failures": [],
+      "strengths": [
+        "因果和限知都守住，没有抢先给规则答案。",
+        "前门、后门、撞门抓腕一次能读懂。",
+        "篇幅克制，章末收在离开教室，不拖逃。"
+      ],
+      "weaknesses": [
+        "主要人物能分开，但口吻整体偏平。",
+        "王老师对前门敲门却开后门，理由只是顺过去。",
+        "句段整齐，少临场改口和废动作。"
+      ],
+      "reader_verdict": "合格连载章：清楚、能追，只是教室里的人还不够吵。"
+    },
+    "G": {
+      "plot_fidelity": 12,
+      "character_voice": 13,
+      "horror_pacing": 13,
+      "spatial_clarity": 7,
+      "serial_readability": 13,
+      "web_vitality": 14,
+      "anti_template": 8,
+      "total": 80,
+      "hard_failures": [
+        "missing_node",
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "口语、起哄、改口和小动作最像作者在讲事。",
+        "半信半疑转到死人，松紧靠事实而不是形容词。",
+        "周正压制失败后的命令有连载推力。"
+      ],
+      "weaknesses": [
+        "论坛被补成“数到七次”，规则答案提前落地。",
+        "黑板上前两条原则和电话里的第二起异常没有写出。",
+        "老人先在对面门口，转到本班前门的位移交代不足。"
+      ],
+      "reader_verdict": "最好读也最活，但把不该写破的计数规则写破了。"
+    },
+    "D": {
+      "plot_fidelity": 18,
+      "character_voice": 14,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 7,
+      "web_vitality": 10,
+      "anti_template": 5,
+      "total": 76,
+      "hard_failures": [],
+      "strengths": [
+        "去掉开场备注后，人物说话辨识度高。",
+        "点名册、瓶盖、发黏拉链这类废动作有效。",
+        "杨间的推断谨慎，前后门关系清楚。"
+      ],
+      "weaknesses": [
+        "正文前残留字数自检和改稿说明，无法直接上架。",
+        "方镜的未来指控偏满，几乎在替读者剧透情绪。",
+        "王老师被写成女性，增加无必要的干扰。"
+      ],
+      "reader_verdict": "现场很像人写的，开场却像没删干净的制作备注。"
+    },
+    "F": {
+      "plot_fidelity": 10,
+      "character_voice": 10,
+      "horror_pacing": 11,
+      "spatial_clarity": 4,
+      "serial_readability": 10,
+      "web_vitality": 13,
+      "anti_template": 8,
+      "total": 66,
+      "hard_failures": [
+        "missing_node",
+        "causal_reorder",
+        "spatial_error",
+        "rule_changed",
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "句子有口气，灯一盏盏灭、侧身护腹这类细节像临场记下的。",
+        "杨间自己的假说仍停在“可能”，没有写成定论。",
+        "群像慌乱比轮流喊口号自然。"
+      ],
+      "weaknesses": [
+        "王老师拉开正在敲门的前门，老人位置无法成立。",
+        "鬼域缺席，专用电话挪到死人之后，因果被改。",
+        "门开着仍按原节奏敲，死者后背还像被浸透。"
+      ],
+      "reader_verdict": "文字有活人气，门和顺序一错，恐怖因果跟着塌。"
+    },
+    "E": {
+      "plot_fidelity": 15,
+      "character_voice": 10,
+      "horror_pacing": 9,
+      "spatial_clarity": 8,
+      "serial_readability": 11,
+      "web_vitality": 8,
+      "anti_template": 4,
+      "total": 65,
+      "hard_failures": [
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "消失、死亡、撞门压制的大节点在，前后门没有写反。",
+        "进场快，章末仍有逃的推力。"
+      ],
+      "weaknesses": [
+        "杨间把“敲门即杀人”说成已证实的规律。",
+        "惨白、针尖瞳孔、困兽、灵魂战栗等套话过密。",
+        "黑板三条被改成喊“鬼”的口号腔，群像功能化。"
+      ],
+      "reader_verdict": "像一篇会喊的套路恐怖章，不像这个班正在出事。"
+    },
+    "C": {
+      "plot_fidelity": 13,
+      "character_voice": 10,
+      "horror_pacing": 10,
+      "spatial_clarity": 8,
+      "serial_readability": 10,
+      "web_vitality": 7,
+      "anti_template": 4,
+      "total": 62,
+      "hard_failures": [
+        "length_violation",
+        "rule_changed",
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "后门消失和腹部出手的大动作还能看懂。",
+        "王老师按日常经验送死这一笔没有漏。"
+      ],
+      "weaknesses": [
+        "电话前后多完成一轮敲门却不死，死亡条件被写乱。",
+        "汉字明显超出上限，腐臭与霉变感官在轮播。",
+        "叙述直接宣布“先不当真”，学生像在执行任务。"
+      ],
+      "reader_verdict": "又长又满，读着像在展示惊悚作文而不是连载现场。"
+    }
+  },
+  "overall_observations": [
+    "真正拉开分差的是限知：杨间只能根据重复敲门去赌，还是把计数/完成条件说破。",
+    "前门谁开、后门谁失踪、电话在死亡之前还是之后，比辞藻更能看出控场。",
+    "活的连载靠起哄、改口和废动作，不靠霉味、尸臭和瞳孔的轮播。",
+    "完整但过顺的完成稿，和有口气却把空间写穿的稿，会在不同维度上分别失分。",
+    "残留改稿字数备注与模板惊悚腔一样，都会让正文没法直接当连载用。"
+  ],
+  "normalizations": [
+    "recomputed_total:F"
+  ]
+}

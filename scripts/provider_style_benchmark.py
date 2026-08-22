@@ -151,6 +151,21 @@ def run_once(spec: dict[str, Any], prompt: str, output_path: Path) -> None:
         raise SystemExit(f"拒绝覆盖既有结果: {output_path}")
 
     meta_path = output_path.with_suffix(".meta.json")
+    attempt = 1
+    if meta_path.exists():
+        previous = json.loads(meta_path.read_text(encoding="utf-8"))
+        if previous.get("status") != "failed":
+            raise SystemExit(f"发现非失败状态的既有元数据，拒绝重试: {meta_path}")
+        previous_attempt = int(previous.get("attempt", 1))
+        if previous_attempt >= 2:
+            raise SystemExit(f"已发生两次技术失败，拒绝继续自动重试: {meta_path}")
+        archived_meta = output_path.with_name(
+            f"{output_path.stem}.attempt_{previous_attempt:02d}.failed.json"
+        )
+        if not archived_meta.exists():
+            write_json(archived_meta, previous)
+        attempt = previous_attempt + 1
+
     started = time.monotonic()
     meta: dict[str, Any] = {
         "id": spec["id"],
@@ -160,7 +175,7 @@ def run_once(spec: dict[str, Any], prompt: str, output_path: Path) -> None:
         "prompt_sha256": sha256_text(prompt),
         "started_at": now_iso(),
         "status": "running",
-        "attempt": 1,
+        "attempt": attempt,
         "isolated_workdir": str(isolated_dir(spec["id"])),
     }
     write_json(meta_path, meta)
@@ -213,14 +228,31 @@ def freeze_hashes() -> None:
 
 def prepare_blind() -> None:
     config = read_config()
-    candidates = list(config["candidates"])
-    missing = [
-        spec["id"]
-        for spec in candidates
-        if not (RAW_DIR / f"{spec['id']}.txt").exists()
-    ]
-    if missing:
-        raise SystemExit("以下候选尚无结果: " + ", ".join(missing))
+    candidates: list[dict[str, Any]] = []
+    excluded: list[dict[str, Any]] = []
+    for spec in config["candidates"]:
+        raw_path = RAW_DIR / f"{spec['id']}.txt"
+        if raw_path.exists():
+            candidates.append(spec)
+            continue
+        meta_path = RAW_DIR / f"{spec['id']}.meta.json"
+        meta = (
+            json.loads(meta_path.read_text(encoding="utf-8"))
+            if meta_path.exists()
+            else {}
+        )
+        if meta.get("status") != "failed" or int(meta.get("attempt", 0)) < 2:
+            raise SystemExit(f"候选尚未完成且未达到连续两次技术失败: {spec['id']}")
+        excluded.append(
+            {
+                **spec,
+                "status": "excluded_after_two_technical_failures",
+                "attempts": int(meta.get("attempt", 2)),
+                "last_error": meta.get("error", "unknown technical failure"),
+            }
+        )
+    if len(candidates) < 2:
+        raise SystemExit("有效候选不足两个，无法盲评")
 
     shuffled = list(candidates)
     random.Random(BLIND_SEED).shuffle(shuffled)
@@ -229,6 +261,7 @@ def prepare_blind() -> None:
         "seed_sha256": sha256_text(BLIND_SEED),
         "created_at": now_iso(),
         "mapping": {},
+        "excluded_candidates": excluded,
     }
     for index, spec in enumerate(shuffled):
         label = chr(ord("A") + index)
@@ -247,16 +280,21 @@ def prepare_blind() -> None:
 
 def build_judge_prompt() -> None:
     rubric = RUBRIC_PATH.read_text(encoding="utf-8").rstrip()
+    mapping_doc = json.loads(
+        (BENCHMARK_DIR / "blind_mapping.json").read_text(encoding="utf-8")
+    )
+    labels = list(mapping_doc["mapping"])
+    label_range = f"{labels[0]}—{labels[-1]}"
     parts = [
         "你是匿名中文网文试写的独立评审。以下候选均使用同一剧情要求生成，身份已隐藏。",
-        "请完整阅读 A—I 后再评分。不得猜测或讨论模型身份。严格依照评分规程，不能按个人文风偏好随意改权重。",
+        f"请完整阅读 {label_range} 后再评分。不得猜测或讨论模型身份。严格依照评分规程，不能按个人文风偏好随意改权重。",
         "\n【评分规程】\n" + rubric,
         "\n【输出要求】\n只输出一个合法 JSON 对象，不要 Markdown 代码块或其他文字。",
-        "JSON 顶层必须包含 ranking、candidates、overall_observations。ranking 是 A—I 从优到劣且不重复的数组。",
+        f"JSON 顶层必须包含 ranking、candidates、overall_observations。ranking 是 {label_range} 从优到劣且不重复的数组。",
         "candidates 的每项必须含七个整数分：plot_fidelity、character_voice、horror_pacing、spatial_clarity、serial_readability、web_vitality、anti_template；total 必须为七项之和；另含 hard_failures（只用规程标签的数组）、strengths（最多3条短句）、weaknesses（最多3条短句）、reader_verdict（一句）。",
         "overall_observations 是最多五条短句的数组，说明本组最能区分模型的现象。",
     ]
-    for label in "ABCDEFGHI":
+    for label in labels:
         candidate_path = BLIND_DIR / f"candidate_{label}.txt"
         if not candidate_path.exists():
             raise SystemExit(f"缺少盲评候选: {candidate_path}")
@@ -286,15 +324,53 @@ def extract_json(value: str) -> dict[str, Any]:
     return parsed
 
 
-def validate_judgment(value: dict[str, Any]) -> list[str]:
+def normalize_judgment(value: dict[str, Any]) -> dict[str, Any]:
+    """Normalize an unambiguous list-form candidates payload without changing scores."""
+    candidates = value.get("candidates")
+    result = dict(value)
+    normalizations: list[str] = []
+    if isinstance(candidates, list):
+        normalized: dict[str, Any] = {}
+        for entry in candidates:
+            if not isinstance(entry, dict):
+                return value
+            label = entry.get("candidate")
+            if not isinstance(label, str) or label in normalized:
+                return value
+            normalized_entry = dict(entry)
+            normalized_entry.pop("candidate", None)
+            normalized[label] = normalized_entry
+        candidates = normalized
+        result["candidates"] = normalized
+        normalizations.append("candidates_list_to_label_object")
+    if isinstance(candidates, dict):
+        for label, entry in candidates.items():
+            if not isinstance(entry, dict):
+                continue
+            scores = [entry.get(key) for key in DIMENSIONS]
+            if not all(
+                isinstance(score, (int, float)) and not isinstance(score, bool)
+                for score in scores
+            ):
+                continue
+            computed = sum(scores)
+            if entry.get("total") != computed:
+                entry["total"] = computed
+                normalizations.append(f"recomputed_total:{label}")
+    if normalizations:
+        result["normalizations"] = normalizations
+    return result
+
+
+def validate_judgment(value: dict[str, Any], labels: list[str]) -> list[str]:
     errors: list[str] = []
     ranking = value.get("ranking")
-    if not isinstance(ranking, list) or sorted(ranking) != list("ABCDEFGHI"):
-        errors.append("ranking 必须恰好包含 A-I")
+    if not isinstance(ranking, list) or sorted(ranking) != sorted(labels):
+        errors.append(f"ranking 必须恰好包含 {labels[0]}-{labels[-1]}")
     candidates = value.get("candidates")
     if not isinstance(candidates, dict):
         return errors + ["缺少 candidates 对象"]
-    for label in "ABCDEFGHI":
+    for label in labels:
         entry = candidates.get(label)
         if not isinstance(entry, dict):
             errors.append(f"缺少候选 {label}")
@@ -313,18 +389,17 @@ def validate_judgment(value: dict[str, Any]) -> list[str]:
     return errors
 
 
-def judge_once(spec: dict[str, Any]) -> None:
-    prompt_path = BENCHMARK_DIR / "judge_prompt.md"
-    if not prompt_path.exists():
-        raise SystemExit("尚未 prepare-blind")
-    prompt = prompt_path.read_text(encoding="utf-8")
+def parse_judge_output(spec: dict[str, Any], prompt: str) -> None:
     output_path = JUDGE_DIR / f"{spec['id']}.txt"
-    run_once(spec, prompt, output_path)
     raw = output_path.read_text(encoding="utf-8")
     parsed_path = JUDGE_DIR / f"{spec['id']}.json"
+    mapping_doc = json.loads(
+        (BENCHMARK_DIR / "blind_mapping.json").read_text(encoding="utf-8")
+    )
+    labels = list(mapping_doc["mapping"])
     try:
-        parsed = extract_json(raw)
-        errors = validate_judgment(parsed)
+        parsed = normalize_judgment(extract_json(raw))
+        errors = validate_judgment(parsed, labels)
     except Exception as exc:
         errors = [f"无法解析 JSON: {type(exc).__name__}: {exc}"]
         parsed = {"parse_error": errors[0]}
@@ -342,11 +417,34 @@ def judge_once(spec: dict[str, Any]) -> None:
         print(f"JUDGE VALID {spec['id']}", flush=True)
 
 
+def judge_once(spec: dict[str, Any]) -> None:
+    prompt_path = BENCHMARK_DIR / "judge_prompt.md"
+    if not prompt_path.exists():
+        raise SystemExit("尚未 prepare-blind")
+    prompt = prompt_path.read_text(encoding="utf-8")
+    output_path = JUDGE_DIR / f"{spec['id']}.txt"
+    run_once(spec, prompt, output_path)
+    parse_judge_output(spec, prompt)
+
+
+def revalidate_judges() -> None:
+    prompt_path = BENCHMARK_DIR / "judge_prompt.md"
+    if not prompt_path.exists():
+        raise SystemExit("尚未 prepare-blind")
+    prompt = prompt_path.read_text(encoding="utf-8")
+    for spec in read_config()["judges"]:
+        output_path = JUDGE_DIR / f"{spec['id']}.txt"
+        if output_path.exists():
+            parse_judge_output(spec, prompt)
+
+
 def aggregate() -> None:
     config = read_config()
-    mapping = json.loads(
+    mapping_doc = json.loads(
         (BENCHMARK_DIR / "blind_mapping.json").read_text(encoding="utf-8")
-    )["mapping"]
+    )
+    mapping = mapping_doc["mapping"]
+    excluded_candidates = mapping_doc.get("excluded_candidates", [])
     judgments: dict[str, dict[str, Any]] = {}
     invalid: dict[str, list[str]] = {}
     for spec in config["judges"]:
@@ -430,6 +528,7 @@ def aggregate() -> None:
         "generated_at": now_iso(),
         "valid_judges": list(judgments),
         "invalid_judges": invalid,
+        "excluded_candidates": excluded_candidates,
         "ranking": rows,
     }
     write_json(BENCHMARK_DIR / "aggregate.json", result)
@@ -437,7 +536,7 @@ def aggregate() -> None:
     lines = [
         "# Provider 文风盲测结果",
         "",
-        f"有效评审：{len(judgments)}/4。分数为有效评审的七维均值之和；± 为评审总分的总体标准差。",
+        f"有效评审：{len(judgments)}/{len(config['judges'])}。分数为有效评审的七维均值之和；± 为评审总分的总体标准差。",
         "",
         "| 排名 | 模型 | 强度 | 总分 | ± | 前二票 | 网络生命力 | 反模板 | 按量采用门槛 |",
         "| ---: | --- | --- | ---: | ---: | ---: | ---: | ---: | --- |",
@@ -466,6 +565,14 @@ def aggregate() -> None:
         for judge_id, errors in invalid.items():
             lines.append(f"- {judge_id}：{'；'.join(errors)}")
         lines.append("")
+    if excluded_candidates:
+        lines.extend(["## 因技术失败未进入盲评的候选", ""])
+        for candidate in excluded_candidates:
+            lines.append(
+                f"- {candidate['model']} / {candidate['effort']}：连续 "
+                f"{candidate['attempts']} 次未形成正文；{candidate['last_error']}"
+            )
+        lines.append("")
     lines.extend(
         [
             "## 解释限制",
@@ -489,6 +596,7 @@ def main() -> None:
     sub.add_parser("prepare-blind")
     judge_parser = sub.add_parser("judge")
     judge_parser.add_argument("--judge", required=True)
+    sub.add_parser("revalidate-judges")
     sub.add_parser("aggregate")
     args = parser.parse_args()
 
@@ -512,6 +620,8 @@ def main() -> None:
     elif args.command == "judge":
         spec = find_spec("judge", args.judge)
         judge_once(spec)
+    elif args.command == "revalidate-judges":
+        revalidate_judges()
     elif args.command == "aggregate":
         aggregate()
 

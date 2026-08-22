@@ -1,0 +1,182 @@
+{
+  "ranking": [
+    "B",
+    "A",
+    "G",
+    "D",
+    "C",
+    "E",
+    "F"
+  ],
+  "candidates": {
+    "A": {
+      "plot_fidelity": 19,
+      "character_voice": 13,
+      "horror_pacing": 14,
+      "spatial_clarity": 10,
+      "serial_readability": 14,
+      "web_vitality": 11,
+      "anti_template": 8,
+      "total": 89,
+      "hard_failures": [],
+      "strengths": [
+        "关键节点完整，推测保留不确定性",
+        "门窗、黑暗与压制动作清楚",
+        "人物行动因果顺畅"
+      ],
+      "weaknesses": [
+        "解释句略多",
+        "学生杂音仍有功能化痕迹",
+        "怪手描写稍显用力"
+      ],
+      "reader_verdict": "信息边界稳、场面调度清楚，已经接近可用的连载正文。"
+    },
+    "B": {
+      "plot_fidelity": 19,
+      "character_voice": 13,
+      "horror_pacing": 14,
+      "spatial_clarity": 10,
+      "serial_readability": 14,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 90,
+      "hard_failures": [],
+      "strengths": [
+        "节点覆盖完整且顺序稳定",
+        "普通学生与王老师反应自然",
+        "悬念和行动推进衔接紧"
+      ],
+      "weaknesses": [
+        "整体组织略显过于整齐",
+        "少数说明句稍满"
+      ],
+      "reader_verdict": "本组最稳健，信息、节奏和可读性之间的平衡最好。"
+    },
+    "C": {
+      "plot_fidelity": 18,
+      "character_voice": 10,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 12,
+      "web_vitality": 8,
+      "anti_template": 5,
+      "total": 75,
+      "hard_failures": [],
+      "strengths": [
+        "剧情节点基本齐全",
+        "恐怖事实递进明确",
+        "结尾动作结果交代完整"
+      ],
+      "weaknesses": [
+        "感官和程度修辞堆叠偏多",
+        "学生反应较同质化",
+        "说明腔削弱了临场感"
+      ],
+      "reader_verdict": "故事骨架合格，但语言加工痕迹较重，缺少自然杂音。"
+    },
+    "D": {
+      "plot_fidelity": 18,
+      "character_voice": 14,
+      "horror_pacing": 14,
+      "spatial_clarity": 10,
+      "serial_readability": 8,
+      "web_vitality": 12,
+      "anti_template": 2,
+      "total": 78,
+      "hard_failures": [],
+      "strengths": [
+        "正文主体的临场细节最丰富",
+        "普通教师的误判有生活逻辑",
+        "推理过程克制且清楚"
+      ],
+      "weaknesses": [
+        "开头残留明显的写作过程说明",
+        "少数细节像为补足篇幅而添加",
+        "元话语直接破坏正文沉浸"
+      ],
+      "reader_verdict": "正文主体很有现场生命力，但成稿状态被开头的过程性文字严重拖累。"
+    },
+    "E": {
+      "plot_fidelity": 16,
+      "character_voice": 10,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 12,
+      "web_vitality": 7,
+      "anti_template": 4,
+      "total": 71,
+      "hard_failures": [],
+      "strengths": [
+        "关键事件覆盖较全",
+        "黑暗侵入和压制失败有画面",
+        "结尾具备追读动力"
+      ],
+      "weaknesses": [
+        "方镜的未来信息说得过满",
+        "感官与夸张修辞过密",
+        "群像反应偏向统一惊恐"
+      ],
+      "reader_verdict": "完成度不低，但过度渲染和直接解释削弱了悬念与真实感。"
+    },
+    "F": {
+      "plot_fidelity": 12,
+      "character_voice": 11,
+      "horror_pacing": 11,
+      "spatial_clarity": 5,
+      "serial_readability": 10,
+      "web_vitality": 11,
+      "anti_template": 7,
+      "total": 67,
+      "hard_failures": [
+        "missing_node",
+        "causal_reorder",
+        "spatial_error"
+      ],
+      "strengths": [
+        "敲门节奏与观察推理清楚",
+        "临场视角较有沉浸感",
+        "压制失败的收束有效"
+      ],
+      "weaknesses": [
+        "王老师改为打开前门",
+        "周正通话被后置",
+        "缺少方镜明确指出鬼域的节点"
+      ],
+      "reader_verdict": "语言有可读性，但关键门位和事件顺序偏离，削弱了核心因果。"
+    },
+    "G": {
+      "plot_fidelity": 16,
+      "character_voice": 13,
+      "horror_pacing": 14,
+      "spatial_clarity": 10,
+      "serial_readability": 14,
+      "web_vitality": 13,
+      "anti_template": 8,
+      "total": 88,
+      "hard_failures": [
+        "knowledge_leak"
+      ],
+      "strengths": [
+        "口语和现场杂音较自然",
+        "敲门、死亡、压制递进顺畅",
+        "结尾停在有效动作点"
+      ],
+      "weaknesses": [
+        "论坛留言提前给出计数规则线索",
+        "后段假说写得过于具体",
+        "个别预知式台词略显悬浮"
+      ],
+      "reader_verdict": "临场生命力很强，但擅自补出的论坛信息越过了剧情信息边界。"
+    }
+  },
+  "overall_observations": [
+    "B、A在节点完整、因果顺序和空间调度上最稳。",
+    "G的网络生命力突出，但论坛预先透露计数规则，形成明显信息泄漏。",
+    "D正文主体的动作和人物杂音最好，却被开头的写作过程说明拖累。",
+    "C、E的恐怖事实齐全，但感官堆叠、金句化和说明腔较重。",
+    "F把王老师开前门并将周正通话后置，造成关键空间与因果偏差。"
+  ],
+  "normalizations": [
+    "candidates_list_to_label_object"
+  ]
+}

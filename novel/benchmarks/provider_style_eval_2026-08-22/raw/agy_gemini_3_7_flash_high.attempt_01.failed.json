@@ -1,0 +1,14 @@
+{
+  "id": "agy_gemini_3_7_flash_high",
+  "provider": "agy_cli",
+  "model": "gemini-3.7-flash-high",
+  "effort": "high",
+  "prompt_sha256": "57183b1e13b0b1fdd2018dab2336e0576a5acbe13e715d976bfa388428f0c4c3",
+  "started_at": "2026-08-22T07:16:35.164653+00:00",
+  "status": "failed",
+  "attempt": 1,
+  "isolated_workdir": "/tmp/novel-provider-style-eval-2026-08-22/agy_gemini_3_7_flash_high",
+  "finished_at": "2026-08-22T07:17:08.410132+00:00",
+  "elapsed_seconds": 33.246,
+  "error": "ProviderError: AGY 返回了空内容或占位内容"
+}

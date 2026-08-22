@@ -1,0 +1,93 @@
+{
+  "benchmark_id": "provider-style-eval-2026-08-22",
+  "seed_sha256": "7be0df0191fa4f84948ec3a67d169ad277690767c119e55ad47f4cf96693d8f1",
+  "created_at": "2026-08-22T07:28:24.048604+00:00",
+  "mapping": {
+    "A": {
+      "id": "codex_sol_xhigh",
+      "provider": "codex_cli",
+      "model": "gpt-5.6-sol",
+      "effort": "xhigh",
+      "metered": false,
+      "source_sha256": "57e295af7712e5fe108fdb364e6a31d0793b89e8c5ad3c43aafbf2f684525546",
+      "blind_sha256": "57e295af7712e5fe108fdb364e6a31d0793b89e8c5ad3c43aafbf2f684525546"
+    },
+    "B": {
+      "id": "codex_luna_max",
+      "provider": "codex_cli",
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "metered": false,
+      "source_sha256": "15a716e93015b6309ee7ec66ca5a77dc6689718c47d0079bf0207589b465f411",
+      "blind_sha256": "15a716e93015b6309ee7ec66ca5a77dc6689718c47d0079bf0207589b465f411"
+    },
+    "C": {
+      "id": "agy_gemini_3_1_pro_high",
+      "provider": "agy_cli",
+      "model": "gemini-3.1-pro-high",
+      "effort": "high",
+      "metered": false,
+      "source_sha256": "961efef6b2fbedc1fd72adb5fafc846202c51b77f25e6110893108a867a98686",
+      "blind_sha256": "961efef6b2fbedc1fd72adb5fafc846202c51b77f25e6110893108a867a98686"
+    },
+    "D": {
+      "id": "grok_4_6_xhigh",
+      "provider": "grok_cli",
+      "model": "grok-4.6",
+      "effort": "xhigh",
+      "metered": false,
+      "source_sha256": "953b9ad7ebb9312d7cd6eb851ceb5bad732a0fbd8e141234c508766f33fa39cd",
+      "blind_sha256": "953b9ad7ebb9312d7cd6eb851ceb5bad732a0fbd8e141234c508766f33fa39cd"
+    },
+    "E": {
+      "id": "agy_gemini_3_7_flash_high",
+      "provider": "agy_cli",
+      "model": "gemini-3.7-flash-high",
+      "effort": "high",
+      "metered": false,
+      "source_sha256": "9f76c3ee4ba9ac659c468200bc062877b10fb2b1871482fdd606287e0352598c",
+      "blind_sha256": "9f76c3ee4ba9ac659c468200bc062877b10fb2b1871482fdd606287e0352598c"
+    },
+    "F": {
+      "id": "opencode_mimo_v2_5",
+      "provider": "opencode_cli",
+      "model": "xiaomi/mimo-v2.5",
+      "effort": "none",
+      "metered": true,
+      "source_sha256": "2cd2c6ebfb1a4e17d70ee55b8917c77c777982dfdec897aacf9b5a4c0f089431",
+      "blind_sha256": "2cd2c6ebfb1a4e17d70ee55b8917c77c777982dfdec897aacf9b5a4c0f089431"
+    },
+    "G": {
+      "id": "opencode_deepseek_v4_flash",
+      "provider": "opencode_cli",
+      "model": "deepseek/deepseek-v4-flash",
+      "effort": "none",
+      "metered": true,
+      "source_sha256": "f26752e278b159394ec57cdbaccb373f8ce0fb66b49ae314a1c63927ec9b84b1",
+      "blind_sha256": "f26752e278b159394ec57cdbaccb373f8ce0fb66b49ae314a1c63927ec9b84b1"
+    }
+  },
+  "excluded_candidates": [
+    {
+      "id": "agy_claude_opus_4_6_thinking",
+      "provider": "agy_cli",
+      "model": "claude-opus-4-6-thinking",
+      "effort": "high",
+      "metered": false,
+      "status": "excluded_after_two_technical_failures",
+      "attempts": 2,
+      "last_error": "ProviderError: AGY 返回了空内容或占位内容"
+    },
+    {
+      "id": "agy_claude_sonnet_4_6_thinking",
+      "provider": "agy_cli",
+      "model": "claude-sonnet-4-6",
+      "effort": "high",
+      "metered": false,
+      "note": "AGY 当前目录无独立 thinking slug，以 high effort 调用 Sonnet 4.6",
+      "status": "excluded_after_two_technical_failures",
+      "attempts": 2,
+      "last_error": "ProviderError: AGY 返回了空内容或占位内容"
+    }
+  ]
+}

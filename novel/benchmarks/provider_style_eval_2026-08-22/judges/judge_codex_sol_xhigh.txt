@@ -1,0 +1,110 @@
+{
+  "ranking": ["A", "B", "G", "D", "C", "E", "F"],
+  "candidates": {
+    "A": {
+      "plot_fidelity": 20,
+      "character_voice": 14,
+      "horror_pacing": 14,
+      "spatial_clarity": 10,
+      "serial_readability": 14,
+      "web_vitality": 13,
+      "anti_template": 9,
+      "total": 94,
+      "hard_failures": [],
+      "strengths": ["节点完整且信息边界严谨", "群像反应自然有层次", "压制段落的动作与空间最清楚"],
+      "weaknesses": ["杨间推理段稍显工整", "部分惊惧反应略有同质化"],
+      "reader_verdict": "完成度最高，既像连载正文，又没有牺牲规则的不确定性。"
+    },
+    "B": {
+      "plot_fidelity": 19,
+      "character_voice": 13,
+      "horror_pacing": 14,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 11,
+      "anti_template": 8,
+      "total": 88,
+      "hard_failures": [],
+      "strengths": ["半信半疑到死亡的递进扎实", "杨间的判断保持了必要迟疑", "信息分配顺畅易读"],
+      "weaknesses": ["方镜台词略显生造", "老人由受制到站起的动作交代稍虚", "整体过于匀整光滑"],
+      "reader_verdict": "结构稳健、阅读阻力很低，仅在人味和动作落点上略逊于A。"
+    },
+    "G": {
+      "plot_fidelity": 11,
+      "character_voice": 13,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 12,
+      "web_vitality": 12,
+      "anti_template": 7,
+      "total": 77,
+      "hard_failures": ["knowledge_leak", "rule_changed"],
+      "strengths": ["学生现场杂音鲜活", "腐坏过程具有持续压迫感", "人物对白有口语辨识度"],
+      "weaknesses": ["论坛提前给出计数线索", "擅自补出七次敲门规则", "杨间的介入建议不够直接"],
+      "reader_verdict": "现场感很好，但新增的计数答案严重越过了冻结信息边界。"
+    },
+    "D": {
+      "plot_fidelity": 17,
+      "character_voice": 14,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 10,
+      "web_vitality": 9,
+      "anti_template": 1,
+      "total": 73,
+      "hard_failures": ["knowledge_leak"],
+      "strengths": ["正文口语肌理很强", "王老师和学生的小动作传神", "杨间的推理克制可信"],
+      "weaknesses": ["开头残留大段生成过程说明", "方镜无依据知道杨间保存了照片", "怪手数量的表述略含混"],
+      "reader_verdict": "剔除开头编辑残迹后正文很强，但成稿直接暴露生成流程是显著缺陷。"
+    },
+    "C": {
+      "plot_fidelity": 15,
+      "character_voice": 10,
+      "horror_pacing": 10,
+      "spatial_clarity": 7,
+      "serial_readability": 10,
+      "web_vitality": 7,
+      "anti_template": 4,
+      "total": 63,
+      "hard_failures": ["knowledge_leak", "spatial_error"],
+      "strengths": ["主要剧情节点齐全", "危险升级顺序基本成立", "电话警告与冒险选择衔接明确"],
+      "weaknesses": ["高强度形容和结论反复堆叠", "杨间把未证实规则说得过满", "老人未倒下却又重新站起"],
+      "reader_verdict": "故事能顺利读完，但模板化惊悚语言和动作矛盾明显削弱可信度。"
+    },
+    "E": {
+      "plot_fidelity": 12,
+      "character_voice": 9,
+      "horror_pacing": 10,
+      "spatial_clarity": 9,
+      "serial_readability": 11,
+      "web_vitality": 7,
+      "anti_template": 3,
+      "total": 61,
+      "hard_failures": ["missing_node", "knowledge_leak", "source_reconstruction_risk"],
+      "strengths": ["前后门位置与压制动作清楚", "死亡节点具有直接冲击力", "结尾悬念落点完整"],
+      "weaknesses": ["缺少周正主动报告事件的节点", "直接断言敲门就是杀人关键", "套语、极端形容和标志性措辞密集"],
+      "reader_verdict": "可读但加工痕迹浓重，规则越界与疑似复现既有句群拉低了可信度。"
+    },
+    "F": {
+      "plot_fidelity": 8,
+      "character_voice": 9,
+      "horror_pacing": 11,
+      "spatial_clarity": 4,
+      "serial_readability": 11,
+      "web_vitality": 10,
+      "anti_template": 7,
+      "total": 60,
+      "hard_failures": ["missing_node", "causal_reorder", "spatial_error", "endpoint_overrun"],
+      "strengths": ["叙述相对朴素顺畅", "杨间的假说保留了不确定性", "部分学生反应有生活感"],
+      "weaknesses": ["方镜缺失鬼域判断和未来敌意", "王老师误开前门造成严重空间冲突", "电话顺序后移且续写了学生逃跑"],
+      "reader_verdict": "语言不差，但关键节点、门的位置和场景终点同时失守，难以作为合格交稿。"
+    }
+  },
+  "overall_observations": [
+    "最明显的分水岭是杨间能否只提出假说，而不替故事公布敲门规则。",
+    "前后门位置一旦写错，会同时破坏王老师消失与周正撞门两段因果。",
+    "自然的学生杂音和无用小动作，比集中尖叫更能制造现场感。",
+    "C、E的强形容与结论式复述明显稀释恐怖，D则直接残留生成过程文字。",
+    "A、B对黑暗退去、腐坏不复原和老人重新站起的结果链处理最完整。"
+  ]
+}

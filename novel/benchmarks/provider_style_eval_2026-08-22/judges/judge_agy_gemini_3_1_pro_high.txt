@@ -1,0 +1,183 @@
+{
+  "ranking": [
+    "F",
+    "G",
+    "B",
+    "A",
+    "D",
+    "C",
+    "E"
+  ],
+  "candidates": {
+    "A": {
+      "plot_fidelity": 18,
+      "character_voice": 13,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 12,
+      "anti_template": 8,
+      "total": 87,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "剧情节点完整，因果推导自然，没有遗漏关键信息",
+        "王老师的反应符合普通人的日常逻辑",
+        "整体节奏感较好，没有明显的拖沓"
+      ],
+      "weaknesses": [
+        "部分描写略显平淡，缺乏强烈的画面感",
+        "群像反应有时显得模式化",
+        "语言仍带有一点AI生成的工整痕迹"
+      ],
+      "reader_verdict": "一篇中规中矩的连载平替，阅读流畅但缺乏惊艳感。"
+    },
+    "B": {
+      "plot_fidelity": 18,
+      "character_voice": 14,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 13,
+      "anti_template": 9,
+      "total": 90,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "人物对话自然生动，符合学生和老师的真实身份",
+        "对于‘鬼域’和恐怖氛围的刻画循序渐进",
+        "杨间的推理过程克制且符合逻辑，没有越界"
+      ],
+      "weaknesses": [
+        "个别细节描写略显冗余",
+        "周正的动作场面张力可以进一步提升"
+      ],
+      "reader_verdict": "读起来非常顺畅的网文正文，代入感很强，已经具备较高的商业写作水准。"
+    },
+    "C": {
+      "plot_fidelity": 16,
+      "character_voice": 11,
+      "horror_pacing": 11,
+      "spatial_clarity": 8,
+      "serial_readability": 11,
+      "web_vitality": 10,
+      "anti_template": 6,
+      "total": 73,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "场景的黑暗侵蚀描写具有一定的视觉冲击力",
+        "对敲门声的规律总结比较清晰"
+      ],
+      "weaknesses": [
+        "大量堆砌形容词和成语，AI感极重",
+        "人物反应过度戏剧化，显得不真实",
+        "对话缺乏生活气息，像在背诵台词"
+      ],
+      "reader_verdict": "遣词造句用力过猛，华丽的辞藻反而破坏了恐怖氛围，阅读体验不佳。"
+    },
+    "D": {
+      "plot_fidelity": 17,
+      "character_voice": 14,
+      "horror_pacing": 13,
+      "spatial_clarity": 9,
+      "serial_readability": 6,
+      "web_vitality": 11,
+      "anti_template": 4,
+      "total": 74,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "文风简练短促，非常有网络小说的粗粝感",
+        "动作与画面的衔接紧凑，节奏极快",
+        "人物语言非常接地气"
+      ],
+      "weaknesses": [
+        "正文开头遗留了模型的提示词思考过程，严重破坏沉浸感",
+        "部分场景过渡有些生硬"
+      ],
+      "reader_verdict": "如果去掉开头的AI自白，这会是一篇极具网文生命力的佳作，可惜明显的生成失误毁了整体观感。"
+    },
+    "E": {
+      "plot_fidelity": 15,
+      "character_voice": 11,
+      "horror_pacing": 10,
+      "spatial_clarity": 8,
+      "serial_readability": 12,
+      "web_vitality": 10,
+      "anti_template": 6,
+      "total": 72,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "对抗老人的动作场面描写比较有冲击力",
+        "对于腐烂和异变的视觉描写较丰富"
+      ],
+      "weaknesses": [
+        "修辞过度夸张，‘极度惊恐’等词汇频繁出现，显得廉价",
+        "周正的反应像是一个狂躁症患者，脱离了原本冷酷疲惫的设定",
+        "杨间的推理过于全知全能，缺乏摸索感"
+      ],
+      "reader_verdict": "典型的AI式惊悚文，靠堆砌恐怖词汇来吓人，缺乏真正的心理压迫感和叙事张力。"
+    },
+    "F": {
+      "plot_fidelity": 18,
+      "character_voice": 14,
+      "horror_pacing": 15,
+      "spatial_clarity": 10,
+      "serial_readability": 15,
+      "web_vitality": 15,
+      "anti_template": 10,
+      "total": 97,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "恐怖氛围的递进极其精准，‘调光旋钮’的比喻堪称神来之笔",
+        "人物动作、空间位置和因果关系交代得异常清晰",
+        "语言极其克制而冷峻，完美契合悬疑惊悚题材",
+        "杨间的推理过程严谨且严格符合限知视角"
+      ],
+      "weaknesses": [
+        "字数未达到规定区间",
+        "结尾戛然而止，略显仓促"
+      ],
+      "reader_verdict": "大师级的惊悚网文仿写，氛围感和克制力都在极高水准，可以直接作为行业标杆。"
+    },
+    "G": {
+      "plot_fidelity": 18,
+      "character_voice": 14,
+      "horror_pacing": 14,
+      "spatial_clarity": 9,
+      "serial_readability": 14,
+      "web_vitality": 13,
+      "anti_template": 9,
+      "total": 91,
+      "hard_failures": [
+        "length_violation"
+      ],
+      "strengths": [
+        "‘它在数’的推理角度独特且令人毛骨悚然，逻辑自洽",
+        "王老师的日常反应与恐怖现实形成了极佳的对比",
+        "整体叙事节奏流畅，悬念感和追读感极强"
+      ],
+      "weaknesses": [
+        "部分群像反应稍显杂乱，有抢戏之嫌",
+        "字数未达到规定区间"
+      ],
+      "reader_verdict": "推理切入点非常惊艳，日常与恐怖的交织做得恰到好处，是一篇极具潜力的优秀连载文。"
+    }
+  },
+  "overall_observations": [
+    "各模型在剧情节点的执行上普遍及格，但区分度在于‘如何推理出规则’，优秀模型能保持限知视角的探索感，而劣质模型则显得全知全能且过于笃定。",
+    "文风的差异极大，部分模型（如F、G）已经能掌握网文特有的‘克制’与‘粗粝’，而另一部分（如C、E）仍在堆砌华丽空洞的形容词以试图营造氛围。",
+    "王老师这一角色的处理是试金石，优秀模型能写出普通人基于日常经验的真实错判，劣质模型则将其写成单纯的送死NPC。",
+    "候选D出现了严重的‘思维过程泄漏’，直接将创作草稿和字数凑数逻辑写入了正文，暴露出指令遵循上的重大缺陷。",
+    "所有候选均明显未达到2800-3600字（字符）的长度要求，说明当前模型在单次输出超长文本且保持情节密度方面仍存在普遍瓶颈。"
+  ]
+}
