@@ -159,6 +159,39 @@ class ProviderTests(unittest.TestCase):
         provider = AgyCliProvider([sys.executable, "-c", source], timeout_seconds=2)
         self.assertEqual(provider.generate("prompt"), "agy response")
 
+    def test_agy_provider_aligns_cli_timeout_and_omits_claude_effort(self):
+        source = (
+            "import json,sys; "
+            "print(json.dumps({'status':'SUCCESS','response':'|'.join(sys.argv[1:])}))"
+        )
+        provider = AgyCliProvider(
+            [sys.executable, "-c", source],
+            timeout_seconds=17,
+            model="claude-opus-4-6-thinking",
+            reasoning_effort="high",
+        )
+        argv = provider.generate("prompt").split("|")
+        self.assertIn("--print-timeout", argv)
+        self.assertIn("17s", argv)
+        self.assertIn("--model", argv)
+        self.assertIn("claude-opus-4-6-thinking", argv)
+        self.assertNotIn("--effort", argv)
+
+    def test_agy_provider_keeps_gemini_effort(self):
+        source = (
+            "import json,sys; "
+            "print(json.dumps({'status':'SUCCESS','response':'|'.join(sys.argv[1:])}))"
+        )
+        provider = AgyCliProvider(
+            [sys.executable, "-c", source],
+            timeout_seconds=17,
+            model="gemini-3.1-pro-high",
+            reasoning_effort="high",
+        )
+        argv = provider.generate("prompt").split("|")
+        self.assertIn("--effort", argv)
+        self.assertIn("high", argv)
+
     def test_opencode_provider_parses_stream_json(self):
         source = "import json; print(json.dumps({'type': 'text', 'part': {'text': 'opencode output'}}))"
         provider = OpenCodeCliProvider([sys.executable, "-c", source], timeout_seconds=2)

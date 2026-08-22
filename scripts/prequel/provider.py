@@ -96,6 +96,8 @@ class AgyCliProvider:
 
     def generate(self, prompt: str, output_schema: Path | None = None) -> str:
         cmd = list(self.command)
+        if "--print-timeout" not in cmd:
+            cmd.extend(["--print-timeout", f"{self.timeout_seconds}s"])
         if self.model:
             cmd.extend(["--model", self.model])
         if self.reasoning_effort and self.reasoning_effort not in ("none", ""):
