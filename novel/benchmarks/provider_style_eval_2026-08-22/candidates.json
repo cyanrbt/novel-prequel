@@ -1,0 +1,21 @@
+{
+  "benchmark_id": "provider-style-eval-2026-08-22",
+  "generation_policy": "one_shot_no_retry_except_transport_failure",
+  "candidates": [
+    {"id": "codex_sol_xhigh", "provider": "codex_cli", "model": "gpt-5.6-sol", "effort": "xhigh", "metered": false},
+    {"id": "codex_luna_max", "provider": "codex_cli", "model": "gpt-5.6-luna", "effort": "max", "metered": false},
+    {"id": "agy_gemini_3_7_flash_high", "provider": "agy_cli", "model": "gemini-3.7-flash-high", "effort": "high", "metered": false},
+    {"id": "agy_gemini_3_1_pro_high", "provider": "agy_cli", "model": "gemini-3.1-pro-high", "effort": "high", "metered": false},
+    {"id": "agy_claude_opus_4_6_thinking", "provider": "agy_cli", "model": "claude-opus-4-6-thinking", "effort": "high", "metered": false},
+    {"id": "agy_claude_sonnet_4_6_thinking", "provider": "agy_cli", "model": "claude-sonnet-4-6", "effort": "high", "metered": false, "note": "AGY 当前目录无独立 thinking slug，以 high effort 调用 Sonnet 4.6"},
+    {"id": "grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh", "metered": false},
+    {"id": "opencode_deepseek_v4_flash", "provider": "opencode_cli", "model": "deepseek/deepseek-v4-flash", "effort": "none", "metered": true},
+    {"id": "opencode_mimo_v2_5", "provider": "opencode_cli", "model": "xiaomi/mimo-v2.5", "effort": "none", "metered": true}
+  ],
+  "judges": [
+    {"id": "judge_codex_sol_xhigh", "provider": "codex_cli", "model": "gpt-5.6-sol", "effort": "xhigh"},
+    {"id": "judge_agy_gemini_3_1_pro_high", "provider": "agy_cli", "model": "gemini-3.1-pro-high", "effort": "high"},
+    {"id": "judge_agy_claude_opus_4_6_thinking", "provider": "agy_cli", "model": "claude-opus-4-6-thinking", "effort": "high"},
+    {"id": "judge_grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh"}
+  ]
+}
