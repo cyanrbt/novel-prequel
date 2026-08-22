@@ -202,18 +202,19 @@ class ContextBuilderTests(unittest.TestCase):
         )
         self.assertEqual(packet["draft"], "完整正文")
         ledger = packet["constraint_ledger"]
+        rendered = json.dumps(packet, ensure_ascii=False)
         self.assertEqual(ledger["hard_constraints"]["chapter_number"], 1)
         self.assertEqual(
-            ledger["diagnostic_scene_model"][0]["discovery_path"],
-            "从前门进入",
+            ledger["hard_constraints"]["ordinary_explanations_remaining"],
+            [{"scene": 1, "remaining": ["有人恶作剧"]}],
         )
-        self.assertFalse(
-            ledger["audit_policy"]["diagnostic_scene_model_is_binding"]
-        )
+        self.assertNotIn("diagnostic_scene_model", ledger)
+        self.assertNotIn("discovery_path", rendered)
+        self.assertNotIn("choice_reason", rendered)
         self.assertTrue(ledger["audit_policy"]["coherent_alternatives_are_allowed"])
         self.assertEqual(ledger["audit_policy"]["quote_source"], "draft_only")
         self.assertEqual(packet["event_outline"], "事件权威规则")
-        self.assertNotIn("all_chapters", json.dumps(packet, ensure_ascii=False))
+        self.assertNotIn("all_chapters", rendered)
 
     def test_ballot_receives_story_brief_not_hidden_scene_diagnostics(self):
         plan = {

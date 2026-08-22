@@ -632,7 +632,6 @@ def build_reader_validation_diagnostic(
             else "_AND_".join(feedback_components)
         )
     return {
-        "schema_version": 2,
         "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "initial_verdict": review.get("verdict"),
         "pacing_normalization": normalization,

@@ -273,9 +273,8 @@ def _build_writer_narrative_engine(investment: dict[str, Any]) -> dict[str, Any]
 def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
     """Create the intent-level brief shown to the Writer.
 
-    The full scene ledger is deliberately retained for auditors only.  In
-    particular, discovery_path / ordinary_explanations / choice_reason would
-    otherwise tempt the Writer to turn a validation checklist into dialogue.
+    Discovery path, remaining explanations and choice reason stay in the plan
+    for Planner/auditor files; they are not copied into the Writer packet.
     """
     spine = plan.get("dramatic_spine", {})
     investment = plan.get("reader_investment", {})
@@ -321,6 +320,22 @@ def build_story_brief(plan: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _ordinary_explanations_remaining(plan: dict[str, Any]) -> list[dict[str, Any]]:
+    remaining: list[dict[str, Any]] = []
+    for index, scene in enumerate(plan.get("scenes", [])):
+        if not isinstance(scene, dict):
+            continue
+        explanations = scene.get("ordinary_explanations")
+        leftover = (
+            explanations.get("remaining")
+            if isinstance(explanations, dict)
+            else None
+        )
+        if leftover:
+            remaining.append({"scene": index + 1, "remaining": leftover})
+    return remaining
+
+
 def _build_hard_constraints(plan: dict[str, Any]) -> dict[str, Any]:
     return {
         "chapter_number": plan.get("chapter_number"),
@@ -338,35 +353,18 @@ def _build_hard_constraints(plan: dict[str, Any]) -> dict[str, Any]:
 
 
 def build_constraint_ledger(plan: dict[str, Any]) -> dict[str, Any]:
-    """Separate binding constraints from the Planner's diagnostic hypothesis.
-
-    Writers never see the exact discovery/custody choreography.  Reviewers retain
-    it to understand the Planner's causal model, but must not punish a coherent
-    alternative merely because it differs from that hidden model.
-    """
-    diagnostic_fields = (
-        "initial_state",
-        "discovery_path",
-        "ordinary_explanations",
-        "choice_reason",
-        "end_state",
+    """Give reviewers binding constraints and story targets, not scene choreography."""
+    hard_constraints = dict(_build_hard_constraints(plan))
+    hard_constraints["ordinary_explanations_remaining"] = (
+        _ordinary_explanations_remaining(plan)
     )
     return {
         "contract_version": 2,
-        "hard_constraints": _build_hard_constraints(plan),
+        "hard_constraints": hard_constraints,
         "narrative_targets": build_story_brief(plan),
-        "diagnostic_scene_model": [
-            {
-                "scene": index + 1,
-                **{key: scene.get(key) for key in diagnostic_fields},
-            }
-            for index, scene in enumerate(plan.get("scenes", []))
-            if isinstance(scene, dict)
-        ],
         "state_change_candidates": plan.get("state_changes", []),
         "operations": plan.get("operations", {}),
         "audit_policy": {
-            "diagnostic_scene_model_is_binding": False,
             "state_change_candidates_are_provisional": True,
             "coherent_alternatives_are_allowed": True,
             "narrative_target_deviation_default": "warning_or_revision",

@@ -135,7 +135,7 @@ python3 scripts/orchestrator.py next --mode fast --dry-run
 python3 scripts/orchestrator.py next --resume --dry-run
 ```
 
-恢复只复用状态哈希、工件哈希和模型路由指纹都一致的已完成阶段；中断中的调用会作为已花费失败调用结算。`--resume` 不增加原预算，也不会突破清单记录的调用上限。旧流程的 `REPLAN` 工作区显示为只读，不能按新版预算恢复。
+恢复只复用状态哈希、工件哈希和模型路由指纹都一致的已完成阶段；中断中的调用会作为已花费失败调用结算。`--resume` 不增加原预算，也不会突破清单记录的调用上限。
 
 检查工作区中的规划、正文与审查报告后，提升最近一次通过的尝试：
 
@@ -223,17 +223,13 @@ python3 scripts/orchestrator.py next --dry-run --mode balanced
 
 最终摘要中的“实际墙钟耗时”是用户真实等待时间；“并发调用耗时合计”是所有模型调用时长相加，因两个任务可以并发，后者可能明显大于前者。
 
-获批的十次试运行必须逐次由用户启动。至少五次可轮换使用 `--shadow-review`，最后只读汇总：
+批量汇总 dry-run 清单：
 
 ```bash
-python3 scripts/benchmark_pipeline.py \
-  --manifest novel/work/chapter_NNN/attempt_01/run_manifest.json \
-  --manifest PATH_02 --manifest PATH_03 --manifest PATH_04 --manifest PATH_05 \
-  --manifest PATH_06 --manifest PATH_07 --manifest PATH_08 --manifest PATH_09 \
-  --manifest PATH_10
+python3 scripts/benchmark_pipeline.py --manifest PATH_01 --manifest PATH_02
 ```
 
-汇总脚本不会启动模型；影子专项仍占用单章既有预算，不能突破两次专项或 12 次总上限。
+该脚本不启动模型；`--shadow-review` 仍占用单章既有预算，不能突破两次专项或 12 次总上限。
 
 ## 项目结构
 

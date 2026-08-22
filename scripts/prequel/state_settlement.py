@@ -295,7 +295,6 @@ def build_state_settlement_validation_diagnostic(
         and bool(evidence)
     )
     return {
-        "schema_version": 1,
         "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "initial_verdict": settlement.get("verdict"),
         "p1_issues": [

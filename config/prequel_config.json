@@ -110,10 +110,10 @@
   "volume_structure": [
     {"volume": 1, "name": "门外", "entry_event": "event_1", "entry_event_name": "第一卷·门外", "estimated_chapters": [55, 70], "years": "1911-1914", "exit_milestone": "M1-CITY-EXIT"},
     {"volume": 2, "name": "无主信", "entry_event": "event_2", "entry_event_name": "第二卷·无主信", "estimated_chapters": [75, 95], "years": "1914-1927", "exit_milestone": "M2-COOPERATION-ANCHOR"},
-    {"volume": 3, "name": "不同的门", "entry_event": "event_3", "entry_event_name": "第三卷·不同的门", "estimated_chapters": [110, 135], "years": "1928-1937", "exit_milestone": "M3-SEVEN-FORMED"},
+    {"volume": 3, "name": "不同的门", "entry_event": "event_3", "entry_event_name": "第三卷·不同的门", "estimated_chapters": [105, 130], "years": "1928-1937", "exit_milestone": "M3-SEVEN-FORMED"},
     {"volume": 4, "name": "无人守得住", "entry_event": "event_7", "entry_event_name": "第四卷·无人守得住", "estimated_chapters": [90, 115], "years": "1937-1945", "exit_milestone": "M4-SYSTEM-FAILURE"},
-    {"volume": 5, "name": "留给后来人", "entry_event": "event_8", "entry_event_name": "第五卷·留给后来人", "estimated_chapters": [75, 105], "years": "1945-1955", "exit_milestone": "M5-FINAL-SEAL"},
-    {"volume": 6, "name": "守到后来", "entry_event": "event_9", "entry_event_name": "第六卷·守到后来", "estimated_chapters": [35, 60], "years": "1950年代至杨间时代", "exit_milestone": "M6-CANON-HANDOFF"}
+    {"volume": 5, "name": "留给后来人", "entry_event": "event_8", "entry_event_name": "第五卷·留给后来人", "estimated_chapters": [75, 100], "years": "1945-1953", "exit_milestone": "M5-FINAL-SEAL"},
+    {"volume": 6, "name": "守到后来", "entry_event": "event_9", "entry_event_name": "第六卷·守到后来", "estimated_chapters": [45, 65], "years": "1954年至杨间时代", "exit_milestone": "M6-CANON-HANDOFF"}
   ],
 
   "world_reveal_layers": [

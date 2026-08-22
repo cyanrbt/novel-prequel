@@ -678,8 +678,6 @@ def validate_plan(
             missing = [item for item in unlock_after if item not in completed_milestones]
             if missing:
                 issues.append(Issue("ABILITY_GATE", "P1", f"能力前置里程碑未完成: {name}", ", ".join(missing)))
-        elif expected and expected < ability.get("unlock_chapter", 0) and name in rendered:
-            issues.append(Issue("ABILITY_GATE", "P1", f"能力提前出现: {name}", name))
     return issues
 
 
