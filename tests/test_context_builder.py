@@ -164,6 +164,11 @@ class ContextBuilderTests(unittest.TestCase):
         self.assertEqual(len(selected), 2)
         self.assertIn("causal_tension", {item["name"] for item in selected})
         self.assertIn("lived_voice", {item["name"] for item in selected})
+        lived_voice = next(
+            item for item in selected if item["name"] == "lived_voice"
+        )
+        self.assertIn("转述清单", lived_voice["instruction"])
+        self.assertIn("关键声音直接呈现", lived_voice["instruction"])
 
     def test_ambiguous_plan_rotates_focus_pair_by_chapter(self):
         plan = {"chapter_purpose": "推进", "scenes": []}
