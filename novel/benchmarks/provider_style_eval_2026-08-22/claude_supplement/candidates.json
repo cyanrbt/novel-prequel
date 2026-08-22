@@ -1,0 +1,21 @@
+{
+  "benchmark_id": "provider-style-eval-2026-08-22-claude-supplement",
+  "generation_policy": "reuse_seven_and_one_shot_two_claude_after_provider_fix",
+  "candidates": [
+    {"id": "codex_sol_xhigh", "provider": "codex_cli", "model": "gpt-5.6-sol", "effort": "xhigh", "metered": false, "source": "reused_base_output"},
+    {"id": "codex_luna_max", "provider": "codex_cli", "model": "gpt-5.6-luna", "effort": "max", "metered": false, "source": "reused_base_output"},
+    {"id": "agy_gemini_3_7_flash_high", "provider": "agy_cli", "model": "gemini-3.7-flash-high", "effort": "high", "metered": false, "source": "reused_base_output"},
+    {"id": "agy_gemini_3_1_pro_high", "provider": "agy_cli", "model": "gemini-3.1-pro-high", "effort": "high", "metered": false, "source": "reused_base_output"},
+    {"id": "agy_claude_opus_4_6_thinking", "provider": "agy_cli", "model": "claude-opus-4-6-thinking", "effort": "none", "metered": false, "source": "generated_after_b2d8fca"},
+    {"id": "agy_claude_sonnet_4_6_thinking", "provider": "agy_cli", "model": "claude-sonnet-4-6", "effort": "none", "metered": false, "source": "generated_after_b2d8fca"},
+    {"id": "grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh", "metered": false, "source": "reused_base_output"},
+    {"id": "opencode_deepseek_v4_flash", "provider": "opencode_cli", "model": "deepseek/deepseek-v4-flash", "effort": "none", "metered": true, "source": "reused_base_output"},
+    {"id": "opencode_mimo_v2_5", "provider": "opencode_cli", "model": "xiaomi/mimo-v2.5", "effort": "none", "metered": true, "source": "reused_base_output"}
+  ],
+  "judges": [
+    {"id": "judge_codex_sol_xhigh", "provider": "codex_cli", "model": "gpt-5.6-sol", "effort": "xhigh"},
+    {"id": "judge_agy_gemini_3_1_pro_high", "provider": "agy_cli", "model": "gemini-3.1-pro-high", "effort": "high"},
+    {"id": "judge_codex_luna_max", "provider": "codex_cli", "model": "gpt-5.6-luna", "effort": "max"},
+    {"id": "judge_grok_4_6_xhigh", "provider": "grok_cli", "model": "grok-4.6", "effort": "xhigh"}
+  ]
+}
