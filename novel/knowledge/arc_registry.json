@@ -2,7 +2,7 @@
   "schema": "novel-arc-registry",
   "authority": "series_architecture.md",
   "milestones": {
-    "M1-DUAL-EXPOSURE": {"volume": 1, "meaning": "门外身份重演与棺下影在张洞右臂留下互扰残余，使他形成稳定但粗糙的被动差异；家庭完整性被打破但不要求父母同时死亡"},
+    "M1-DUAL-EXPOSURE": {"volume": 1, "meaning": "门外身份重演与棺下影在张洞右臂留下互扰的初始残余，使他形成稳定但粗糙的被动差异；二者是首次沉寂样本与成长接口，不是成熟能力材料清单；家庭完整性被打破但不要求父母同时死亡"},
     "M1B-PATH-RECORD": {"volume": 1, "after": ["M1-DUAL-EXPOSURE"], "meaning": "张洞通过多个活人行动样本，把记录重点从痕迹改为被迫选择与触发顺序"},
     "M1-CITY-EXIT": {"volume": 1, "after": ["M1B-PATH-RECORD"], "meaning": "张洞主动离开大汉市，寻找不依赖固定守位者的限制方法"},
     "M2-ACTIVE-PRICE": {"volume": 2, "after": ["M1-CITY-EXIT"], "meaning": "张洞第一次主动让异常进入自身，短暂抹去一段灵异作用并承受不可逆侵蚀；该能力不是鬼域"},
@@ -12,7 +12,7 @@
     "M3-SEVEN-FORMED": {"volume": 3, "after": ["M3-PAPER-BIRTH"], "meaning": "七人围绕同一错门作用链第一次按否决边界共同限制异常，并在弘法寺门后关押鬼眼原主人、制造新的看守节点"},
     "M4-SYSTEM-FAILURE": {"volume": 4, "after": ["M3-SEVEN-FORMED", "M3-PAPER-BIRTH"], "meaning": "固定体系无法同时保护移动人群与旧节点；人皮纸提供真实但隐去代价归属的生路，核心牺牲使团队路线分裂"},
     "M4-LATE-SON": {"volume": 4, "after": ["M3-SEVEN-FORMED"], "meaning": "1942年张羡光出生；晚年得子改变张洞对后世风险的私人理解"},
-    "M5-BALANCE-LOCK": {"volume": 5, "after": ["M4-SYSTEM-FAILURE"], "meaning": "张洞把右臂两种残余锁成长期互相死机，复苏趋稳且活人阶段灵异续命被排斥；活人寿命终止后才进入尸体复苏"},
+    "M5-BALANCE-LOCK": {"volume": 5, "after": ["M4-SYSTEM-FAILURE"], "meaning": "张洞把最早两种残余造成的已知内部失衡锁成长期死机，说明他没有因复苏早夭且仍衰老、不返青；不解释成熟能力全部拼图与异常寿数，活人生命终止后才进入尸体复苏"},
     "M5-FINAL-SEAL": {"volume": 5, "after": ["M5-BALANCE-LOCK"], "meaning": "七人把身份重演、棺下影与无主交接拆入古宅有限房间、老林埋藏层与邮局无名房间；每个节点都有触发、维护、拒绝转移和失效信号"},
     "M5-PAPER-ESCAPE": {"volume": 5, "after": ["M4-SYSTEM-FAILURE", "M3-PAPER-BIRTH"], "meaning": "贺永安拒绝成为长期载体；七人切断人皮纸与当时拼图的联系，却因何小满使用一条真实救人信息而让本体逃出"},
     "M6-SYSTEM-DECAY": {"volume": 6, "after": ["M5-FINAL-SEAL", "M5-PAPER-ESCAPE", "M4-LATE-SON"], "meaning": "最后一个无人接班的位置随成员退出不断接收新缺口，现代灵异复苏来自可追踪的累计失效"},
