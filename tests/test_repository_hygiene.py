@@ -32,7 +32,7 @@ class RepositoryHygieneTests(unittest.TestCase):
 
     def test_codex_sqlite_runtime_stays_in_ignored_work_area(self):
         config = json.loads(
-            (ROOT / "config/prequel_config.json").read_text(encoding="utf-8")
+            (ROOT / "config/execution.example.json").read_text(encoding="utf-8")
         )
         command = config["provider"]["command"]
         index = command.index("--config")
@@ -44,11 +44,23 @@ class RepositoryHygieneTests(unittest.TestCase):
             self.is_ignored("novel/work/.codex-runtime/state.sqlite")
         )
 
+    def test_core_config_does_not_select_an_agent_or_model(self):
+        config = json.loads(
+            (ROOT / "config/prequel_config.json").read_text(encoding="utf-8")
+        )
+        for key in ("provider", "model_profiles", "stage_routes"):
+            self.assertNotIn(key, config)
+        self.assertTrue(self.is_ignored("config/execution.json"))
+
     def test_operational_files_use_stable_identifiers(self):
         paths = (
             "README.md",
+            "WORKFLOW.md",
             "init.md",
             "config/prequel_config.json",
+            "config/execution.example.json",
+            "schemas/task_envelope.schema.json",
+            "schemas/agent_result.schema.json",
             "schemas/state.schema.json",
             "scripts/prequel/state_store.py",
             "scripts/prequel/pipeline.py",
@@ -80,7 +92,12 @@ class RepositoryHygieneTests(unittest.TestCase):
 
     def test_readme_documents_quality_evolution_commands(self):
         text = (ROOT / "README.md").read_text(encoding="utf-8")
-        for command in ("next --resume", "accept --candidate", "audit --arc"):
+        for command in (
+            "workflow-check",
+            "next --resume",
+            "accept --candidate",
+            "audit --arc",
+        ):
             self.assertIn(command, text)
 
     def test_engine_manual_links_to_quality_design(self):

@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "agent_result.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "task_id", "status", "input_fingerprint", "artifact", "error"],
+  "properties": {
+    "protocol": {"const": "prequel-result/1"},
+    "task_id": {"type": "string", "minLength": 1},
+    "status": {"enum": ["COMPLETED", "BLOCKED", "FAILED"]},
+    "input_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "artifact": {},
+    "error": {"type": ["string", "null"]}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"status": {"const": "COMPLETED"}}},
+      "then": {"properties": {"error": {"type": "null"}}}
+    },
+    {
+      "if": {"properties": {"status": {"enum": ["BLOCKED", "FAILED"]}}},
+      "then": {"properties": {"error": {"type": "string", "minLength": 1}}}
+    }
+  ]
+}

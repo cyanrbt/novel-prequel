@@ -1,6 +1,6 @@
 # 《神秘复苏前传：张洞传》创作引擎
 
-本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。项目采用质量优先的里程碑结构，目标约500章、自然完结区间440—580章，同时保持设定、时间、人物能力与叙事声音连续。
+本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。执行平台无关的统一入口是根目录 [`WORKFLOW.md`](WORKFLOW.md)；本手册描述任何 Agent 都必须遵守的领域状态机。项目采用质量优先的里程碑结构，目标约500章、自然完结区间440—580章，同时保持设定、时间、人物能力与叙事声音连续。
 
 ## 核心原则
 
@@ -110,7 +110,7 @@ Writer 并发生成两份正文
        正文章节 + 元数据 + 当前状态
 ```
 
-平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次模型调用，最大并发固定为 2；快速模式在盲读与状态证据门禁开启时最多 5 次（规划、单候选、集成初筛、盲读、状态结算），始终人工确认。启动 Provider 后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。
+平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次 Agent 执行，最大并发固定为 2；快速模式在盲读与状态证据门禁开启时最多 5 次（规划、单候选、集成初筛、盲读、状态结算），始终人工确认。任务开始执行后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。sub-agent、线程池和顺序执行都必须使用相同任务与工件协议。
 
 ## 工作区与原子提升
 
@@ -197,6 +197,9 @@ python3 scripts/orchestrator.py status
 # 执行完整写作前检查
 python3 scripts/orchestrator.py preflight
 
+# 检查平台无关工作流和任务/结果协议
+python3 scripts/orchestrator.py workflow-check
+
 # 生成下一章的全部工件，但不提升正式章节
 python3 scripts/orchestrator.py next --dry-run
 
@@ -230,6 +233,8 @@ python3 scripts/orchestrator.py recover
 # 运行全部自动测试
 python3 -m unittest discover -v
 ```
+
+`preflight` 默认只检查领域状态与正式审核绑定，不要求任何 Agent CLI；只有旧 CLI 兼容管线使用 `preflight --backend`。
 
 ## 故障恢复
 

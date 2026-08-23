@@ -23,6 +23,7 @@ from scripts.prequel.pipeline import (
     formal_review_binding_status,
     import_manual_candidate,
     load_config,
+    load_execution_config,
     merge_formal_chapters,
     review_manual_candidate,
     run_preflight,
@@ -49,6 +50,7 @@ from scripts.prequel.scene_audit import (
 )
 from scripts.prequel.state_store import atomic_save_json, atomic_save_text, load_state
 from scripts.prequel.taste_contract import load_taste_contract
+from scripts.prequel.prompt_native import validate_prompt_native_project
 
 
 STATE_FILE = PROJECT_ROOT / "novel/state/current.json"
@@ -151,7 +153,15 @@ def command_status(args) -> int:
 
 
 def command_preflight(args) -> int:
-    for check in run_preflight(PROJECT_ROOT, check_cli_capabilities=True):
+    for check in run_preflight(
+        PROJECT_ROOT, check_cli_capabilities=getattr(args, "backend", False)
+    ):
+        print(f"[OK] {check}")
+    return 0
+
+
+def command_workflow_check(args) -> int:
+    for check in validate_prompt_native_project(PROJECT_ROOT):
         print(f"[OK] {check}")
     return 0
 
@@ -199,7 +209,7 @@ def command_review(args) -> int:
         failed = failed or not result["passed"]
         previous.append(path.read_text(encoding="utf-8"))
         if args.specialists:
-            config = load_config(PROJECT_ROOT)
+            config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
             router = StageModelRouter.from_config(config, PROJECT_ROOT)
             draft = path.read_text(encoding="utf-8")
             reviews = {}
@@ -380,7 +390,7 @@ def command_audit(args) -> int:
     through = state["chapter"]["last_chapter"]
     if through < 1:
         raise StateValidationError("没有可审计的正式章节")
-    config = load_config(PROJECT_ROOT)
+    config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
     runner = AuditRunner(
         PROJECT_ROOT, StageModelRouter.from_config(config, PROJECT_ROOT)
     )
@@ -399,7 +409,7 @@ def command_reader_review(args) -> int:
     if chapter not in by_number:
         raise StateValidationError(f"正式章节不存在: 第{chapter}章")
     draft = by_number[chapter].read_text(encoding="utf-8")
-    config = load_config(PROJECT_ROOT)
+    config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
     router = StageModelRouter.from_config(config, PROJECT_ROOT)
     packet = build_blind_reader_packet(state, chapter, draft, PROJECT_ROOT)
     raw = router.provider_for("blind_reader_reviewer").generate(
@@ -453,7 +463,7 @@ def command_demo_review(args) -> int:
         artifact_label=source_label,
         prior_reader_facts=prior_reader_facts,
     )
-    config = load_config(PROJECT_ROOT)
+    config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
     raw = StageModelRouter.from_config(config, PROJECT_ROOT).provider_for(
         "demo_scene_reviewer"
     ).generate(
@@ -542,7 +552,7 @@ def command_models(args) -> int:
             efforts_str = ", ".join(m.supported_efforts) if m.supported_efforts else "none"
             print(f"    - {m.slug:<32} {m.display_name}{default_tag}")
             print(f"      思考强度: [{efforts_str}]")
-    print("\n提示: 可直接在 config/prequel_config.json 中的 model_profiles 和 stage_routes 中引用上述模型。")
+    print("\n提示: 将模型映射写入本地 config/execution.json；核心创作配置不绑定执行后端。")
     return 0
 
 
@@ -561,7 +571,17 @@ def build_parser() -> argparse.ArgumentParser:
     status.set_defaults(handler=command_status)
 
     preflight = sub.add_parser("preflight", help="写作前完整预检")
+    preflight.add_argument(
+        "--backend",
+        action="store_true",
+        help="同时检查可选 config/execution.json 与本地 Agent CLI 能力",
+    )
     preflight.set_defaults(handler=command_preflight)
+
+    workflow_check = sub.add_parser(
+        "workflow-check", help="检查平台无关工作流与任务/结果协议"
+    )
+    workflow_check.set_defaults(handler=command_workflow_check)
 
     models_parser = sub.add_parser("models", aliases=["discover"], help="自发现已安装 AI Agent 的模型与思考强度")
     models_parser.add_argument("--provider", choices=("codex_cli", "agy_cli", "opencode_cli", "grok_cli"), help="指定要自发现的 Provider 类型")

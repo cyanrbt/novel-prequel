@@ -1,0 +1,20 @@
+{
+  "protocol": "prequel-task/1",
+  "task_id": "protocol-smoke-reviewer",
+  "stage": "protocol_smoke_test",
+  "role_file": "agents/reviewer.md",
+  "instruction": "验证示例输入并返回给定的结构化结果；不得读取或修改正式小说文件。",
+  "inputs": {
+    "sample": "平台无关任务协议"
+  },
+  "input_fingerprint": "f267cc2accaa4316d08b9cd10be0fe9a82e8eb3e59700dae5b5bed1b99b15182",
+  "output_contract": {
+    "format": "json",
+    "schema": "schemas/agent_result.schema.json"
+  },
+  "capabilities": {
+    "filesystem": "read",
+    "subagents": "optional",
+    "structured_output": "preferred"
+  }
+}

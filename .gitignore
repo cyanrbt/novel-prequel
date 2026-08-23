@@ -7,4 +7,5 @@ __pycache__/
 .local-reference/
 novel/work/
 novel/state/current.json.bak
+config/execution.json
 shenmifushu.txt
