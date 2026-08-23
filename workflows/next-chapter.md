@@ -2,7 +2,7 @@
 
 ## 前置条件
 
-先完整执行 [`status-check.md`](status-check.md)。只有结果为 `READY` 才能继续。
+先完整执行 [`status-check.md`](status-check.md)。只有结果为 `READY`，且 `reference_voice_profile.md` 的 `calibration_status` 为 `READY`，才能继续。
 
 ## 任务图
 
@@ -12,6 +12,7 @@
    - 输出必须符合 `schemas/plan.schema.json`。
 2. **Writer 候选**
    - 每个执行者读取 `agents/writer.md`。
+   - 每个执行者接收已校准的 `reference_voice_profile.md`，不接收未筛选的参考原文、完整审查规则或旧式模仿锚点。
    - 候选之间不得相互读取结果。
    - 支持 sub-agent 时可以并行；否则顺序生成，但输入必须冻结且一致。
    - 只输出正文，不读写项目文件。

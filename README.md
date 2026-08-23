@@ -15,6 +15,7 @@
 | 能力 | 作用 |
 |---|---|
 | 质量进化分工 | Planner 先建立读者投入引擎与戏剧脊柱，再维护完整约束账本；Writer 只读取面向故事的精简简报，Reviewer 使用完整账本审计 |
+| 文风校准 | Prose Director 用同一事实场景生成三种独立改写，Reference Style Reviewer 相对盲评，最终由用户盲选更新正向文风画像 |
 | 单一真相源 | 当前章号、人物、时间、伏笔和已知规则集中在一个状态文件中 |
 | 事务式写作 | 章节、元数据和状态同步提升；任一步骤失败都不改变正式内容 |
 | 多层质量门禁 | 四维计分后执行无大纲盲读，并以头部同类机制校准人物依恋、主动威胁、主角独特性、揭示变形、情绪余震和真实续读偏好 |
@@ -115,6 +116,12 @@ python3 scripts/orchestrator.py preflight
 
 也可以直接让当前 Agent 阅读 `WORKFLOW.md` 并执行 `status-check`。支持 sub-agent 时并行委派，不支持时按相同协议顺序执行。
 
+当前正向文风画像仍处于 `CALIBRATING`。继续新章节前，先执行不修改正式正文的校准流程：
+
+```text
+阅读 WORKFLOW.md，执行 style-calibration 工作流；冻结第1章关键场景，生成三份匿名候选并停在用户盲选。
+```
+
 ### 安全生成下一章
 
 通用模式下，告诉当前 Agent：
@@ -122,6 +129,8 @@ python3 scripts/orchestrator.py preflight
 ```text
 阅读 WORKFLOW.md，执行 next-chapter 工作流；先停在所有前置条件都通过的安全边界。
 ```
+
+只有 `novel/style/reference_voice_profile.md` 已经通过至少一轮用户盲选并标记为 `READY`，才能开始下一章。完整比较契约见 [`schemas/style_comparison.schema.json`](schemas/style_comparison.schema.json)。
 
 以下命令属于可选的旧 CLI 兼容管线。先准备仅在本机生效的执行配置：
 

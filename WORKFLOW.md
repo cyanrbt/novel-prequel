@@ -48,6 +48,7 @@
 ## 可执行工作流
 
 - [`workflows/status-check.md`](workflows/status-check.md)：只读检查项目是否可以继续。
+- [`workflows/style-calibration.md`](workflows/style-calibration.md)：用三候选盲选校准正向文风画像，不修改正式正文。
 - [`workflows/next-chapter.md`](workflows/next-chapter.md)：规划、生成、审查下一章并停在安全边界。
 - [`workflows/accept-candidate.md`](workflows/accept-candidate.md)：重新验证并提升已通过的候选。
 - [`workflows/protocol-smoke-test.md`](workflows/protocol-smoke-test.md)：不调用外部 Agent、不修改正式内容的协议冒烟测试。

@@ -24,6 +24,7 @@ from scripts.prequel.pipeline import (
     import_manual_candidate,
     load_config,
     load_execution_config,
+    load_voice_profile_status,
     merge_formal_chapters,
     review_manual_candidate,
     run_preflight,
@@ -106,6 +107,7 @@ def command_status(args) -> int:
     chapter = state["chapter"]
     config = load_config(PROJECT_ROOT)
     binding = formal_review_binding_status(PROJECT_ROOT, state, config)
+    voice_status = load_voice_profile_status(PROJECT_ROOT, config)
     print("《神秘复苏前传》创作状态")
     print(f"状态: {state['machine_state']}")
     if binding["status"] == "VALID":
@@ -119,6 +121,10 @@ def command_status(args) -> int:
         print(f"正式稿审核绑定: STALE / {binding.get('reason')}")
     print(f"当前事件: {chapter['current_event_name']} / {chapter['current_phase']}")
     print(f"时间地点: {state['timeline']['current_year']}年 / {state['protagonist']['location']}")
+    if voice_status is not None:
+        print(f"正向文风画像: {voice_status}")
+        if voice_status == "CALIBRATING":
+            print("安全下一步: 执行 style-calibration，完成第1章场景盲选")
     chapter_work = PROJECT_ROOT / "novel/work" / f"chapter_{chapter['next_chapter']:03d}"
     for attempt in sorted(chapter_work.glob("attempt_*"), reverse=True):
         manifest = attempt / "run_manifest.json"

@@ -61,6 +61,7 @@ class RepositoryHygieneTests(unittest.TestCase):
             "config/execution.example.json",
             "schemas/task_envelope.schema.json",
             "schemas/agent_result.schema.json",
+            "schemas/style_comparison.schema.json",
             "schemas/state.schema.json",
             "scripts/prequel/state_store.py",
             "scripts/prequel/pipeline.py",
@@ -69,6 +70,10 @@ class RepositoryHygieneTests(unittest.TestCase):
             "novel/knowledge/README.md",
             "novel/rules/rulebook.md",
             "novel/style/compact_style.yaml",
+            "novel/style/reference_voice_profile.md",
+            "agents/prose_director.md",
+            "agents/reference_style_reviewer.md",
+            "workflows/style-calibration.md",
         )
         numbered_label = re.compile(r"\b" + chr(118) + r"\d+(?:\.\d+)*\b", re.I)
         retired_schema_key = "schema" + "_" + "version"

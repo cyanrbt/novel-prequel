@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.prequel.errors import ArtifactValidationError
+from scripts.prequel.errors import ArtifactValidationError, QualityGateError
 from scripts.prequel.pipeline import run_preflight
 from scripts.prequel.prompt_native import (
     validate_agent_result,
@@ -55,9 +55,17 @@ class PromptNativeWorkflowTests(unittest.TestCase):
                 "scripts.prequel.pipeline.formal_review_binding_status",
                 return_value={"status": "VALID"},
             ),
+            patch(
+                "scripts.prequel.pipeline.load_voice_profile_status",
+                return_value="READY",
+            ),
         ):
             checks = run_preflight(ROOT, check_cli_capabilities=False)
         self.assertIn("agent-agnostic story config loaded", checks)
+
+    def test_preflight_blocks_next_chapter_while_voice_is_calibrating(self):
+        with self.assertRaisesRegex(QualityGateError, "文风画像仍在校准"):
+            run_preflight(ROOT, check_cli_capabilities=False)
 
 
 if __name__ == "__main__":

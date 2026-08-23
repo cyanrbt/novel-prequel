@@ -13,11 +13,16 @@ EXECUTION_KEYS = {"provider", "model_profiles", "stage_routes"}
 REQUIRED_PROTOCOL_FILES = (
     "WORKFLOW.md",
     "workflows/status-check.md",
+    "workflows/style-calibration.md",
     "workflows/next-chapter.md",
     "workflows/accept-candidate.md",
     "workflows/protocol-smoke-test.md",
     "schemas/task_envelope.schema.json",
     "schemas/agent_result.schema.json",
+    "schemas/style_comparison.schema.json",
+    "agents/prose_director.md",
+    "agents/reference_style_reviewer.md",
+    "novel/style/reference_voice_profile.md",
     "tests/fixtures/prompt_native_task.json",
     "tests/fixtures/prompt_native_result.json",
     "config/execution.example.json",
@@ -151,10 +156,40 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
     for schema_path in (
         "schemas/task_envelope.schema.json",
         "schemas/agent_result.schema.json",
+        "schemas/style_comparison.schema.json",
     ):
         schema = _read_object(root / schema_path)
         if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
             raise ArtifactValidationError(f"协议 Schema 版本无效: {schema_path}")
+
+    style_schema = _read_object(root / "schemas/style_comparison.schema.json")
+    if style_schema.get("properties", {}).get("schema", {}).get("const") != (
+        "novel-style-comparison"
+    ):
+        raise ArtifactValidationError("文风比较 Schema 标识无效")
+    ranking = style_schema.get("properties", {}).get("ranking", {})
+    if ranking.get("minItems") != 3 or not ranking.get("uniqueItems"):
+        raise ArtifactValidationError("文风比较必须对三个不同候选排序")
+
+    profile = (root / "novel/style/reference_voice_profile.md").read_text(
+        encoding="utf-8"
+    )
+    for marker in (
+        "schema: novel-reference-voice-profile",
+        "## 八项正向原则",
+    ):
+        if marker not in profile:
+            raise ArtifactValidationError(f"正向文风画像缺少标记: {marker}")
+    if not re.search(r"(?m)^calibration_status: (?:CALIBRATING|READY)$", profile):
+        raise ArtifactValidationError("正向文风画像校准状态无效")
+    agent_paths = core_config.get("agents", {})
+    expected_agents = {
+        "prose_director": "agents/prose_director.md",
+        "reference_style_reviewer": "agents/reference_style_reviewer.md",
+    }
+    for name, path in expected_agents.items():
+        if agent_paths.get(name) != path:
+            raise ArtifactValidationError(f"核心配置缺少文风角色: {name}")
 
     task = _read_object(root / "tests/fixtures/prompt_native_task.json")
     result = _read_object(root / "tests/fixtures/prompt_native_result.json")
@@ -163,6 +198,7 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
         "core story config is execution-backend agnostic",
         "optional execution backend example validated",
         "protocol schemas loaded",
+        "style calibration workflow and positive voice profile loaded",
     ]
     checks.extend(validate_task_envelope(root, task))
     checks.extend(validate_agent_result(task, result))

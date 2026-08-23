@@ -80,6 +80,29 @@ def load_config(project_root: Path) -> dict[str, Any]:
     return value
 
 
+def load_voice_profile_status(
+    project_root: Path, core_config: dict[str, Any] | None = None
+) -> str | None:
+    """Return the prompt-native voice calibration state when configured."""
+    config = core_config if core_config is not None else load_config(project_root)
+    relative = config.get("key_files", {}).get("reference_voice_profile")
+    if relative is None:
+        return None
+    if not isinstance(relative, str) or not relative.strip():
+        raise ArtifactValidationError("正向文风画像路径无效")
+    path = project_root / relative
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ArtifactValidationError(f"无法读取正向文风画像: {exc}") from exc
+    match = re.search(
+        r"(?m)^calibration_status: (CALIBRATING|READY)$", text
+    )
+    if match is None:
+        raise ArtifactValidationError("正向文风画像缺少有效 calibration_status")
+    return match.group(1)
+
+
 def load_execution_config(
     project_root: Path, core_config: dict[str, Any] | None = None
 ) -> dict[str, Any]:
@@ -320,6 +343,14 @@ def run_preflight(
     checks.append("agent-agnostic story config loaded")
     load_taste_contract(project_root)
     checks.append("cumulative user taste contract validated")
+    voice_status = load_voice_profile_status(project_root, config)
+    if voice_status is not None:
+        if voice_status != "READY":
+            raise QualityGateError(
+                "正向文风画像仍在校准；先执行 workflows/style-calibration.md "
+                "并完成用户盲选"
+            )
+        checks.append("positive voice profile calibrated by user blind selection")
     if check_cli_capabilities:
         from .cli_capabilities import (
             discover_capabilities,

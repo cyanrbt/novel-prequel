@@ -20,6 +20,7 @@
     "state": "novel/state/current.json",
     "rulebook": "novel/rules/rulebook.md",
     "compact_style": "novel/style/compact_style.yaml",
+    "reference_voice_profile": "novel/style/reference_voice_profile.md",
     "user_taste_contract": "novel/style/user_taste_contract.json",
     "style_anchors": "novel/style/style_anchors.txt",
     "series_architecture": "novel/plots/series_architecture.md",
@@ -37,6 +38,8 @@
   "agents": {
     "planner": "agents/planner.md",
     "writer": "agents/writer.md",
+    "prose_director": "agents/prose_director.md",
+    "reference_style_reviewer": "agents/reference_style_reviewer.md",
     "reviewer": "agents/reviewer.md",
     "blind_reader_reviewer": "agents/reader_reviewer.md",
     "state_settler": "agents/state_settler.md"
