@@ -4,17 +4,18 @@
 
 # 《神秘复苏前传：张洞传》
 
-一个由 Planner、Writer 与 Reviewer 协作驱动的长篇小说创作系统，也是一部以张洞为主角、持续更新中的非官方前传故事。
+一个由 Planner、Writer 与 Reviewer 协作驱动、可由任意 Agent 执行的长篇小说创作系统，也是一部以张洞为主角、持续更新中的非官方前传故事。
 
 > 从一座封着疑棺的旧祠堂开始，沿着鬼邮局、民国驭鬼者与七老留下的痕迹，写完一条从辛亥前后延伸至杨间时代的灵异时间线。
 
 ## 项目概览
 
-这个仓库同时包含可运行的创作引擎和正式连载正文。系统将“规划、写作、审查”拆成三个独立角色，由 Python 编排器控制状态、上下文和文件写入，避免未通过审查的草稿污染正式章节。
+这个仓库同时包含可运行的创作协议和正式连载正文。系统将“规划、写作、审查”拆成独立角色，由平台无关的 Markdown/JSON 工作流约束状态、上下文和文件写入；Python 只保留为可选的确定性校验与旧 CLI 兼容工具。
 
 | 能力 | 作用 |
 |---|---|
 | 质量进化分工 | Planner 先建立读者投入引擎与戏剧脊柱，再维护完整约束账本；Writer 只读取面向故事的精简简报，Reviewer 使用完整账本审计 |
+| 文风校准 | Prose Director 用同一事实场景生成三种独立改写，Reference Style Reviewer 相对盲评，最终由用户盲选更新正向文风画像 |
 | 单一真相源 | 当前章号、人物、时间、伏笔和已知规则集中在一个状态文件中 |
 | 事务式写作 | 章节、元数据和状态同步提升；任一步骤失败都不改变正式内容 |
 | 多层质量门禁 | 四维计分后执行无大纲盲读，并以头部同类机制校准人物依恋、主动威胁、主角独特性、揭示变形、情绪余震和真实续读偏好 |
@@ -28,7 +29,7 @@
 
 ```mermaid
 flowchart LR
-    U[创作指令] --> O[Python 编排器]
+    U[创作指令] --> O[主 Agent / 通用工作流]
     O --> P[Planner 规划]
     P --> W[Writer 两候选并发]
     W --> R[集成初筛并发]
@@ -47,7 +48,7 @@ flowchart LR
 
 默认平衡模式把 Planner、盲读者和状态结算器在内的所有模型调用限制为最多 12 次：两候选和两次集成初筛构成 5 次基础路径，专项复核最多两次，只有分差接近时才调用一次 Selector，修订与验证必须成对预留且最多一次；最终盲读与状态结算各预留一次。失败、超时和无效输出一旦启动 Provider 都计入预算；系统不做无条件补写或外层重新规划。
 
-完整的状态机、文件契约与恢复方式见 [创作引擎手册](init.md)。
+任意 Agent 的统一入口见 [通用 Agent 工作流](WORKFLOW.md)；完整的状态机、文件契约与恢复方式见 [创作引擎手册](init.md)。
 
 ## 故事世界
 
@@ -98,22 +99,46 @@ flowchart LR
 
 ### 环境要求
 
-- Python 3.10 或更高版本
 - Git
-- 默认生产路径需要已安装并完成认证的 Codex CLI
-- 可选：AGY、OpenCode 或 Grok CLI。改配置前先用 `models` 确认本机可用模型
+- 任意能够读取仓库文件并遵循 Markdown/JSON 契约的 Agent
+- 可选：Python 3.10+，用于确定性校验、事务安全和旧 CLI 兼容管线
+- 可选：Codex、AGY、OpenCode 或 Grok CLI；通用工作流不要求安装其中任何一个
 
 ### 获取项目
 
 ```bash
 git clone https://github.com/cyanrbt/novel-prequel.git
 cd novel-prequel
+python3 scripts/orchestrator.py workflow-check
 python3 scripts/orchestrator.py status
 python3 scripts/orchestrator.py preflight
-python3 scripts/orchestrator.py models
+```
+
+也可以直接让当前 Agent 阅读 `WORKFLOW.md` 并执行 `status-check`。支持 sub-agent 时并行委派，不支持时按相同协议顺序执行。
+
+当前正向文风画像仍处于 `CALIBRATING`。继续新章节前，先执行不修改正式正文的校准流程：
+
+```text
+阅读 WORKFLOW.md，执行 style-calibration 工作流；冻结第1章关键场景，生成三份匿名候选并停在用户盲选。
 ```
 
 ### 安全生成下一章
+
+通用模式下，告诉当前 Agent：
+
+```text
+阅读 WORKFLOW.md，执行 next-chapter 工作流；先停在所有前置条件都通过的安全边界。
+```
+
+只有 `novel/style/reference_voice_profile.md` 已经通过至少一轮用户盲选并标记为 `READY`，才能开始下一章。完整比较契约见 [`schemas/style_comparison.schema.json`](schemas/style_comparison.schema.json)。
+
+以下命令属于可选的旧 CLI 兼容管线。先准备仅在本机生效的执行配置：
+
+```bash
+cp config/execution.example.json config/execution.json
+python3 scripts/orchestrator.py preflight --backend
+python3 scripts/orchestrator.py models
+```
 
 先使用 dry-run 生成完整工件，不修改正式章节：
 
@@ -198,15 +223,17 @@ python3 -m unittest discover -v
 
 章节晋级只在 `decision.json` 标记 `audits_due`，不会自动调用审计模型。
 
-### 模型路由与运行状态
+### 可选执行后端与运行状态
 
-默认生产路由使用 Codex：
+核心创作配置不包含 Agent、CLI 或模型名称。`config/execution.example.json` 只是旧 CLI 后端示例；复制为被 Git 忽略的 `config/execution.json` 后可以按本机能力修改。
+
+示例路由使用 Codex：
 
 - Terra medium：Planner、集成初筛；Terra high：专项复核、盲读、状态结算和复杂验证。
 - Sol medium：候选正文与 Selector；Sol high：定向修订。
 - Luna high：局部差分验证与短片段交付前场景预审。
 
-引擎同时支持 AGY、OpenCode 和 Grok。先运行 `python3 scripts/orchestrator.py models`，再改 `config/prequel_config.json` 中的 `provider`、`model_profiles` 与 `stage_routes`。
+兼容引擎同时支持 AGY、OpenCode 和 Grok。先运行 `python3 scripts/orchestrator.py models`，再改本地 `config/execution.json` 中的 `provider`、`model_profiles` 与 `stage_routes`。通用工作流不读取这些字段。
 
 - `status` 会逐章核对正式正文哈希、盲读结果和累计偏好合同版本；任何正式章在审核后被手工改动，都会显示 `STALE` 并阻断下一章生成。
 - `WAITING_USER`：已有可检查工件，但自动提升条件不足。

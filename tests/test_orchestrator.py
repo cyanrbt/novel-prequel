@@ -78,6 +78,7 @@ class OrchestratorFormattingTests(unittest.TestCase):
                 patch("scripts.orchestrator.load_state", return_value={}),
                 patch("scripts.orchestrator.formal_chapter_paths", return_value=[chapter_path]),
                 patch("scripts.orchestrator.load_config", return_value={}),
+                patch("scripts.orchestrator.load_execution_config", return_value={}),
                 patch("scripts.orchestrator.StageModelRouter.from_config", return_value=Router()),
                 patch("scripts.orchestrator.build_blind_reader_packet", return_value={}) as build_packet,
                 patch("scripts.orchestrator.build_blind_reader_prompt", return_value="prompt"),

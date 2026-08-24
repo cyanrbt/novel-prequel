@@ -80,6 +80,62 @@ def load_config(project_root: Path) -> dict[str, Any]:
     return value
 
 
+def load_voice_profile_status(
+    project_root: Path, core_config: dict[str, Any] | None = None
+) -> str | None:
+    """Return the prompt-native voice calibration state when configured."""
+    config = core_config if core_config is not None else load_config(project_root)
+    relative = config.get("key_files", {}).get("reference_voice_profile")
+    if relative is None:
+        return None
+    if not isinstance(relative, str) or not relative.strip():
+        raise ArtifactValidationError("正向文风画像路径无效")
+    path = project_root / relative
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ArtifactValidationError(f"无法读取正向文风画像: {exc}") from exc
+    match = re.search(
+        r"(?m)^calibration_status: (CALIBRATING|READY)$", text
+    )
+    if match is None:
+        raise ArtifactValidationError("正向文风画像缺少有效 calibration_status")
+    return match.group(1)
+
+
+def load_execution_config(
+    project_root: Path, core_config: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    """Load an optional local execution backend without coupling story config to it.
+
+    Inline execution keys remain supported for older fixtures and local configs, but
+    the repository's canonical config intentionally contains story semantics only.
+    """
+    core = core_config if core_config is not None else load_config(project_root)
+    execution_keys = {"provider", "model_profiles", "stage_routes"}
+    if execution_keys & set(core):
+        return core
+    path = project_root / "config/execution.json"
+    if not path.is_file():
+        raise ArtifactValidationError(
+            "未配置可执行 Agent 后端；通用工作流请读取 WORKFLOW.md，"
+            "旧 CLI 管线请复制 config/execution.example.json 为 "
+            "config/execution.json"
+        )
+    try:
+        execution = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise ArtifactValidationError(f"执行后端配置无效: {exc}") from exc
+    if not isinstance(execution, dict):
+        raise ArtifactValidationError("执行后端配置根节点必须是object")
+    missing = sorted(execution_keys - set(execution))
+    if missing:
+        raise ArtifactValidationError(
+            "执行后端配置缺少字段: " + ", ".join(missing)
+        )
+    return {**core, **execution}
+
+
 def parse_json_artifact(raw: str, name: str) -> dict[str, Any]:
     text = raw.strip()
     if text.startswith("```"):
@@ -275,6 +331,7 @@ def run_preflight(
     state: dict[str, Any] | None = None,
     *,
     check_cli_capabilities: bool = False,
+    require_voice_ready: bool = True,
 ) -> list[str]:
     checks: list[str] = []
     state = state or load_state(project_root / "novel/state/current.json")
@@ -284,8 +341,7 @@ def run_preflight(
     checks.append("state schema validated")
 
     config = load_config(project_root)
-    router = StageModelRouter.from_config(config, project_root)
-    checks.append("model provider and stage routes configured")
+    checks.append("agent-agnostic story config loaded")
     load_taste_contract(project_root)
     checks.append("cumulative user taste contract validated")
     if check_cli_capabilities:
@@ -294,8 +350,10 @@ def run_preflight(
             validate_requested_routes,
         )
 
-        provider_type = config.get("provider", {}).get("type", "codex_cli")
-        command = config.get("provider", {}).get("command", [])
+        execution_config = load_execution_config(project_root, config)
+        router = StageModelRouter.from_config(execution_config, project_root)
+        provider_type = execution_config.get("provider", {}).get("type", "codex_cli")
+        command = execution_config.get("provider", {}).get("command", [])
         executable = command[0] if isinstance(command, list) and command else None
 
         requested = {
@@ -303,7 +361,7 @@ def run_preflight(
                 router.settings_for(stage).model,
                 router.settings_for(stage).reasoning_effort,
             )
-            for stage in sorted(config.get("stage_routes", {}))
+            for stage in sorted(execution_config.get("stage_routes", {}))
         }
 
         try:
@@ -394,6 +452,17 @@ def run_preflight(
             "正式正文审核绑定已过期: " + str(binding.get("reason", "unknown"))
         )
     checks.append("latest formal chapter review hash and taste contract are bound")
+    voice_status = load_voice_profile_status(project_root, config)
+    if voice_status is not None:
+        if require_voice_ready and voice_status != "READY":
+            raise QualityGateError(
+                "正向文风画像仍在校准；先执行 workflows/style-calibration.md "
+                "并完成用户盲选"
+            )
+        if voice_status == "READY":
+            checks.append("positive voice profile calibrated by user blind selection")
+        else:
+            checks.append(f"positive voice profile status validated: {voice_status}")
     checks.append(f"next chapter: {state['chapter']['next_chapter']}")
     return checks
 
@@ -1372,7 +1441,9 @@ def review_manual_candidate(
         state, plan, draft, static_review, planner_context
     )
     input_hash = fingerprint(packet)
-    active_router = router or StageModelRouter.from_config(config, project_root)
+    active_router = router or StageModelRouter.from_config(
+        load_execution_config(project_root, config), project_root
+    )
     caller = ModelCallExecutor(active_router, manifest, progress)
     metadata = _manual_review_metadata(
         active_router,
@@ -2536,7 +2607,7 @@ def _write_temp(target: Path, content: bytes) -> Path:
 
 def merge_formal_chapters(project_root: Path) -> tuple[Path, int]:
     """Build a continuous reading copy from the exact contiguous formal chapter set."""
-    run_preflight(project_root)
+    run_preflight(project_root, require_voice_ready=False)
     paths = formal_chapter_paths(project_root)
     target = project_root / "novel/full_novel.txt"
     # Formal chapter sources retain blank lines for convenient editing. The public
@@ -2767,7 +2838,9 @@ def accept_dry_run(
                 raise ArtifactValidationError(
                     "手工导入尝试缺少有效盲读绑定；accept禁止现场调用模型"
                 )
-            router = StageModelRouter.from_config(acceptance_config, project_root)
+            router = StageModelRouter.from_config(
+                load_execution_config(project_root, acceptance_config), project_root
+            )
             raw = router.provider_for("blind_reader_reviewer").generate(
                 build_blind_reader_prompt(
                     project_root,
@@ -2838,7 +2911,7 @@ def accept_dry_run(
                     "手工导入尝试缺少有效状态结算绑定；accept禁止现场调用模型"
                 )
             router = router or StageModelRouter.from_config(
-                acceptance_config, project_root
+                load_execution_config(project_root, acceptance_config), project_root
             )
             settlement_raw = router.provider_for("state_settler").generate(
                 build_state_settlement_prompt(
@@ -3086,6 +3159,7 @@ class WritingPipeline:
             self.provider = provider
             self.router = StageModelRouter.single(provider)
         else:
+            self.config = load_execution_config(self.project_root, self.config)
             self.provider = provider_from_config(self.config, self.project_root)
             self.router = StageModelRouter.from_config(self.config, self.project_root)
 

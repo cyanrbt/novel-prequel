@@ -122,20 +122,35 @@ class ContextBuilderTests(unittest.TestCase):
             project_root=Path.cwd(),
         )
         sources = packet["authoritative_context"]
-        self.assertIn("schema: novel-prequel-style", sources["style"])
+        self.assertIn(
+            "schema: novel-reference-voice-profile", packet["voice_profile"]
+        )
         self.assertEqual(sources["protagonist_runtime_profile"], self.state["protagonist"])
         self.assertIn("张洞", sources["character_voice_fallbacks"])
         self.assertEqual(
             packet["user_taste_contract"]["schema"],
             "novel-user-taste-contract",
         )
-        self.assertIn("TASTE-POV-001", sources["user_taste_contract"])
+        self.assertNotIn("user_taste_contract", sources)
+        self.assertIn(
+            "TASTE-POV-001",
+            json.dumps(packet["user_taste_contract"], ensure_ascii=False),
+        )
         self.assertTrue(sources["recent_prose"][0].endswith("旧章结尾"))
         self.assertNotIn("style_anchors", sources)
         anchor_trace = next(
             item for item in packet["context_trace"] if item["label"] == "style_anchors"
         )
         self.assertFalse(anchor_trace["included"])
+        for label in (
+            "compact_style",
+            "user_taste_contract_duplicate",
+            "rulebook",
+        ):
+            excluded = next(
+                item for item in packet["context_trace"] if item["label"] == label
+            )
+            self.assertFalse(excluded["included"])
 
     def test_planner_receives_era_bans(self):
         context = build_planner_context(Path.cwd(), self.state)

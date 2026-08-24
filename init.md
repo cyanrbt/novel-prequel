@@ -1,12 +1,12 @@
 # 《神秘复苏前传：张洞传》创作引擎
 
-本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。项目采用质量优先的里程碑结构，目标约500章、自然完结区间440—580章，同时保持设定、时间、人物能力与叙事声音连续。
+本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。执行平台无关的统一入口是根目录 [`WORKFLOW.md`](WORKFLOW.md)；本手册描述任何 Agent 都必须遵守的领域状态机。项目采用质量优先的里程碑结构，目标约500章、自然完结区间440—580章，同时保持设定、时间、人物能力与叙事声音连续。
 
 ## 核心原则
 
 1. **状态唯一**：当前章号、时间、人物、伏笔和已揭示规则只写入 `novel/state/current.json`。
 2. **规则唯一**：正文约束只认 `novel/rules/rulebook.md`。
-3. **风格唯一**：运行参数使用 `novel/style/compact_style.yaml`；`style_anchors.txt` 只有完成人工逐段核准后才允许进入运行上下文。
+3. **风格分层**：Writer 使用经用户盲选校准的 `novel/style/reference_voice_profile.md`；`compact_style.yaml` 与未核准的 `style_anchors.txt` 只供审查和追溯，不直接注入正文生成。
 4. **偏好累计**：用户明确确认或否定的视角、空间、反应、对白与命名要求写入 `novel/style/user_taste_contract.json`，同时进入 Planner、Writer 和 Reviewer；新意见不得覆盖旧意见。
 5. **职责分离**：Planner 维护完整 Constraint Ledger；Writer 只读取精简 Story Brief；Reviewer 使用完整账本审计，Selector 只做匿名比较。
 6. **失败隔离**：未通过门禁的内容只保存在工作区，不修改正式章节和当前状态。
@@ -18,7 +18,8 @@
 |---|---|---|
 | `novel/state/current.json` | 当前创作状态 | 正式章节通过后 |
 | `novel/rules/rulebook.md` | 创作与发布约束 | 规则确认后 |
-| `novel/style/compact_style.yaml` | 运行时风格参数 | 风格策略调整时 |
+| `novel/style/reference_voice_profile.md` | Writer 使用的正向文风画像与校准状态 | 用户完成候选盲选后 |
+| `novel/style/compact_style.yaml` | 完整风格审查参数 | 风格策略调整时 |
 | `novel/style/user_taste_contract.json` | 用户累计验收合同与可确定性检查 | 用户明确确认或否定创作方式时 |
 | `novel/style/style_anchors.txt` | 民国语境示例 | 经人工确认后 |
 | `novel/knowledge/canon_registry.json` | 事实等级与年代禁入项 | 设定核验后 |
@@ -42,10 +43,17 @@
 
 ### Writer
 
-- 读取精简故事简报、硬约束、规则、风格参数和受控上下文，不读取场景验证路径、普通解释清单或预设对话推理过程。
+- 读取精简故事简报、硬约束、正向文风画像和受控上下文，不读取全量审查规则、场景验证路径、普通解释清单或预设对话推理过程。
 - 输出纯正文，不解释创作过程，不修改状态。
 - 保持第三人称限知、民国语境和人物认知边界。
 - 实际上下文及来源哈希写入各候选的 `writer_context.json`；近期正文尾部会真正进入 Writer，而不只用于统计。
+
+### Prose Director 与 Reference Style Reviewer
+
+- Prose Director 在事实锁和连续性锁内改写故事草稿，只调整叙述焦点、解释密度、对白声纹和节奏，不新增设定或改变结果。
+- 文风校准对同一场景冻结三种策略候选；支持 sub-agent 时并行，不支持时顺序执行，候选之间始终隔离。
+- Reference Style Reviewer 只做 A/B/C 相对比较，输出 `schemas/style_comparison.schema.json`，不得把绝对分数或模型偏好冒充用户审美。
+- 用户盲选是画像从 `CALIBRATING` 进入 `READY` 的必要条件；校准工件只写入 `novel/work/style-calibration/`，不直接修改正式正文。
 
 ### 集成、专项 Reviewer 与 Selector
 
@@ -110,7 +118,7 @@ Writer 并发生成两份正文
        正文章节 + 元数据 + 当前状态
 ```
 
-平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次模型调用，最大并发固定为 2；快速模式在盲读与状态证据门禁开启时最多 5 次（规划、单候选、集成初筛、盲读、状态结算），始终人工确认。启动 Provider 后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。
+平衡模式含 Planner、Blind Reader 和 State Settler 在内最多 12 次 Agent 执行，最大并发固定为 2；快速模式在盲读与状态证据门禁开启时最多 5 次（规划、单候选、集成初筛、盲读、状态结算），始终人工确认。任务开始执行后的失败、超时和无效输出均计数，不自动补写候选、不外层重新规划。达到上限后返回 `BUDGET_EXHAUSTED` 和现有工件。sub-agent、线程池和顺序执行都必须使用相同任务与工件协议。
 
 ## 工作区与原子提升
 
@@ -197,6 +205,9 @@ python3 scripts/orchestrator.py status
 # 执行完整写作前检查
 python3 scripts/orchestrator.py preflight
 
+# 检查平台无关工作流和任务/结果协议
+python3 scripts/orchestrator.py workflow-check
+
 # 生成下一章的全部工件，但不提升正式章节
 python3 scripts/orchestrator.py next --dry-run
 
@@ -230,6 +241,8 @@ python3 scripts/orchestrator.py recover
 # 运行全部自动测试
 python3 -m unittest discover -v
 ```
+
+`preflight` 默认只检查领域状态与正式审核绑定，不要求任何 Agent CLI；只有旧 CLI 兼容管线使用 `preflight --backend`。
 
 ## 故障恢复
 

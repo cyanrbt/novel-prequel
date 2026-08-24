@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "task_envelope.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["protocol", "task_id", "stage", "role_file", "instruction", "inputs", "input_fingerprint", "output_contract", "capabilities"],
+  "properties": {
+    "protocol": {"const": "prequel-task/1"},
+    "task_id": {"type": "string", "minLength": 1},
+    "stage": {"type": "string", "minLength": 1},
+    "role_file": {"type": "string", "pattern": "^agents/.+\\.md$"},
+    "instruction": {"type": "string", "minLength": 1},
+    "inputs": {"type": "object"},
+    "input_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "output_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "schema"],
+      "properties": {
+        "format": {"enum": ["text", "json"]},
+        "schema": {"type": ["string", "null"]}
+      }
+    },
+    "capabilities": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["filesystem", "subagents", "structured_output"],
+      "properties": {
+        "filesystem": {"enum": ["none", "read", "write"]},
+        "subagents": {"enum": ["optional", "forbidden"]},
+        "structured_output": {"enum": ["preferred", "required", "not_needed"]}
+      }
+    }
+  }
+}

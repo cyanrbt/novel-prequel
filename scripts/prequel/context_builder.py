@@ -457,9 +457,7 @@ def build_authoritative_writer_context(
     sources: dict[str, Any] = {}
     trace: list[dict[str, Any]] = []
     configured = {
-        "style": ("novel/style/compact_style.yaml", 10000),
-        "user_taste_contract": ("novel/style/user_taste_contract.json", 14000),
-        "rulebook": ("novel/rules/rulebook.md", 16000),
+        "voice_profile": ("novel/style/reference_voice_profile.md", 7000),
         "setting_whitelist": ("novel/rules/setting_whitelist.md", 7000),
         "setting_blacklist": ("novel/rules/setting_blacklist.md", 7000),
     }
@@ -471,6 +469,37 @@ def build_authoritative_writer_context(
             continue
         sources[label], source_trace = entry
         trace.append(source_trace)
+
+    excluded_sources = {
+        "compact_style": (
+            "novel/style/compact_style.yaml",
+            "由精简的正向文风画像替代；完整风格规则保留给审查",
+        ),
+        "user_taste_contract_duplicate": (
+            "novel/style/user_taste_contract.json",
+            "偏好合同已作为结构化顶层工件注入，不重复附带原文",
+        ),
+        "rulebook": (
+            "novel/rules/rulebook.md",
+            "当前任务只注入相关正典、事件约束和禁入项；全量规则书保留给审查",
+        ),
+    }
+    for label, (relative_path, reason) in excluded_sources.items():
+        path = project_root / relative_path
+        if not path.is_file():
+            continue
+        raw = path.read_text(encoding="utf-8")
+        trace.append(
+            {
+                "label": label,
+                "path": relative_path,
+                "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
+                "source_chars": len(raw),
+                "included_chars": 0,
+                "included": False,
+                "reason": reason,
+            }
+        )
 
     character_cards: dict[str, str] = {}
     voice_fallbacks: dict[str, str] = {}
@@ -649,21 +678,6 @@ def build_writer_packet(
         "era_bans": context.get("era_bans", {"characters": [], "terms": []}),
         "event_guardrails": context.get("event_outline", ""),
         "chapter_guardrails": context.get("chapter_blueprint", ""),
-        "style_principles": [
-            "先让人物值得在乎，再让异常或选择伤到活人的身体、身份、关系或迫切愿望",
-            "规则线在人物求生与犯错中抵达；不要把正文写成验证未知的实验报告",
-            "张洞的理性是尚未成熟的应对方式和缺点，不是永远正确的答案",
-            "第三人称限知还要让张洞的欲望、偏见和难堪筛选观察焦点，不能只做跟拍他的摄像机",
-            "空间清楚靠一次场景锚定和关键状态变化；状态未变时不重复播报门窗、左右、步数与站位",
-            "无歧义的普通移动允许省略，精确动作留给有阻力、有误差或会付代价的瞬间",
-            "同一人物连续掌握段落焦点时自然使用代词、承前省略和句式变化，避免称谓加动作的记录体",
-            "允许少量只建立人物声纹、生活基线、社会质地或误判来源的内容，不要求每句都推动剧情或在以后回收",
-            "人物可以跑题、改口、重复和漏掉重要信息后再补充；这些偏斜必须来自有限认知，不能靠随机错字和无动机矛盾伪造",
-            "每个重要揭示必须改变人物行为、关系或危险种类；只让证据更可靠的场景应压缩",
-            "关键线索必须由选择、交换、对抗或损失换来，避免恰好未锁、恰好掉出、恰好无人看守",
-            "结尾留下针对活人的情绪余震，不把下一项调查任务冒充追读欲",
-            "不复制原著标志性句式、段落或对白",
-        ],
         "user_taste_contract": taste_contract or {},
         "recent_repetition_signatures": _recent_signatures(recent_texts),
     }
@@ -671,6 +685,7 @@ def build_writer_packet(
         authoritative, trace = build_authoritative_writer_context(
             project_root, state, plan, recent_texts, context
         )
+        packet["voice_profile"] = authoritative.pop("voice_profile", "")
         packet["authoritative_context"] = authoritative
         packet["context_trace"] = trace
     else:
