@@ -1,10 +1,6 @@
-import tempfile
 import unittest
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import patch
 
-from scripts.orchestrator import command_reader_review, format_progress_event
+from scripts.orchestrator import build_parser, format_progress_event
 
 
 class OrchestratorFormattingTests(unittest.TestCase):
@@ -53,46 +49,24 @@ class OrchestratorFormattingTests(unittest.TestCase):
         self.assertIn("正在校验工件", line)
         self.assertIn("84.2秒", line)
 
-    def test_reader_review_builds_packet_with_project_root(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = Path(tmp)
-            chapter_path = root / "chapter_002.txt"
-            chapter_path.write_text("第2章\n\n正文。", encoding="utf-8")
-
-            class Provider:
-                def generate(self, prompt, output_schema=None):
-                    return "{}"
-
-            class Router:
-                def provider_for(self, stage):
-                    self.assertEqual(stage, "blind_reader_reviewer")
-                    return Provider()
-
-                def assertEqual(self, left, right):
-                    if left != right:
-                        raise AssertionError(f"{left!r} != {right!r}")
-
-            with (
-                patch("scripts.orchestrator.PROJECT_ROOT", root),
-                patch("scripts.orchestrator.STATE_FILE", root / "current.json"),
-                patch("scripts.orchestrator.load_state", return_value={}),
-                patch("scripts.orchestrator.formal_chapter_paths", return_value=[chapter_path]),
-                patch("scripts.orchestrator.load_config", return_value={}),
-                patch("scripts.orchestrator.load_execution_config", return_value={}),
-                patch("scripts.orchestrator.StageModelRouter.from_config", return_value=Router()),
-                patch("scripts.orchestrator.build_blind_reader_packet", return_value={}) as build_packet,
-                patch("scripts.orchestrator.build_blind_reader_prompt", return_value="prompt"),
-                patch("scripts.orchestrator.parse_json_artifact", return_value={"verdict": "PASS"}),
-                patch("scripts.orchestrator.validate_blind_reader_review", return_value=[]),
-                patch("scripts.orchestrator.atomic_save_text"),
-                patch("scripts.orchestrator.atomic_save_json"),
-            ):
-                result = command_reader_review(SimpleNamespace(chapter=2))
-
-            self.assertEqual(result, 0)
-            build_packet.assert_called_once_with(
-                {}, 2, "第2章\n\n正文。", root
-            )
+    def test_parser_exposes_only_deterministic_commands(self):
+        choices = next(
+            action.choices
+            for action in build_parser()._actions
+            if getattr(action, "choices", None)
+        )
+        for retired in (
+            "next",
+            "models",
+            "discover",
+            "manual-review",
+            "audit",
+            "reader-review",
+            "demo-review",
+        ):
+            self.assertNotIn(retired, choices)
+        self.assertIn("scene-experiment", choices)
+        self.assertIn("accept", choices)
 
 
 if __name__ == "__main__":

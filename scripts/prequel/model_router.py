@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .errors import ProviderError
-from .provider import CodexCliProvider, ModelProvider, provider_from_spec
+from .provider import ModelProvider
 
 
 @dataclass(frozen=True)
@@ -32,32 +32,10 @@ class StageModelRouter:
 
     @classmethod
     def from_config(cls, config: dict, project_root: Path) -> "StageModelRouter":
-        legacy = config.get("provider", {})
-        profiles = config.get("model_profiles") or {"default": {}}
-        if not isinstance(profiles, dict):
-            raise ProviderError("model_profiles 必须是object")
-        if "default" not in profiles:
-            profiles = {"default": {}, **profiles}
-        providers: dict[str, ModelProvider] = {}
-        settings: dict[str, ResolvedModelSettings] = {}
-        for name, spec in profiles.items():
-            if not isinstance(name, str) or not isinstance(spec, dict):
-                raise ProviderError("model_profiles 的名称和配置必须有效")
-            provider = provider_from_spec({**legacy, **spec}, project_root)
-            providers[name] = provider
-            settings[name] = ResolvedModelSettings(
-                name, provider.model or "", provider.reasoning_effort or ""
-            )
-        routes = config.get("stage_routes", {})
-        if not isinstance(routes, dict) or not all(
-            isinstance(key, str) and isinstance(value, str)
-            for key, value in routes.items()
-        ):
-            raise ProviderError("stage_routes 必须是字符串映射")
-        missing = sorted(set(routes.values()) - set(providers))
-        if missing:
-            raise ProviderError("阶段路由引用未知模型档案: " + ", ".join(missing))
-        return cls(providers, routes, settings)
+        """Fail closed: repository-managed Agent execution backends are retired."""
+        raise ProviderError(
+            "不再从仓库配置构造 Agent 后端；由当前 Agent 执行 WORKFLOW.md"
+        )
 
     def profile_for(self, stage: str) -> str:
         return self.routes.get(stage, "default")

@@ -42,7 +42,13 @@ REQUIRED_PROTOCOL_FILES = (
     "novel/style/reference_voice_profile.md",
     "tests/fixtures/prompt_native_task.json",
     "tests/fixtures/prompt_native_result.json",
+)
+RETIRED_AGENT_CLI_FILES = (
     "config/execution.example.json",
+    "scripts/prequel/cli_capabilities.py",
+    "scripts/scene_generation_experiment.py",
+    "scripts/provider_style_benchmark.py",
+    "scripts/provider_style_benchmark_supplement.py",
 )
 HEX_64 = re.compile(r"^[0-9a-f]{64}$")
 SUPPORTED_SCHEMA_KEYS = {
@@ -482,11 +488,26 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
             "核心创作配置仍包含执行后端字段: " + ", ".join(coupled)
         )
 
-    execution_example = _read_object(root / "config/execution.example.json")
-    missing_execution = sorted(EXECUTION_KEYS - set(execution_example))
-    if missing_execution:
+    retained_cli = [path for path in RETIRED_AGENT_CLI_FILES if (root / path).exists()]
+    if retained_cli:
         raise ArtifactValidationError(
-            "执行后端示例缺少字段: " + ", ".join(missing_execution)
+            "仓库仍保留已淘汰的 Agent CLI 入口: " + ", ".join(retained_cli)
+        )
+    cli_markers = (
+        "co" + "dex exec",
+        "Codex" + "CliProvider",
+        "Agy" + "CliProvider",
+        "OpenCode" + "CliProvider",
+        "Grok" + "CliProvider",
+    )
+    leaked: list[str] = []
+    for path in (root / "scripts").rglob("*.py"):
+        source = path.read_text(encoding="utf-8")
+        if any(marker in source for marker in cli_markers):
+            leaked.append(str(path.relative_to(root)))
+    if leaked:
+        raise ArtifactValidationError(
+            "活动脚本重新引入了 Agent CLI 调用: " + ", ".join(sorted(leaked))
         )
 
     for schema_path in (
@@ -547,7 +568,7 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
     checks = [
         "prompt-native workflow files exist",
         "core story config is execution-backend agnostic",
-        "optional execution backend example validated",
+        "Agent CLI backends and launchers are absent",
         "protocol schemas loaded",
         "style calibration workflow and positive voice profile loaded",
     ]

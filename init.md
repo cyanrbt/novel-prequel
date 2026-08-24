@@ -202,11 +202,11 @@ novel/state/current.json
 
 `memory_index.json` 以正式正文哈希校验来源；`quality_lessons.json` 只在同类问题最近十章出现三次后激活，并在连续十章无复发后退休。Writer 每次最多接收八条相关经验。`creative_debts.json` 保存只作用于未来章节的阶段债务。
 
-每十章到期健康检查，每二十章到期阶段复审。章节晋级只记录到期标记；用户必须显式执行 `audit`。每次审计有独立的单次调用清单，只写入 `novel/reviews/` 和未来创作债务，不会占用章节预算或改写历史正文。
+每十章到期健康检查，每二十章到期阶段复审。章节晋级只记录到期标记；用户必须显式要求当前 Agent 执行阶段复审。每次审计有独立的任务清单，只写入 `novel/reviews/` 和未来创作债务，不会占用章节预算或改写历史正文。
 
 长期质量基础见 [质量进化管线设计](docs/superpowers/specs/2026-08-01-quality-evolution-pipeline-design.md)，当前预算化执行规则见 [章节生成预算优化设计](docs/superpowers/specs/2026-08-01-chapter-generation-budget-optimization-design.md)。
 
-## 命令参考
+## 确定性命令参考
 
 ```bash
 # 查看当前进度
@@ -218,29 +218,14 @@ python3 scripts/orchestrator.py preflight
 # 检查平台无关工作流和任务/结果协议
 python3 scripts/orchestrator.py workflow-check
 
-# 生成下一章的全部工件，但不提升正式章节
-python3 scripts/orchestrator.py next --dry-run
-
-# 五调用快速模式；始终等待人工确认
-python3 scripts/orchestrator.py next --mode fast --dry-run
-
-# 按运行清单恢复，输入或正式状态变化时拒绝复用
-python3 scripts/orchestrator.py next --resume --dry-run
-
 # 重新校验并提升最近一次通过的尝试
 python3 scripts/orchestrator.py accept
 
 # 人工接受指定的合格候选
 python3 scripts/orchestrator.py accept --candidate 2
 
-# 规划、写作、审查并直接提升下一章
-python3 scripts/orchestrator.py next
-
-# 审查最近五章
+# 对最近五章执行确定性静态审查
 python3 scripts/orchestrator.py review --last 5
-
-# 手动执行二十章阶段复审
-python3 scripts/orchestrator.py audit --arc
 
 # 从正式章节重建合订本
 python3 scripts/orchestrator.py merge
@@ -252,7 +237,7 @@ python3 scripts/orchestrator.py recover
 python3 -m unittest discover -v
 ```
 
-`preflight` 默认只检查领域状态与正式审核绑定，不要求任何 Agent CLI；只有旧 CLI 兼容管线使用 `preflight --backend`。
+规划、写作、语义审查、盲读和阶段复审不是命令行功能。告诉当前 Agent 阅读 `WORKFLOW.md` 并执行相应工作流；Python 命令不会启动外部 Agent。
 
 ## 故障恢复
 
@@ -260,6 +245,6 @@ python3 -m unittest discover -v
 2. 未通过的章节尝试保留在 `novel/work/`，不会污染正式内容。
 3. 状态文件损坏时运行 `recover`；命令只接受能够通过完整校验的备份。
 4. 若本地备份不可用，从最后一个可信 Git 提交恢复项目文件，再重新执行预检。
-5. 模型调用中断时使用 `next --resume --dry-run`；只有正式状态、输入、工件和模型路由指纹都匹配才会复用。中断调用已消耗预算，恢复不会扩展上限。
+5. Agent 任务中断时，重新读取对应任务信封和运行清单；只有正式状态、输入和工件指纹都匹配才可复用，恢复不得扩展既定任务预算。
 6. 恢复后人工检查 `decision.md`，再执行 `accept` 或选择明确的合格候选。
 7. `WAITING_USER` 可无新增调用地检查最佳工件；`BUDGET_EXHAUSTED` 还会分组列出安全操作与会创建新预算的操作。缺少预算账本的旧工作区只读，需显式开始新运行。

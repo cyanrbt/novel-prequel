@@ -7,7 +7,11 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from scripts.prequel.errors import LegacyRunNotResumable, QualityGateError
+from scripts.prequel.errors import (
+    ArtifactValidationError,
+    LegacyRunNotResumable,
+    QualityGateError,
+)
 from scripts.prequel.evolution import EvolutionResult
 from scripts.prequel.artifacts import ChapterWorkspace
 from scripts.prequel.run_manifest import RunManifest, fingerprint
@@ -611,23 +615,24 @@ class PipelineTests(unittest.TestCase):
             with self.assertRaises(LegacyRunNotResumable):
                 pipeline._attempt_number(1, True, fingerprint(state))
 
-    def test_next_cli_accepts_modes_shadow_and_unbounded_positive_candidate(self):
+    def test_cli_retires_model_driven_next_and_keeps_deterministic_accept(self):
         from scripts.orchestrator import build_parser
 
         parser = build_parser()
-        self.assertEqual(parser.parse_args(["next"]).mode, "balanced")
-        self.assertEqual(parser.parse_args(["next", "--mode", "fast"]).mode, "fast")
-        self.assertEqual(
-            parser.parse_args(["next", "--shadow-review", "continuity"]).shadow_review,
-            "continuity",
+        choices = next(
+            action.choices
+            for action in parser._actions
+            if getattr(action, "choices", None)
         )
+        self.assertNotIn("next", choices)
         self.assertEqual(parser.parse_args(["accept", "--candidate", "4"]).candidate, 4)
 
-    def test_review_parser_accepts_specialist_calibration(self):
+    def test_review_parser_is_static_only(self):
         from scripts.orchestrator import build_parser
 
-        args = build_parser().parse_args(["review", "--last", "2", "--specialists"])
-        self.assertTrue(args.specialists)
+        args = build_parser().parse_args(["review", "--last", "2"])
+        self.assertEqual(args.last, 2)
+        self.assertFalse(hasattr(args, "specialists"))
 
     def test_high_confidence_evolution_result_promotes_atomically(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -802,7 +807,7 @@ class PipelineTests(unittest.TestCase):
             self.assertEqual(state["chapter"]["last_chapter"], 1)
             self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
 
-    def test_accept_runs_enabled_blind_reader_with_project_root(self):
+    def test_accept_refuses_to_generate_missing_reader_or_state_reports(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
             provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
@@ -820,29 +825,10 @@ class PipelineTests(unittest.TestCase):
             (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
             (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
 
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            workspace = root / "novel/work/chapter_001/attempt_01"
-            plan = json.loads((workspace / "plan.json").read_text(encoding="utf-8"))
-            draft = (workspace / "draft.txt").read_text(encoding="utf-8")
-
-            class Router:
-                def __init__(self):
-                    self.providers = {
-                        "blind_reader_reviewer": FakeProvider([blind_reader_json(draft)]),
-                        "state_settler": FakeProvider([state_settlement_json(state, plan, draft)]),
-                    }
-
-                def provider_for(self, stage):
-                    return self.providers[stage]
-
-            with patch(
-                "scripts.prequel.pipeline.StageModelRouter.from_config",
-                return_value=Router(),
+            with self.assertRaisesRegex(
+                ArtifactValidationError, "不会现场启动模型"
             ):
-                accepted = accept_dry_run(root)
-
-            self.assertTrue(accepted.promoted)
-            self.assertTrue((root / "novel/work/chapter_001/attempt_01/reader_review.json").exists())
+                accept_dry_run(root)
 
     def test_accept_reuses_hash_bound_passing_reader_and_state_reports(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -869,17 +855,7 @@ class PipelineTests(unittest.TestCase):
                 state_settlement_json(state, plan, draft), encoding="utf-8"
             )
 
-            class NoCallRouter:
-                def provider_for(self, stage):
-                    raise AssertionError(
-                        f"valid bound reports must not call the {stage} model"
-                    )
-
-            with patch(
-                "scripts.prequel.pipeline.StageModelRouter.from_config",
-                return_value=NoCallRouter(),
-            ):
-                accepted = accept_dry_run(root)
+            accepted = accept_dry_run(root)
 
             self.assertTrue(accepted.promoted)
             self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())

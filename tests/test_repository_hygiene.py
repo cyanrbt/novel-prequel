@@ -1,5 +1,5 @@
-import re
 import json
+import re
 import subprocess
 import unittest
 from pathlib import Path
@@ -30,19 +30,28 @@ class RepositoryHygieneTests(unittest.TestCase):
         for relative in local_paths:
             self.assertTrue(self.is_ignored(relative), relative)
 
-    def test_codex_sqlite_runtime_stays_in_ignored_work_area(self):
-        config = json.loads(
-            (ROOT / "config/execution.example.json").read_text(encoding="utf-8")
+    def test_agent_cli_launchers_are_absent(self):
+        retired = (
+            "config/execution.example.json",
+            "scripts/prequel/cli_capabilities.py",
+            "scripts/scene_generation_experiment.py",
+            "scripts/provider_style_benchmark.py",
+            "scripts/provider_style_benchmark_supplement.py",
         )
-        command = config["provider"]["command"]
-        index = command.index("--config")
-        self.assertEqual(
-            command[index + 1],
-            'sqlite_home="novel/work/.codex-runtime"',
+        for relative in retired:
+            self.assertFalse((ROOT / relative).exists(), relative)
+
+        markers = (
+            "co" + "dex exec",
+            "Codex" + "CliProvider",
+            "Agy" + "CliProvider",
+            "OpenCode" + "CliProvider",
+            "Grok" + "CliProvider",
         )
-        self.assertTrue(
-            self.is_ignored("novel/work/.codex-runtime/state.sqlite")
-        )
+        for path in (ROOT / "scripts").rglob("*.py"):
+            source = path.read_text(encoding="utf-8")
+            for marker in markers:
+                self.assertNotIn(marker, source, str(path.relative_to(ROOT)))
 
     def test_core_config_does_not_select_an_agent_or_model(self):
         config = json.loads(
@@ -50,7 +59,6 @@ class RepositoryHygieneTests(unittest.TestCase):
         )
         for key in ("provider", "model_profiles", "stage_routes"):
             self.assertNotIn(key, config)
-        self.assertTrue(self.is_ignored("config/execution.json"))
 
     def test_operational_files_use_stable_identifiers(self):
         paths = (
@@ -58,7 +66,6 @@ class RepositoryHygieneTests(unittest.TestCase):
             "WORKFLOW.md",
             "init.md",
             "config/prequel_config.json",
-            "config/execution.example.json",
             "schemas/task_envelope.schema.json",
             "schemas/agent_result.schema.json",
             "schemas/protocol_smoke_artifact.schema.json",
@@ -96,15 +103,16 @@ class RepositoryHygieneTests(unittest.TestCase):
                 continue
             self.assertTrue((ROOT / target).exists(), target)
 
-    def test_readme_documents_quality_evolution_commands(self):
+    def test_readme_documents_prompt_native_and_deterministic_commands(self):
         text = (ROOT / "README.md").read_text(encoding="utf-8")
         for command in (
             "workflow-check",
-            "next --resume",
             "accept --candidate",
-            "audit --arc",
+            "scene-experiment validate",
         ):
             self.assertIn(command, text)
+        self.assertIn("当前 Agent", text)
+        self.assertNotIn("orchestrator.py next", text)
 
     def test_engine_manual_links_to_quality_design(self):
         text = (ROOT / "init.md").read_text(encoding="utf-8")

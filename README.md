@@ -8,7 +8,7 @@
 
 > 从一座封着疑棺的旧祠堂开始，沿着鬼邮局、民国驭鬼者与七老留下的痕迹，写完一条从辛亥前后延伸至杨间时代的灵异时间线。
 
-仓库同时存放连载正文和创作协议。当前章号、人物、时间和伏笔集中在一份状态文件中；规划、写作、审查分角色执行，通过后章节、元数据与状态一起写入。Python 只做可选的确定性校验与旧 CLI 兼容。
+仓库同时存放连载正文和创作协议。当前章号、人物、时间和伏笔集中在一份状态文件中；规划、写作、审查分角色执行，通过后章节、元数据与状态一起写入。Python 只做确定性校验、工件匿名化和事务性提升，不启动任何 Agent 命令。
 
 任意 Agent 从 [通用 Agent 工作流](WORKFLOW.md) 进入；状态机、质量门禁、恢复方式和完整命令见 [创作引擎手册](init.md)。
 
@@ -84,7 +84,7 @@ cd novel-prequel
 
 `novel/style/reference_voice_profile.md` 至少经过一轮用户盲选并标记为 `READY` 后，再执行 `next-chapter`。支持 sub-agent 时并行委派，不支持时按相同协议顺序执行。
 
-### 可选 CLI
+### 确定性工具
 
 ```bash
 python3 scripts/orchestrator.py workflow-check
@@ -92,27 +92,15 @@ python3 scripts/orchestrator.py status
 python3 scripts/orchestrator.py preflight
 ```
 
-旧 CLI 后端需先复制本机配置：
-
-```bash
-cp config/execution.example.json config/execution.json
-python3 scripts/orchestrator.py preflight --backend
-```
-
 | 目的 | 命令 |
 |---|---|
-| 生成工件，不提升正式章节 | `python3 scripts/orchestrator.py next --dry-run` |
-| 更快的单候选人工确认 | `python3 scripts/orchestrator.py next --mode fast --dry-run` |
-| 按清单恢复已完成阶段 | `python3 scripts/orchestrator.py next --resume --dry-run` |
 | 提升最近一次合格尝试 | `python3 scripts/orchestrator.py accept` |
 | 指定已通过硬门禁的候选 | `python3 scripts/orchestrator.py accept --candidate 2` |
-| 直接提升合格尝试 | `python3 scripts/orchestrator.py next` |
-| 二十章级阶段复审 | `python3 scripts/orchestrator.py audit --arc` |
 | 重建连续阅读合订本 | `python3 scripts/orchestrator.py merge` |
 | 验证场景机制实验输入 | `python3 scripts/orchestrator.py scene-experiment validate --packet <scene_packet.json>` |
 | 匿名化三条实验路线 | `python3 scripts/orchestrator.py scene-experiment blind --packet <scene_packet.json> --contract-first <a.txt> --simulation-fixed <b.txt> --simulation-rolling <c.txt>` |
 
-`--dry-run` 仍会消耗模型额度。审查、恢复、模型路由和质量门禁的完整说明见 [创作引擎手册](init.md)。
+规划、写作、语义审查和阶段复审都由当前 Agent 按 `WORKFLOW.md` 执行；仓库不提供 Agent CLI 后端或自动模型路由。恢复和质量门禁的完整说明见 [创作引擎手册](init.md)。
 
 ## 目录
 
@@ -124,7 +112,7 @@ novel-prequel/
 ├── workflows/                      # 可执行工作流
 ├── config/                         # 质量门禁与卷结构
 ├── schemas/                        # 状态、规划和审查契约
-├── scripts/orchestrator.py         # 可选 CLI
+├── scripts/orchestrator.py         # 确定性校验与事务工具
 ├── tests/
 └── novel/
     ├── chapters/                   # 正式正文

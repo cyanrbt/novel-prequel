@@ -13,48 +13,23 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from scripts.prequel.errors import PrequelError, StateValidationError
-from scripts.prequel.audits import AuditRunner
-from scripts.prequel.model_router import StageModelRouter
-from scripts.prequel.metrics import chapter_metrics
 from scripts.prequel.pipeline import (
-    WritingPipeline,
     accept_dry_run,
     formal_chapter_paths,
     formal_review_binding_status,
     import_manual_candidate,
     load_config,
-    load_execution_config,
     load_voice_profile_status,
     merge_formal_chapters,
-    review_manual_candidate,
     run_preflight,
 )
 from scripts.prequel.quality import scan_draft
-from scripts.prequel.evaluation import (
-    DIMENSIONS,
-    build_scorecard,
-    canonicalize_artifact_quotes,
-    validate_specialist_review,
-)
-from scripts.prequel.pipeline import parse_json_artifact
-from scripts.prequel.reader_review import (
-    build_blind_reader_packet,
-    build_blind_reader_prompt,
-    canonicalize_pacing_diagnostics,
-    validate_blind_reader_review,
-)
-from scripts.prequel.scene_audit import (
-    build_scene_audit_packet,
-    build_scene_audit_prompt,
-    canonicalize_scene_audit_anchor_quotes,
-    validate_scene_mechanism_audit,
-)
 from scripts.prequel.scene_experiment import (
     load_json_object as load_scene_experiment_json,
     prepare_blind_bundle,
     validate_scene_packet,
 )
-from scripts.prequel.state_store import atomic_save_json, atomic_save_text, load_state
+from scripts.prequel.state_store import load_state
 from scripts.prequel.taste_contract import load_taste_contract
 from scripts.prequel.prompt_native import validate_prompt_native_project
 
@@ -164,9 +139,7 @@ def command_status(args) -> int:
 
 
 def command_preflight(args) -> int:
-    for check in run_preflight(
-        PROJECT_ROOT, check_cli_capabilities=getattr(args, "backend", False)
-    ):
+    for check in run_preflight(PROJECT_ROOT):
         print(f"[OK] {check}")
     return 0
 
@@ -257,130 +230,7 @@ def command_review(args) -> int:
         _print_review(result)
         failed = failed or not result["passed"]
         previous.append(path.read_text(encoding="utf-8"))
-        if args.specialists:
-            config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
-            router = StageModelRouter.from_config(config, PROJECT_ROOT)
-            draft = path.read_text(encoding="utf-8")
-            reviews = {}
-            for dimension in DIMENSIONS:
-                role = (PROJECT_ROOT / f"agents/reviewer_{dimension}.md").read_text(
-                    encoding="utf-8"
-                )
-                packet = {
-                    "chapter_number": number,
-                    "dimension": dimension,
-                    "draft": draft,
-                    "static_review": result,
-                    "continuity_snapshot": state,
-                    "calibration_only": True,
-                }
-                raw = router.provider_for(f"{dimension}_reviewer").generate(
-                    role
-                    + "\n\n# 本次任务\n这是只读正式章校准，不得提出回写历史状态。"
-                    + "\n\n# 唯一输入工件\n"
-                    + json.dumps(packet, ensure_ascii=False, indent=2),
-                    PROJECT_ROOT / "schemas/specialist_review.schema.json",
-                )
-                review = parse_json_artifact(raw, f"formal-{number}-{dimension}")
-                failures = [
-                    issue.message
-                    for issue in validate_specialist_review(
-                        review, draft, number, dimension
-                    )
-                    if issue.severity == "P1"
-                ]
-                if failures:
-                    raise StateValidationError("专项校准证据无效: " + "；".join(failures))
-                reviews[dimension] = review
-            report = {
-                "chapter_number": number,
-                "calibration_only": True,
-                "reviews": reviews,
-                "scorecard": build_scorecard(
-                    reviews,
-                    config.get("quality_evolution", {}).get("weights"),
-                ),
-            }
-            target = PROJECT_ROOT / f"novel/work/baselines/chapter_{number:03d}.json"
-            atomic_save_json(target, report)
-            print(f"专项校准: {target}")
     return 2 if failed else 0
-
-
-def command_next(args) -> int:
-    result = WritingPipeline(PROJECT_ROOT).run_next(
-        dry_run=args.dry_run,
-        resume=args.resume,
-        mode=args.mode,
-        shadow_review=args.shadow_review,
-        progress=_cli_progress,
-    )
-    mode = (
-        "已通过门禁并提升"
-        if result.promoted
-        else "dry-run完成，未提升"
-        if args.dry_run
-        else "已完成评估，等待人工确认"
-    )
-    print(f"[OK] 第{result.chapter_number}章{mode}")
-    print(f"状态: {result.status}")
-    print(f"工作区: {result.workspace}")
-    manifest_path = result.workspace / "run_manifest.json"
-    decision_path = result.workspace / "decision.json"
-    manifest: dict = {}
-    if manifest_path.exists():
-        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        budget = manifest.get("budget", {})
-        print(f"调用: {budget.get('spent', 0)}/{budget.get('limit', '?')}")
-        calls = budget.get("calls", {}).values()
-        models: dict[str, int] = {}
-        for call in calls:
-            model = call.get("model", "unknown")
-            models[model] = models.get(model, 0) + 1
-        print("模型构成: " + ", ".join(f"{name}×{count}" for name, count in sorted(models.items())))
-        metrics = chapter_metrics(manifest_path)
-        wall = metrics["wall_time_seconds"]
-        print(
-            "实际墙钟耗时: 未知"
-            if wall is None
-            else f"实际墙钟耗时: {wall:.1f}秒"
-        )
-        print(
-            "并发调用耗时合计: "
-            f"{metrics['model_call_time_seconds']:.1f}秒"
-        )
-    if decision_path.exists():
-        decision = json.loads(decision_path.read_text(encoding="utf-8"))
-        if decision.get("degraded"):
-            print(f"失败候选: {decision.get('failed_candidate') or '未知'}")
-            print("系统未自动重试: " + str(decision.get("automatic_retry_skipped_reason")))
-            print("当前最佳有效工件: " + str(decision.get("best_available_artifact")))
-        failures = decision.get("failures", [])
-        if failures:
-            print("失败明细:")
-            for failure in failures:
-                print(
-                    f"- {failure.get('stage') or '未知阶段'} / "
-                    f"{failure.get('failure_kind') or 'UNKNOWN'}: "
-                    f"{failure.get('message') or '无说明'}"
-                )
-                if failure.get("diagnostic_artifact"):
-                    print(f"  诊断: {failure['diagnostic_artifact']}")
-        if result.status in {"WAITING_USER", "BUDGET_EXHAUSTED"}:
-            for reason in decision.get("reasons", []):
-                print(f"等待原因: {reason}")
-            print("无需新增调用的安全操作:")
-            for item in decision.get("safe_actions", []):
-                print(f"- {item}")
-            print("会建立新预算的额外消耗操作:")
-            for item in decision.get("new_budget_actions", []):
-                print(f"- {item}")
-            print(decision.get("resume_warning", "--resume 不会扩展预算"))
-        if result.status == "BUDGET_EXHAUSTED":
-            spent = decision.get("calls_spent", "?")
-            limit = manifest.get("budget", {}).get("limit", "?")
-            print(f"BUDGET_EXHAUSTED（{spent}/{limit}）")
-    return 0
 
 
 def command_merge(args) -> int:
@@ -410,137 +260,11 @@ def command_manual_import(args) -> int:
     provenance = manifest["manual_import"]
     print(f"[OK] 手工稿已导入全新尝试: {result.workspace}")
     print(f"正文SHA-256: {provenance['imported_draft_sha256']}")
-    print("下一步: python3 scripts/orchestrator.py manual-review "
-          f"--attempt {int(result.workspace.name.split('_')[-1])}")
+    print(
+        "下一步: 告诉当前 Agent 阅读 WORKFLOW.md，按 accept-candidate "
+        "工作流补齐语义审查、盲读和状态结算工件"
+    )
     return 0
-
-
-def command_manual_review(args) -> int:
-    result = review_manual_candidate(
-        PROJECT_ROOT,
-        attempt=args.attempt,
-        progress=_cli_progress,
-    )
-    review = result.semantic_review or {}
-    print(f"[OK] 手工稿全部启用审查已绑定: {result.workspace}")
-    print(f"正文SHA-256: {review.get('draft_sha256', 'missing')}")
-    print(f"结论: {review.get('verdict', 'UNKNOWN')}")
-    if review.get("verdict") == "PASS":
-        print(
-            "下一步: python3 scripts/orchestrator.py accept "
-            f"--attempt {args.attempt}"
-        )
-        return 0
-    return 2
-
-
-def command_audit(args) -> int:
-    state = load_state(STATE_FILE)
-    through = state["chapter"]["last_chapter"]
-    if through < 1:
-        raise StateValidationError("没有可审计的正式章节")
-    config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
-    runner = AuditRunner(
-        PROJECT_ROOT, StageModelRouter.from_config(config, PROJECT_ROOT)
-    )
-    path = runner.run_arc(through) if args.arc else runner.run_health(through)
-    print(f"[OK] 审计报告: {path}")
-    return 0
-
-
-def command_reader_review(args) -> int:
-    state = load_state(STATE_FILE)
-    paths = formal_chapter_paths(PROJECT_ROOT)
-    if not paths:
-        raise StateValidationError("没有可供盲读者审查的正式章节")
-    by_number = {int(path.stem.split("_")[1]): path for path in paths}
-    chapter = args.chapter or max(by_number)
-    if chapter not in by_number:
-        raise StateValidationError(f"正式章节不存在: 第{chapter}章")
-    draft = by_number[chapter].read_text(encoding="utf-8")
-    config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
-    router = StageModelRouter.from_config(config, PROJECT_ROOT)
-    packet = build_blind_reader_packet(state, chapter, draft, PROJECT_ROOT)
-    raw = router.provider_for("blind_reader_reviewer").generate(
-        build_blind_reader_prompt(PROJECT_ROOT, packet),
-        PROJECT_ROOT / "schemas/reader_review.schema.json",
-    )
-    raw_target = PROJECT_ROOT / "novel/work/reader_reviews" / f"chapter_{chapter:03d}.raw.txt"
-    atomic_save_text(raw_target, raw)
-    report = parse_json_artifact(raw, f"reader-review-chapter-{chapter}")
-    canonicalize_artifact_quotes(report, draft)
-    canonicalize_scene_audit_anchor_quotes(report.get("mechanism_audit"), draft)
-    canonicalize_pacing_diagnostics(report, draft)
-    failures = [
-        issue.message
-        for issue in validate_blind_reader_review(report, draft, chapter)
-        if issue.severity == "P1"
-    ]
-    if failures:
-        print(f"[STOP] 无效盲读者原始输出: {raw_target}")
-        raise StateValidationError("盲读者报告证据无效: " + "；".join(failures))
-    target = PROJECT_ROOT / "novel/work/reader_reviews" / f"chapter_{chapter:03d}.json"
-    atomic_save_json(target, report)
-    print(f"[OK] 盲读者报告: {target}")
-    print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report["verdict"] == "PASS" else 2
-
-
-def command_demo_review(args) -> int:
-    prior_reader_facts: list[dict] = []
-    if str(args.path) == "-":
-        draft = sys.stdin.read()
-        source_label = args.label or "stdin"
-    else:
-        draft = args.path.read_text(encoding="utf-8")
-        source_label = args.label or args.path.name
-        requested = args.path.resolve()
-        for formal_path in formal_chapter_paths(PROJECT_ROOT):
-            if formal_path.resolve() != requested:
-                continue
-            chapter_number = int(formal_path.stem.split("_")[1])
-            prior_reader_facts = build_blind_reader_packet(
-                load_state(STATE_FILE), chapter_number, draft
-            )["prior_reader_facts"]
-            break
-    if not draft.strip():
-        raise StateValidationError("待审片段为空")
-    contract = load_taste_contract(PROJECT_ROOT)
-    packet = build_scene_audit_packet(
-        draft,
-        contract,
-        artifact_label=source_label,
-        prior_reader_facts=prior_reader_facts,
-    )
-    config = load_execution_config(PROJECT_ROOT, load_config(PROJECT_ROOT))
-    raw = StageModelRouter.from_config(config, PROJECT_ROOT).provider_for(
-        "demo_scene_reviewer"
-    ).generate(
-        build_scene_audit_prompt(PROJECT_ROOT, packet),
-        PROJECT_ROOT / "schemas/scene_audit.schema.json",
-    )
-    digest = packet["artifact_sha256"][:12]
-    target_dir = PROJECT_ROOT / "novel/work/demo_reviews"
-    raw_target = target_dir / f"{digest}.raw.txt"
-    atomic_save_text(raw_target, raw)
-    report = parse_json_artifact(raw, f"demo-scene-review-{digest}")
-    canonicalize_artifact_quotes(report, draft)
-    canonicalize_scene_audit_anchor_quotes(report, draft)
-    failures = [
-        issue.message
-        for issue in validate_scene_mechanism_audit(
-            report, draft, taste_contract=contract
-        )
-        if issue.severity == "P1"
-    ]
-    if failures:
-        print(f"[STOP] 无效片段审查原始输出: {raw_target}")
-        raise StateValidationError("片段场景审查证据无效: " + "；".join(failures))
-    target = target_dir / f"{digest}.json"
-    atomic_save_json(target, report)
-    print(f"[OK] 片段场景审查: {target}")
-    print(json.dumps(report, ensure_ascii=False, indent=2))
-    return 0 if report["verdict"] == "PASS" else 2
 
 
 def command_recover(args) -> int:
@@ -550,58 +274,6 @@ def command_recover(args) -> int:
     load_state(backup)
     shutil.copy2(backup, STATE_FILE)
     print("[OK] 已从current.json.bak恢复状态")
-    return 0
-
-
-def command_models(args) -> int:
-    from scripts.prequel.cli_capabilities import (
-        discover_all_capabilities,
-        discover_capabilities,
-    )
-
-    if args.provider:
-        caps = {args.provider: discover_capabilities(args.provider)}
-    else:
-        caps = discover_all_capabilities()
-
-    if getattr(args, "json", False):
-        data = {
-            k: {
-                "provider": v.provider_type,
-                "version": v.version,
-                "command": v.cli_command,
-                "models": [
-                    {
-                        "slug": m.slug,
-                        "name": m.display_name,
-                        "efforts": m.supported_efforts,
-                        "is_default": m.is_default,
-                    }
-                    for m in v.models
-                ],
-            }
-            for k, v in caps.items()
-        }
-        print(json.dumps(data, ensure_ascii=False, indent=2))
-        return 0
-
-    if not caps:
-        print("[WARN] 未发现任何可用的 AI Provider")
-        return 1
-
-    print("================================================================")
-    print(" 已发现的 AI Agent CLI 提供商及支持的模型与思考强度 (Auto-Discovery)")
-    print("================================================================")
-    for ptype, info in caps.items():
-        print(f"\n【Provider: {ptype}】")
-        print(f"  版本/命令: {info.version} ({info.cli_command})")
-        print("  支持的模型与思考强度:")
-        for m in info.models:
-            default_tag = " [默认]" if m.is_default else ""
-            efforts_str = ", ".join(m.supported_efforts) if m.supported_efforts else "none"
-            print(f"    - {m.slug:<32} {m.display_name}{default_tag}")
-            print(f"      思考强度: [{efforts_str}]")
-    print("\n提示: 将模型映射写入本地 config/execution.json；核心创作配置不绑定执行后端。")
     return 0
 
 
@@ -620,11 +292,6 @@ def build_parser() -> argparse.ArgumentParser:
     status.set_defaults(handler=command_status)
 
     preflight = sub.add_parser("preflight", help="写作前完整预检")
-    preflight.add_argument(
-        "--backend",
-        action="store_true",
-        help="同时检查可选 config/execution.json 与本地 Agent CLI 能力",
-    )
     preflight.set_defaults(handler=command_preflight)
 
     workflow_check = sub.add_parser(
@@ -644,27 +311,6 @@ def build_parser() -> argparse.ArgumentParser:
     scene_experiment.add_argument("--output", type=Path)
     scene_experiment.add_argument("--seed")
     scene_experiment.set_defaults(handler=command_scene_experiment)
-
-    models_parser = sub.add_parser("models", aliases=["discover"], help="自发现已安装 AI Agent 的模型与思考强度")
-    models_parser.add_argument("--provider", choices=("codex_cli", "agy_cli", "opencode_cli", "grok_cli"), help="指定要自发现的 Provider 类型")
-    models_parser.add_argument("--json", action="store_true", help="以 JSON 格式输出")
-    models_parser.set_defaults(handler=command_models)
-
-    next_parser = sub.add_parser("next", help="规划、生成、审查并提升下一章")
-    next_parser.add_argument("--dry-run", action="store_true", help="生成全部工件但不提升正式章节")
-    next_parser.add_argument("--resume", action="store_true", help="恢复输入仍有效的最近运行")
-    next_parser.add_argument(
-        "--mode",
-        choices=("balanced", "fast"),
-        default="balanced",
-        help="balanced最多12次调用（含盲读与状态结算）；fast最多5次预留且始终人工确认",
-    )
-    next_parser.add_argument(
-        "--shadow-review",
-        choices=("continuity", "character", "craft", "anti_slop"),
-        help="仅用于获批试运行的预算内影子专项复核",
-    )
-    next_parser.set_defaults(handler=command_next)
 
     merge = sub.add_parser("merge", help="从已校验的正式章节生成合订本")
     merge.set_defaults(handler=command_merge)
@@ -686,18 +332,6 @@ def build_parser() -> argparse.ArgumentParser:
     )
     manual_import.set_defaults(handler=command_manual_import)
 
-    manual_review = sub.add_parser(
-        "manual-review", help="对手工导入稿执行同一预算内的语义、盲读与状态审查"
-    )
-    manual_review.add_argument(
-        "--attempt", type=_positive_int, required=True, help="手工导入尝试序号"
-    )
-    manual_review.set_defaults(handler=command_manual_review)
-
-    audit = sub.add_parser("audit", help="对正式章节执行阶段审计，不改写历史正文")
-    audit.add_argument("--arc", action="store_true", help="执行二十章级阶段复审；默认十章健康检查")
-    audit.set_defaults(handler=command_audit)
-
     lint = sub.add_parser("lint", help="对指定正文执行确定性检查")
     lint.add_argument("path", type=Path)
     lint.add_argument("--year", type=int, required=True)
@@ -706,17 +340,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     review = sub.add_parser("review", help="批量静态审查正式章节")
     review.add_argument("--last", type=int, default=5)
-    review.add_argument("--specialists", action="store_true", help="生成四维只读专项校准报告")
     review.set_defaults(handler=command_review)
-
-    reader = sub.add_parser("reader-review", help="以盲读者身份审查一章正式正文，不读取大纲")
-    reader.add_argument("--chapter", type=_positive_int, help="默认审查最新正式章节")
-    reader.set_defaults(handler=command_reader_review)
-
-    demo = sub.add_parser("demo-review", help="用Luna在交付前审查短片段的视角、空间、反应和对白")
-    demo.add_argument("path", type=Path, help="片段文件；使用 - 从标准输入读取")
-    demo.add_argument("--label", help="报告中的片段名称")
-    demo.set_defaults(handler=command_demo_review)
 
     recover = sub.add_parser("recover", help="从已验证的状态备份恢复")
     recover.set_defaults(handler=command_recover)

@@ -2317,14 +2317,18 @@ class ManualCandidateWorkflowTests(unittest.TestCase):
             )
             self.assertEqual(attempts, ["attempt_01"])
 
-    def test_cli_exposes_explicit_manual_workflow(self):
+    def test_cli_exposes_import_but_retires_model_driven_manual_review(self):
         parser = build_parser()
         imported = parser.parse_args(
             ["manual-import", "draft.txt", "--plan-attempt", "14"]
         )
-        reviewed = parser.parse_args(["manual-review", "--attempt", "15"])
         self.assertEqual(imported.plan_attempt, 14)
-        self.assertEqual(reviewed.attempt, 15)
+        choices = next(
+            action.choices
+            for action in parser._actions
+            if getattr(action, "choices", None)
+        )
+        self.assertNotIn("manual-review", choices)
 
 
 if __name__ == "__main__":

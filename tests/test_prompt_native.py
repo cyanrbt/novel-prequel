@@ -25,6 +25,7 @@ class PromptNativeWorkflowTests(unittest.TestCase):
     def test_repository_protocol_smoke_test_passes_without_agent_cli(self):
         checks = validate_prompt_native_project(ROOT)
         self.assertIn("core story config is execution-backend agnostic", checks)
+        self.assertIn("Agent CLI backends and launchers are absent", checks)
         self.assertTrue(any(item.startswith("task/result binding") for item in checks))
 
     def test_task_envelope_is_bound_to_canonical_inputs(self):
@@ -78,10 +79,6 @@ class PromptNativeWorkflowTests(unittest.TestCase):
     def test_core_preflight_does_not_construct_an_execution_backend(self):
         with (
             patch(
-                "scripts.prequel.pipeline.StageModelRouter.from_config",
-                side_effect=AssertionError("backend should not be constructed"),
-            ),
-            patch(
                 "scripts.prequel.pipeline.formal_review_binding_status",
                 return_value={"status": "VALID"},
             ),
@@ -90,7 +87,7 @@ class PromptNativeWorkflowTests(unittest.TestCase):
                 return_value="READY",
             ),
         ):
-            checks = run_preflight(ROOT, check_cli_capabilities=False)
+            checks = run_preflight(ROOT)
         self.assertIn("agent-agnostic story config loaded", checks)
 
     def test_preflight_blocks_next_chapter_while_voice_is_calibrating(self):
@@ -101,7 +98,7 @@ class PromptNativeWorkflowTests(unittest.TestCase):
             ),
             self.assertRaisesRegex(QualityGateError, "文风画像仍在校准"),
         ):
-            run_preflight(ROOT, check_cli_capabilities=False)
+            run_preflight(ROOT)
 
     def test_maintenance_preflight_allows_calibrating_voice_profile(self):
         with patch(
@@ -110,7 +107,6 @@ class PromptNativeWorkflowTests(unittest.TestCase):
         ):
             checks = run_preflight(
                 ROOT,
-                check_cli_capabilities=False,
                 require_voice_ready=False,
             )
         self.assertIn("positive voice profile status validated: CALIBRATING", checks)

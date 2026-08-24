@@ -65,17 +65,14 @@ python3 scripts/orchestrator.py workflow-check
 # 验证冻结的场景实验输入，不调用模型、不改正式正文
 python3 scripts/orchestrator.py scene-experiment validate --packet <scene_packet.json>
 
-# 检查项目状态、规则、章节连续性和正式审核绑定；不检查任何 Agent CLI
+# 检查项目状态、规则、章节连续性和正式审核绑定
 python3 scripts/orchestrator.py preflight
-
-# 仅在显式使用旧 CLI 后端时检查本地 Agent 和模型能力
-python3 scripts/orchestrator.py preflight --backend
 ```
 
 如果当前执行环境没有 Python，主 Agent 仍可按工作流逐项读取和核对；但任何无法确定性验证的事项必须记录为未验证，不能假定通过。
 
-## 执行后端
+## 执行边界
 
-核心创作配置位于 `config/prequel_config.json`，其中不包含 Agent、CLI 或模型名称。旧版 CLI 管线作为可选兼容后端保留：复制 `config/execution.example.json` 为本地忽略的 `config/execution.json` 后再使用。
+核心创作配置位于 `config/prequel_config.json`，其中不包含 Agent、CLI 或模型名称。仓库不提供、发现或启动 Codex、AGY、OpenCode、Grok 等 Agent 命令行后端；Python 工具也不得通过子进程生成、审查或改写文本。
 
-新增执行平台时，只需实现任务信封到该平台的适配，不得修改角色提示词、故事状态或质量门禁语义。
+语义任务由正在阅读本仓库的当前 Agent 执行：支持 sub-agent 时按任务图委派，不支持时由主 Agent 顺序完成。若未来接入新的宿主平台，只能由宿主消费任务信封并回传结果工件，不得在仓库内恢复 Agent 命令启动器，也不得修改角色提示词、故事状态或质量门禁语义。

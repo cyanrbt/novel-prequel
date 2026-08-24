@@ -33,7 +33,7 @@ from .memory import MemoryStore, memory_record
 from .model_calls import ModelCallExecutor
 from .progress import ProgressSink
 from .model_router import StageModelRouter
-from .provider import ModelProvider, provider_from_config
+from .provider import ModelProvider
 from .quality import Issue, scan_draft, validate_plan, validate_review
 from .reader_review import (
     build_blind_reader_gap_feedback_prompt,
@@ -101,39 +101,6 @@ def load_voice_profile_status(
     if match is None:
         raise ArtifactValidationError("正向文风画像缺少有效 calibration_status")
     return match.group(1)
-
-
-def load_execution_config(
-    project_root: Path, core_config: dict[str, Any] | None = None
-) -> dict[str, Any]:
-    """Load an optional local execution backend without coupling story config to it.
-
-    Inline execution keys remain supported for older fixtures and local configs, but
-    the repository's canonical config intentionally contains story semantics only.
-    """
-    core = core_config if core_config is not None else load_config(project_root)
-    execution_keys = {"provider", "model_profiles", "stage_routes"}
-    if execution_keys & set(core):
-        return core
-    path = project_root / "config/execution.json"
-    if not path.is_file():
-        raise ArtifactValidationError(
-            "未配置可执行 Agent 后端；通用工作流请读取 WORKFLOW.md，"
-            "旧 CLI 管线请复制 config/execution.example.json 为 "
-            "config/execution.json"
-        )
-    try:
-        execution = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ArtifactValidationError(f"执行后端配置无效: {exc}") from exc
-    if not isinstance(execution, dict):
-        raise ArtifactValidationError("执行后端配置根节点必须是object")
-    missing = sorted(execution_keys - set(execution))
-    if missing:
-        raise ArtifactValidationError(
-            "执行后端配置缺少字段: " + ", ".join(missing)
-        )
-    return {**core, **execution}
 
 
 def parse_json_artifact(raw: str, name: str) -> dict[str, Any]:
@@ -330,7 +297,6 @@ def run_preflight(
     project_root: Path,
     state: dict[str, Any] | None = None,
     *,
-    check_cli_capabilities: bool = False,
     require_voice_ready: bool = True,
 ) -> list[str]:
     checks: list[str] = []
@@ -344,48 +310,6 @@ def run_preflight(
     checks.append("agent-agnostic story config loaded")
     load_taste_contract(project_root)
     checks.append("cumulative user taste contract validated")
-    if check_cli_capabilities:
-        from .cli_capabilities import (
-            discover_capabilities,
-            validate_requested_routes,
-        )
-
-        execution_config = load_execution_config(project_root, config)
-        router = StageModelRouter.from_config(execution_config, project_root)
-        provider_type = execution_config.get("provider", {}).get("type", "codex_cli")
-        command = execution_config.get("provider", {}).get("command", [])
-        executable = command[0] if isinstance(command, list) and command else None
-
-        requested = {
-            stage: (
-                router.settings_for(stage).model,
-                router.settings_for(stage).reasoning_effort,
-            )
-            for stage in sorted(execution_config.get("stage_routes", {}))
-        }
-
-        try:
-            caps = discover_capabilities(provider_type, executable)
-            errors = validate_requested_routes(caps, requested)
-            if errors:
-                raise QualityGateError(
-                    f"{provider_type} 模型能力预检失败: " + "；".join(errors)
-                )
-            checks.append(f"{caps.provider_type} CLI: {caps.version}")
-            checks.extend(
-                f"route {stage}: {model}/{effort}"
-                for stage, (model, effort) in requested.items()
-            )
-            checks.append(
-                f"{caps.provider_type} model and reasoning capabilities validated"
-            )
-        except Exception as exc:
-            if isinstance(exc, QualityGateError):
-                raise
-            raise QualityGateError(
-                f"{provider_type} 能力自发现与预检失败: {exc}"
-            ) from exc
-
     if "quality_evolution" in config:
         for filename, field in (
             ("memory_index.json", "entries"),
@@ -1269,7 +1193,7 @@ def import_manual_candidate(
     if plan_attempt < 1:
         raise ArtifactValidationError("规划来源尝试序号必须大于0")
     state = load_state(project_root / "novel/state/current.json")
-    run_preflight(project_root, state, check_cli_capabilities=False)
+    run_preflight(project_root, state)
     config = load_config(project_root)
     _, _, call_limit = _manual_review_budget_contract(config)
     chapter = state["chapter"]["next_chapter"]
@@ -1369,7 +1293,7 @@ def review_manual_candidate(
     if attempt < 1:
         raise ArtifactValidationError("手工导入尝试序号必须大于0")
     state = load_state(project_root / "novel/state/current.json")
-    run_preflight(project_root, state, check_cli_capabilities=False)
+    run_preflight(project_root, state)
     chapter = state["chapter"]["next_chapter"]
     workspace = ChapterWorkspace(
         project_root
@@ -1441,9 +1365,12 @@ def review_manual_candidate(
         state, plan, draft, static_review, planner_context
     )
     input_hash = fingerprint(packet)
-    active_router = router or StageModelRouter.from_config(
-        load_execution_config(project_root, config), project_root
-    )
+    if router is None:
+        raise ProviderError(
+            "手工稿语义任务必须由当前 Agent 按 WORKFLOW.md 执行；"
+            "仓库不再从配置构造 Agent 后端"
+        )
+    active_router = router
     caller = ModelCallExecutor(active_router, manifest, progress)
     metadata = _manual_review_metadata(
         active_router,
@@ -2811,7 +2738,6 @@ def accept_dry_run(
     reader_gate = acceptance_config.get("quality_gates", {}).get(
         "blind_reader_gate", {}
     )
-    router: StageModelRouter | None = None
     if reader_gate.get("enabled", False):
         reader_review: dict[str, Any] | None = None
         existing_reader_path = workspace_path / "reader_review.json"
@@ -2832,33 +2758,11 @@ def accept_dry_run(
             except (OSError, json.JSONDecodeError):
                 reader_review = None
         if reader_review is None:
-            # A targeted edit changes the draft hash, so reports for earlier
-            # text fail validation and a fresh blind read is mandatory.
-            if manual_manifest is not None:
-                raise ArtifactValidationError(
-                    "手工导入尝试缺少有效盲读绑定；accept禁止现场调用模型"
-                )
-            router = StageModelRouter.from_config(
-                load_execution_config(project_root, acceptance_config), project_root
+            raise ArtifactValidationError(
+                "待接受尝试缺少有效盲读绑定；请由当前 Agent 按 "
+                "workflows/accept-candidate.md 生成并验证工件，"
+                "accept 不会现场启动模型"
             )
-            raw = router.provider_for("blind_reader_reviewer").generate(
-                build_blind_reader_prompt(
-                    project_root,
-                    build_blind_reader_packet(state, number, draft, project_root),
-                ),
-                project_root / "schemas/reader_review.schema.json",
-            )
-            try:
-                reader_review = parse_json_artifact(raw, "accept-blind-reader")
-                canonicalize_artifact_quotes(reader_review, draft)
-                canonicalize_scene_audit_anchor_quotes(
-                    reader_review.get("mechanism_audit"), draft
-                )
-                canonicalize_pacing_diagnostics(reader_review, draft)
-                workspace.write_json("reader_review.json", reader_review)
-            except ArtifactValidationError:
-                workspace.write_raw_text("reader_review.invalid.txt", raw)
-                raise
         else:
             workspace.write_json("reader_review.json", reader_review)
         require_no_p1(
@@ -2906,46 +2810,11 @@ def accept_dry_run(
             except (OSError, json.JSONDecodeError):
                 state_settlement = None
         if state_settlement is None:
-            if manual_manifest is not None:
-                raise ArtifactValidationError(
-                    "手工导入尝试缺少有效状态结算绑定；accept禁止现场调用模型"
-                )
-            router = router or StageModelRouter.from_config(
-                load_execution_config(project_root, acceptance_config), project_root
+            raise ArtifactValidationError(
+                "待接受尝试缺少有效状态结算绑定；请由当前 Agent 按 "
+                "workflows/accept-candidate.md 生成并验证工件，"
+                "accept 不会现场启动模型"
             )
-            settlement_raw = router.provider_for("state_settler").generate(
-                build_state_settlement_prompt(
-                    project_root,
-                    build_state_settlement_packet(
-                        state,
-                        plan,
-                        draft,
-                        planner_context.get("foreshadow_registry"),
-                        planner_context.get("arc_registry"),
-                    ),
-                ),
-                project_root / "schemas/state_settlement.schema.json",
-            )
-            try:
-                state_settlement = parse_json_artifact(
-                    settlement_raw, "accept-state-settlement"
-                )
-                canonicalize_artifact_quotes(state_settlement, draft)
-                canonicalize_missing_change_paths(
-                    state_settlement,
-                    expected_state_changes(
-                        state,
-                        plan,
-                        planner_context.get("foreshadow_registry"),
-                        planner_context.get("arc_registry"),
-                    ),
-                )
-                workspace.write_json("state_settlement.json", state_settlement)
-            except ArtifactValidationError:
-                workspace.write_raw_text(
-                    "state_settlement.invalid.txt", settlement_raw
-                )
-                raise
         else:
             workspace.write_json("state_settlement.json", state_settlement)
         require_no_p1(
@@ -3159,9 +3028,11 @@ class WritingPipeline:
             self.provider = provider
             self.router = StageModelRouter.single(provider)
         else:
-            self.config = load_execution_config(self.project_root, self.config)
-            self.provider = provider_from_config(self.config, self.project_root)
-            self.router = StageModelRouter.from_config(self.config, self.project_root)
+            raise ProviderError(
+                "仓库不再提供 Agent 执行后端；请由当前 Agent 按 WORKFLOW.md "
+                "执行 prompt-native 工作流。WritingPipeline 仅接受宿主显式注入的"
+                "进程内测试/嵌入 Provider。"
+            )
 
     def run_next(
         self,
@@ -3286,11 +3157,7 @@ class WritingPipeline:
         progress: ProgressSink | None,
     ) -> PipelineResult:
         state = load_state(self.project_root / "novel/state/current.json")
-        run_preflight(
-            self.project_root,
-            state,
-            check_cli_capabilities=not self._provider_injected,
-        )
+        run_preflight(self.project_root, state)
         number = state["chapter"]["next_chapter"]
         state_hash = fingerprint(state)
         attempt = self._attempt_number(number, resume, state_hash)
