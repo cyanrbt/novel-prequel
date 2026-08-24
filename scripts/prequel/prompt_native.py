@@ -15,6 +15,7 @@ REQUIRED_PROTOCOL_FILES = (
     "WORKFLOW.md",
     "workflows/status-check.md",
     "workflows/style-calibration.md",
+    "workflows/scene-generation-experiment.md",
     "workflows/next-chapter.md",
     "workflows/accept-candidate.md",
     "workflows/protocol-smoke-test.md",
@@ -22,8 +23,22 @@ REQUIRED_PROTOCOL_FILES = (
     "schemas/agent_result.schema.json",
     "schemas/protocol_smoke_artifact.schema.json",
     "schemas/style_comparison.schema.json",
+    "schemas/scene_experiment.schema.json",
+    "schemas/contract_scene_plan.schema.json",
+    "schemas/character_intention.schema.json",
+    "schemas/world_resolution.schema.json",
+    "schemas/pov_event_trace.schema.json",
+    "schemas/rolling_horizon.schema.json",
+    "schemas/scene_experiment_comparison.schema.json",
     "agents/prose_director.md",
     "agents/reference_style_reviewer.md",
+    "agents/scene_contract_planner.md",
+    "agents/scene_contract_writer.md",
+    "agents/character_actor.md",
+    "agents/world_resolver.md",
+    "agents/rolling_scene_planner.md",
+    "agents/event_renderer.md",
+    "agents/scene_experiment_reader.md",
     "novel/style/reference_voice_profile.md",
     "tests/fixtures/prompt_native_task.json",
     "tests/fixtures/prompt_native_result.json",
@@ -479,6 +494,13 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
         "schemas/agent_result.schema.json",
         "schemas/protocol_smoke_artifact.schema.json",
         "schemas/style_comparison.schema.json",
+        "schemas/scene_experiment.schema.json",
+        "schemas/contract_scene_plan.schema.json",
+        "schemas/character_intention.schema.json",
+        "schemas/world_resolution.schema.json",
+        "schemas/pov_event_trace.schema.json",
+        "schemas/rolling_horizon.schema.json",
+        "schemas/scene_experiment_comparison.schema.json",
     ):
         schema = _read_object(root / schema_path)
         if schema.get("$schema") != "https://json-schema.org/draft/2020-12/schema":
@@ -508,6 +530,13 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
     expected_agents = {
         "prose_director": "agents/prose_director.md",
         "reference_style_reviewer": "agents/reference_style_reviewer.md",
+        "scene_contract_planner": "agents/scene_contract_planner.md",
+        "scene_contract_writer": "agents/scene_contract_writer.md",
+        "character_actor": "agents/character_actor.md",
+        "world_resolver": "agents/world_resolver.md",
+        "rolling_scene_planner": "agents/rolling_scene_planner.md",
+        "event_renderer": "agents/event_renderer.md",
+        "scene_experiment_reader": "agents/scene_experiment_reader.md",
     }
     for name, path in expected_agents.items():
         if agent_paths.get(name) != path:

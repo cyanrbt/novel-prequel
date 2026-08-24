@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "world_resolution.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "experiment_id", "source_fingerprint", "tick", "intent_fingerprints", "events", "world_state_after", "unresolved_pressure", "rule_ids_used", "unconfirmed_truths_preserved", "no_prose"],
+  "properties": {
+    "schema": {"const": "novel-world-resolution"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "tick": {"type": "integer", "minimum": 1, "maximum": 9},
+    "intent_fingerprints": {"type": "object", "additionalProperties": {"type": "string", "pattern": "^[0-9a-f]{64}$"}},
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "order", "intent_ref", "actor_id", "visible_actor", "action", "observable_result", "observable_by", "hidden_cause", "pov_may_infer", "state_changes"],
+        "properties": {
+          "event_id": {"type": "string", "pattern": "^[A-Z0-9_-]+$"},
+          "order": {"type": "integer", "minimum": 1},
+          "intent_ref": {"type": "string", "pattern": "^(WORLD_PRESSURE|[A-Z0-9_-]+)$"},
+          "actor_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+          "visible_actor": {"type": "string", "minLength": 1},
+          "action": {"type": "string", "minLength": 1},
+          "observable_result": {"type": "string", "minLength": 1},
+          "observable_by": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "hidden_cause": {"type": "string"},
+          "pov_may_infer": {"type": "string"},
+          "state_changes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "world_state_after": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "unresolved_pressure": {"type": "string", "minLength": 1},
+    "rule_ids_used": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z0-9_-]+$"}},
+    "unconfirmed_truths_preserved": {"const": true},
+    "no_prose": {"const": true}
+  }
+}

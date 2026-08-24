@@ -49,6 +49,7 @@
 
 - [`workflows/status-check.md`](workflows/status-check.md)：只读检查项目是否可以继续。
 - [`workflows/style-calibration.md`](workflows/style-calibration.md)：用三候选盲选校准正向文风画像，不修改正式正文。
+- [`workflows/scene-generation-experiment.md`](workflows/scene-generation-experiment.md)：在同一事实锁下比较预先规划、角色模拟和滚动规划，只停在匿名人工盲选。
 - [`workflows/next-chapter.md`](workflows/next-chapter.md)：规划、生成、审查下一章并停在安全边界。
 - [`workflows/accept-candidate.md`](workflows/accept-candidate.md)：重新验证并提升已通过的候选。
 - [`workflows/protocol-smoke-test.md`](workflows/protocol-smoke-test.md)：不调用外部 Agent、不修改正式内容的协议冒烟测试。
@@ -60,6 +61,9 @@ Python 工具是可选安全设施，不是 Agent 驱动器：
 ```bash
 # 只检查通用工作流、任务协议和示例工件
 python3 scripts/orchestrator.py workflow-check
+
+# 验证冻结的场景实验输入，不调用模型、不改正式正文
+python3 scripts/orchestrator.py scene-experiment validate --packet <scene_packet.json>
 
 # 检查项目状态、规则、章节连续性和正式审核绑定；不检查任何 Agent CLI
 python3 scripts/orchestrator.py preflight

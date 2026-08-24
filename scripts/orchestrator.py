@@ -49,6 +49,11 @@ from scripts.prequel.scene_audit import (
     canonicalize_scene_audit_anchor_quotes,
     validate_scene_mechanism_audit,
 )
+from scripts.prequel.scene_experiment import (
+    load_json_object as load_scene_experiment_json,
+    prepare_blind_bundle,
+    validate_scene_packet,
+)
 from scripts.prequel.state_store import atomic_save_json, atomic_save_text, load_state
 from scripts.prequel.taste_contract import load_taste_contract
 from scripts.prequel.prompt_native import validate_prompt_native_project
@@ -169,6 +174,44 @@ def command_preflight(args) -> int:
 def command_workflow_check(args) -> int:
     for check in validate_prompt_native_project(PROJECT_ROOT):
         print(f"[OK] {check}")
+    return 0
+
+
+def command_scene_experiment(args) -> int:
+    packet = load_scene_experiment_json(args.packet, "场景实验输入")
+    checks = validate_scene_packet(PROJECT_ROOT, packet)
+    if args.action == "validate":
+        for check in checks:
+            print(f"[OK] {check}")
+        return 0
+
+    required = {
+        "contract_first": args.contract_first,
+        "simulation_fixed": args.simulation_fixed,
+        "simulation_rolling": args.simulation_rolling,
+    }
+    missing = [name for name, path in required.items() if path is None]
+    if missing:
+        raise StateValidationError(
+            "blind 操作缺少候选路径: " + ", ".join(missing)
+        )
+    candidates = {
+        name: path.read_text(encoding="utf-8")
+        for name, path in required.items()
+    }
+    output = args.output or (
+        PROJECT_ROOT / "novel/work/scene-experiments" / packet["experiment_id"]
+    )
+    bundle = prepare_blind_bundle(
+        PROJECT_ROOT,
+        packet,
+        candidates,
+        output,
+        seed=args.seed,
+    )
+    print("[OK] 三候选已匿名化，正式章节与状态未修改")
+    print(f"盲评包: {output / 'blind/blind_packet.json'}")
+    print(f"状态: {bundle['blind_packet']['workflow_state']}")
     return 0
 
 
@@ -588,6 +631,19 @@ def build_parser() -> argparse.ArgumentParser:
         "workflow-check", help="检查平台无关工作流与任务/结果协议"
     )
     workflow_check.set_defaults(handler=command_workflow_check)
+
+    scene_experiment = sub.add_parser(
+        "scene-experiment",
+        help="验证场景生成机制实验，或把三条路线匿名化后停在人工盲选",
+    )
+    scene_experiment.add_argument("action", choices=("validate", "blind"))
+    scene_experiment.add_argument("--packet", type=Path, required=True)
+    scene_experiment.add_argument("--contract-first", type=Path)
+    scene_experiment.add_argument("--simulation-fixed", type=Path)
+    scene_experiment.add_argument("--simulation-rolling", type=Path)
+    scene_experiment.add_argument("--output", type=Path)
+    scene_experiment.add_argument("--seed")
+    scene_experiment.set_defaults(handler=command_scene_experiment)
 
     models_parser = sub.add_parser("models", aliases=["discover"], help="自发现已安装 AI Agent 的模型与思考强度")
     models_parser.add_argument("--provider", choices=("codex_cli", "agy_cli", "opencode_cli", "grok_cli"), help="指定要自发现的 Provider 类型")

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "rolling_horizon.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "experiment_id", "source_fingerprint", "after_resolution_fingerprint", "retained_far_milestone", "old_beat_ids", "forcing_event_ids", "revision_reason", "revised_beats", "no_prose"],
+  "properties": {
+    "schema": {"const": "novel-rolling-horizon"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "after_resolution_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "retained_far_milestone": {"type": "string", "minLength": 1},
+    "old_beat_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+    "forcing_event_ids": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^[A-Z0-9_-]+$"}},
+    "revision_reason": {"type": "string", "minLength": 1},
+    "revised_beats": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["beat_id", "pressure", "open_question", "why_tentative", "invalidated_by"],
+        "properties": {
+          "beat_id": {"type": "string", "minLength": 1},
+          "pressure": {"type": "string", "minLength": 1},
+          "open_question": {"type": "string", "minLength": 1},
+          "why_tentative": {"type": "string", "minLength": 1},
+          "invalidated_by": {"type": "string", "minLength": 1}
+        }
+      }
+    },
+    "no_prose": {"const": true}
+  }
+}

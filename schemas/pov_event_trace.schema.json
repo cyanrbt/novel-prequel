@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pov_event_trace.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "experiment_id", "source_fingerprint", "resolution_fingerprint", "tick", "pov_character", "opening_state", "visible_events", "world_state_visible_after", "unresolved_pressure", "hidden_fields_removed"],
+  "properties": {
+    "schema": {"const": "novel-pov-event-trace"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "resolution_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "tick": {"type": "integer", "minimum": 1, "maximum": 9},
+    "pov_character": {"type": "string", "minLength": 1},
+    "opening_state": {"type": "string", "minLength": 1},
+    "visible_events": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "order", "visible_actor", "action", "observable_result", "pov_may_infer", "state_changes"],
+        "properties": {
+          "event_id": {"type": "string", "pattern": "^[A-Z0-9_-]+$"},
+          "order": {"type": "integer", "minimum": 1},
+          "visible_actor": {"type": "string", "minLength": 1},
+          "action": {"type": "string", "minLength": 1},
+          "observable_result": {"type": "string", "minLength": 1},
+          "pov_may_infer": {"type": "string"},
+          "state_changes": {"type": "array", "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "world_state_visible_after": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "unresolved_pressure": {"type": "string", "minLength": 1},
+    "hidden_fields_removed": {"const": true}
+  }
+}

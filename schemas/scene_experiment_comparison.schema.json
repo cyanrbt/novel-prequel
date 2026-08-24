@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scene_experiment_comparison.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "experiment_id", "source_fingerprint", "candidate_fingerprints", "ranking", "preferred_candidate", "confidence", "dimension_winners", "candidate_findings", "all_candidates_need_revision", "decision_reasons", "user_questions"],
+  "properties": {
+    "schema": {"const": "novel-scene-experiment-comparison"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "candidate_fingerprints": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["A", "B", "C"],
+      "properties": {
+        "A": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "B": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "C": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "ranking": {"type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": {"enum": ["A", "B", "C"]}},
+    "preferred_candidate": {"enum": ["A", "B", "C"]},
+    "confidence": {"enum": ["LOW", "MEDIUM", "HIGH"]},
+    "dimension_winners": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["character_specificity", "causal_life", "reaction_naturalness", "explanation_restraint", "prose_naturalness", "serial_pull"],
+      "properties": {
+        "character_specificity": {"enum": ["A", "B", "C", "TIE"]},
+        "causal_life": {"enum": ["A", "B", "C", "TIE"]},
+        "reaction_naturalness": {"enum": ["A", "B", "C", "TIE"]},
+        "explanation_restraint": {"enum": ["A", "B", "C", "TIE"]},
+        "prose_naturalness": {"enum": ["A", "B", "C", "TIE"]},
+        "serial_pull": {"enum": ["A", "B", "C", "TIE"]}
+      }
+    },
+    "candidate_findings": {"type": "array", "minItems": 3, "maxItems": 3, "items": {"$ref": "#/$defs/candidate_finding"}},
+    "all_candidates_need_revision": {"type": "boolean"},
+    "decision_reasons": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+    "user_questions": {"type": "array", "minItems": 1, "maxItems": 4, "items": {"type": "string", "minLength": 1}}
+  },
+  "$defs": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quote", "finding"],
+      "properties": {
+        "quote": {"type": "string", "minLength": 1},
+        "finding": {"type": "string", "minLength": 1}
+      }
+    },
+    "candidate_finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["candidate", "strengths", "gaps"],
+      "anyOf": [
+        {"properties": {"strengths": {"minItems": 1}}},
+        {"properties": {"gaps": {"minItems": 1}}}
+      ],
+      "properties": {
+        "candidate": {"enum": ["A", "B", "C"]},
+        "strengths": {"type": "array", "items": {"$ref": "#/$defs/finding"}},
+        "gaps": {"type": "array", "items": {"$ref": "#/$defs/finding"}}
+      }
+    }
+  }
+}

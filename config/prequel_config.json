@@ -40,6 +40,13 @@
     "writer": "agents/writer.md",
     "prose_director": "agents/prose_director.md",
     "reference_style_reviewer": "agents/reference_style_reviewer.md",
+    "scene_contract_planner": "agents/scene_contract_planner.md",
+    "scene_contract_writer": "agents/scene_contract_writer.md",
+    "character_actor": "agents/character_actor.md",
+    "world_resolver": "agents/world_resolver.md",
+    "rolling_scene_planner": "agents/rolling_scene_planner.md",
+    "event_renderer": "agents/event_renderer.md",
+    "scene_experiment_reader": "agents/scene_experiment_reader.md",
     "reviewer": "agents/reviewer.md",
     "blind_reader_reviewer": "agents/reader_reviewer.md",
     "state_settler": "agents/state_settler.md"

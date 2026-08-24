@@ -11,6 +11,7 @@
 5. **职责分离**：Planner 维护完整 Constraint Ledger；Writer 只读取精简 Story Brief；Reviewer 使用完整账本审计，Selector 只做匿名比较。
 6. **失败隔离**：未通过门禁的内容只保存在工作区，不修改正式章节和当前状态。
 7. **原子提升**：章节、元数据和状态必须一起成功写入，任何一步失败都回滚。
+8. **机制实验隔离**：角色行动、世界结算、POV 过滤与滚动规划只在专用实验工作区运行；用户盲选前不改变默认章节管线、正式正文或正典状态。
 
 ## 权威文件
 
@@ -54,6 +55,15 @@
 - 文风校准对同一场景冻结三种策略候选；支持 sub-agent 时并行，不支持时顺序执行，候选之间始终隔离。
 - Reference Style Reviewer 只做 A/B/C 相对比较，输出 `schemas/style_comparison.schema.json`，不得把绝对分数或模型偏好冒充用户审美。
 - 用户盲选是画像从 `CALIBRATING` 进入 `READY` 的必要条件；校准工件只写入 `novel/work/style-calibration/`，不直接修改正式正文。
+
+### 场景模拟实验角色
+
+- Contract-first Scene Planner 代表当前“先决定完整结果、再实现正文”的控制条件，只读取公开事实。
+- Character Actor 每次只代表一个角色，使用该角色的私有目标、有限认知和误解选择下一步行动；不同角色不得互读意图。
+- World Resolver 依据空间、资源、规则和行动冲突结算事实事件，不写 prose，也不确认尚未确认的身份或规则。
+- 确定性 POV 过滤只保留张洞可见事件，并删除隐藏原因；Event Renderer 不得读取角色私有卡和完整结算。
+- Rolling Scene Planner 只能根据已发生结果修订一至三个短期压力节拍，不能替角色指定动作或替 Resolver 指定结果。
+- Scene Experiment Reader 只做匿名相对诊断，最终结论必须来自用户盲选。完整协议见 `workflows/scene-generation-experiment.md`。
 
 ### 集成、专项 Reviewer 与 Selector
 

@@ -30,6 +30,13 @@
     "reviser": "sol_high",
     "verifier": "luna_high",
     "verifier_complex": "terra_high",
-    "arc_reviewer": "terra_high"
+    "arc_reviewer": "terra_high",
+    "scene_contract_planner": "terra_medium",
+    "scene_contract_writer": "sol_medium",
+    "character_actor": "terra_medium",
+    "world_resolver": "terra_high",
+    "rolling_scene_planner": "terra_medium",
+    "event_renderer": "sol_medium",
+    "scene_experiment_reader": "terra_high"
   }
 }

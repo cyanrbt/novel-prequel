@@ -1,0 +1,38 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "contract_scene_plan.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "experiment_id", "source_fingerprint", "pov_character", "protagonist_immediate_want", "fixed_event_chain", "planned_choice", "planned_cost", "planned_human_turn", "planned_local_answer", "planned_endpoint", "knowledge_boundary", "no_prose"],
+  "properties": {
+    "schema": {"const": "novel-contract-scene-plan"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "source_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "pov_character": {"type": "string", "minLength": 1},
+    "protagonist_immediate_want": {"type": "string", "minLength": 1},
+    "fixed_event_chain": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["event_id", "cause", "action", "result", "pov_knows"],
+        "properties": {
+          "event_id": {"type": "string", "pattern": "^[A-Z0-9_-]+$"},
+          "cause": {"type": "string", "minLength": 1},
+          "action": {"type": "string", "minLength": 1},
+          "result": {"type": "string", "minLength": 1},
+          "pov_knows": {"type": "boolean"}
+        }
+      }
+    },
+    "planned_choice": {"type": "string", "minLength": 1},
+    "planned_cost": {"type": "string", "minLength": 1},
+    "planned_human_turn": {"type": "string", "minLength": 1},
+    "planned_local_answer": {"type": "string", "minLength": 1},
+    "planned_endpoint": {"type": "string", "minLength": 1},
+    "knowledge_boundary": {"type": "string", "minLength": 1},
+    "no_prose": {"const": true}
+  }
+}

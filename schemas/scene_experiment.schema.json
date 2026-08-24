@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "scene_experiment.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "experiment_id", "source_bindings", "pov_character", "public_seed", "character_cards", "prose_contract", "controls"],
+  "properties": {
+    "schema": {"const": "novel-scene-experiment"},
+    "experiment_id": {"type": "string", "minLength": 1},
+    "source_bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["state_path", "state_sha256", "source_chapter_path", "source_chapter_sha256", "voice_profile_path", "voice_profile_sha256", "taste_contract_path", "taste_contract_sha256"],
+      "properties": {
+        "state_path": {"type": "string", "minLength": 1},
+        "state_sha256": {"$ref": "#/$defs/fingerprint"},
+        "source_chapter_path": {"type": "string", "minLength": 1},
+        "source_chapter_sha256": {"$ref": "#/$defs/fingerprint"},
+        "voice_profile_path": {"type": "string", "minLength": 1},
+        "voice_profile_sha256": {"$ref": "#/$defs/fingerprint"},
+        "taste_contract_path": {"type": "string", "minLength": 1},
+        "taste_contract_sha256": {"$ref": "#/$defs/fingerprint"}
+      }
+    },
+    "pov_character": {"type": "string", "minLength": 1},
+    "public_seed": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["timeline", "location", "opening_state", "current_pressure", "far_milestone", "fixed_facts", "world_rules", "forbidden_outcomes", "initial_horizon"],
+      "properties": {
+        "timeline": {"type": "string", "minLength": 1},
+        "location": {"type": "string", "minLength": 1},
+        "opening_state": {"type": "string", "minLength": 1},
+        "current_pressure": {"type": "string", "minLength": 1},
+        "far_milestone": {"type": "string", "minLength": 1},
+        "fixed_facts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fact"}},
+        "world_rules": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fact"}},
+        "forbidden_outcomes": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+        "initial_horizon": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["beat_id", "pressure", "open_question", "status"],
+            "properties": {
+              "beat_id": {"type": "string", "minLength": 1},
+              "pressure": {"type": "string", "minLength": 1},
+              "open_question": {"type": "string", "minLength": 1},
+              "status": {"const": "TENTATIVE"}
+            }
+          }
+        }
+      }
+    },
+    "character_cards": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["actor_id", "display_name", "public_role", "private_goal", "known_facts", "false_beliefs", "pressures", "red_lines"],
+        "properties": {
+          "actor_id": {"type": "string", "pattern": "^[a-z0-9_-]+$"},
+          "display_name": {"type": "string", "minLength": 1},
+          "public_role": {"type": "string", "minLength": 1},
+          "private_goal": {"type": "string", "minLength": 1},
+          "known_facts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/fact"}},
+          "false_beliefs": {"type": "array", "items": {"$ref": "#/$defs/fact"}},
+          "pressures": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}},
+          "red_lines": {"type": "array", "minItems": 1, "items": {"type": "string", "minLength": 1}}
+        }
+      }
+    },
+    "prose_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["min_cjk_characters", "max_cjk_characters", "voice_profile", "user_taste_contract"],
+      "properties": {
+        "min_cjk_characters": {"type": "integer", "minimum": 300},
+        "max_cjk_characters": {"type": "integer", "minimum": 301},
+        "voice_profile": {"type": "string", "minLength": 1},
+        "user_taste_contract": {"type": "object"}
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["same_writer_model", "reviewer_cannot_decide", "no_canon_write"],
+      "properties": {
+        "same_writer_model": {"const": true},
+        "reviewer_cannot_decide": {"const": true},
+        "no_canon_write": {"const": true}
+      }
+    }
+  },
+  "$defs": {
+    "fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "fact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[A-Z0-9_-]+$"},
+        "text": {"type": "string", "minLength": 1}
+      }
+    }
+  }
+}
