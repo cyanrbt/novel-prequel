@@ -1,0 +1,31 @@
+{
+  "schema": "creative-novel-state/1",
+  "machine_state": "IDLE",
+  "chapter": {
+    "last_chapter": 0,
+    "next_chapter": 1,
+    "current_volume": 1,
+    "current_volume_name": "入山",
+    "current_event": "weather_station",
+    "current_event_name": "无人气象站",
+    "current_phase": "抵达"
+  },
+  "timeline": {"current_year": 2032, "elapsed_days": 0},
+  "protagonist": {
+    "name": "远岫",
+    "age": 29,
+    "location": "南岭入山口",
+    "abilities": {"weather_observation": {"status": "trained"}},
+    "known_info": [],
+    "body": {"status": "healthy"},
+    "inventory": ["气压计", "维修单"]
+  },
+  "characters": {"active": {}, "pending": {}, "deceased": []},
+  "world_lore": {"confirmed": [], "hypotheses": []},
+  "active_foreshadows": {},
+  "completed_milestones": [],
+  "revealed_rules": [],
+  "recent_hooks": [],
+  "chapter_summaries": {"compression_level": 0, "summaries": {}},
+  "formal_review_bindings": {}
+}

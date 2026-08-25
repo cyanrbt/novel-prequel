@@ -1,0 +1,19 @@
+{
+  "schema": "creative-story-config/1",
+  "protagonist": "远岫",
+  "time_span": {"start_year": 2032, "end_year": 2033},
+  "target_chapters": {"target": 24, "mode": "milestone_driven"},
+  "words_per_chapter": 2800,
+  "chapter_length": {"safe_min": 1600, "target_min": 2200, "target_max": 3400, "safe_max": 5000},
+  "style": "contemporary-realism",
+  "agents": {
+    "planner": "tests/fixtures/decoupled_story/roles/planner.md"
+  },
+  "context_policy": {
+    "opening_blueprint": {"event_id": "weather_station", "first_chapter": 1, "last_chapter": 4},
+    "planner_canon_fact_ids": []
+  },
+  "volume_structure": [
+    {"volume": 1, "name": "入山", "entry_event": "weather_station", "entry_event_name": "无人气象站", "estimated_chapters": [20, 28], "years": "2032-2033", "exit_milestone": "M1-STATION-REOPENED"}
+  ]
+}

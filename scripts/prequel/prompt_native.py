@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .project import load_project_spec, role_paths
 from .run_manifest import fingerprint
 
 
@@ -39,7 +40,6 @@ REQUIRED_PROTOCOL_FILES = (
     "agents/rolling_scene_planner.md",
     "agents/event_renderer.md",
     "agents/scene_experiment_reader.md",
-    "novel/style/reference_voice_profile.md",
     "tests/fixtures/prompt_native_task.json",
     "tests/fixtures/prompt_native_result.json",
 )
@@ -350,13 +350,16 @@ def validate_task_envelope(project_root: Path, task: dict[str, Any]) -> list[str
             "任务信封 input_fingerprint 与 inputs 不一致"
         )
     role_file = task["role_file"]
-    _project_file(
-        project_root,
-        role_file,
-        directory="agents",
-        suffix=".md",
-        label="任务角色文件",
-    )
+    for index, declared_role in enumerate(
+        [role_file, *task.get("role_overlays", [])]
+    ):
+        _project_file(
+            project_root,
+            declared_role,
+            directory=".",
+            suffix=".md",
+            label="任务角色文件" if index == 0 else "任务角色覆盖文件",
+        )
     contract = task["output_contract"]
     schema = contract.get("schema")
     if contract.get("format") == "json":
@@ -391,6 +394,12 @@ def validate_agent_result(
     )
     if result["task_id"] != task["task_id"]:
         raise ArtifactValidationError("Agent结果 task_id 与任务不一致")
+    expected_protocol = {
+        "creative-task/1": "creative-result/1",
+        "prequel-task/1": "prequel-result/1",
+    }.get(task["protocol"])
+    if result["protocol"] != expected_protocol:
+        raise ArtifactValidationError("Agent结果协议与任务协议不匹配")
     if result["input_fingerprint"] != task["input_fingerprint"]:
         raise ArtifactValidationError("Agent结果引用了不同的输入指纹")
     if not HEX_64.fullmatch(str(result["input_fingerprint"])):
@@ -475,13 +484,14 @@ def validate_style_comparison(
 
 def validate_prompt_native_project(project_root: Path) -> list[str]:
     root = project_root.resolve()
+    spec = load_project_spec(root)
     missing = [path for path in REQUIRED_PROTOCOL_FILES if not (root / path).is_file()]
     if missing:
         raise ArtifactValidationError(
             "通用工作流缺少文件: " + ", ".join(missing)
         )
 
-    core_config = _read_object(root / "config/prequel_config.json")
+    core_config = spec.load_config()
     coupled = sorted(EXECUTION_KEYS & set(core_config))
     if coupled:
         raise ArtifactValidationError(
@@ -536,7 +546,7 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
     if ranking.get("minItems") != 3 or not ranking.get("uniqueItems"):
         raise ArtifactValidationError("文风比较必须对三个不同候选排序")
 
-    profile = (root / "novel/style/reference_voice_profile.md").read_text(
+    profile = spec.path("reference_voice_profile").read_text(
         encoding="utf-8"
     )
     for marker in (
@@ -562,6 +572,7 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
     for name, path in expected_agents.items():
         if agent_paths.get(name) != path:
             raise ArtifactValidationError(f"核心配置缺少文风角色: {name}")
+        role_paths(root, name)
 
     task = _read_object(root / "tests/fixtures/prompt_native_task.json")
     result = _read_object(root / "tests/fixtures/prompt_native_result.json")

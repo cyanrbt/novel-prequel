@@ -50,8 +50,8 @@ class PromptNativeWorkflowTests(unittest.TestCase):
             validate_task_envelope(ROOT, changed)
 
         changed = copy.deepcopy(task)
-        changed["role_file"] = "agents/../README.md"
-        with self.assertRaisesRegex(ArtifactValidationError, "必须位于 agents"):
+        changed["role_file"] = "../outside.md"
+        with self.assertRaisesRegex(ArtifactValidationError, "必须位于"):
             validate_task_envelope(ROOT, changed)
 
     def test_result_cannot_be_reused_for_another_task(self):
@@ -62,6 +62,13 @@ class PromptNativeWorkflowTests(unittest.TestCase):
         changed["task_id"] = "another-task"
         with self.assertRaisesRegex(ArtifactValidationError, "task_id"):
             validate_agent_result(task, changed, ROOT)
+
+    def test_legacy_protocol_pair_remains_readable(self):
+        task = self.fixture("prompt_native_task.json")
+        result = self.fixture("prompt_native_result.json")
+        task["protocol"] = "prequel-task/1"
+        result["protocol"] = "prequel-result/1"
+        validate_agent_result(task, result, ROOT)
 
     def test_completed_result_must_match_declared_artifact_schema(self):
         task = self.fixture("prompt_native_task.json")

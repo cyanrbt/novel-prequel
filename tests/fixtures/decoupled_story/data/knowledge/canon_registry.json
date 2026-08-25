@@ -1,0 +1,10 @@
+{
+  "schema": "creative-canon/1",
+  "confidence_levels": {
+    "A": "项目确认的事实",
+    "B": "有证据但尚未锁定的事实",
+    "C": "可调整的创作推演"
+  },
+  "facts": [],
+  "era_bans": []
+}

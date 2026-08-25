@@ -1,0 +1,7 @@
+{
+  "schema": "creative-engine-config/1",
+  "context_limits": {"recent_chars": 6000},
+  "quality_gates": {"blind_reader_gate": {"enabled": false}},
+  "memory_management": {"max_retries": 1},
+  "git": {"auto_commit": false}
+}

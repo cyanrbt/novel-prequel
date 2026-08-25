@@ -9,6 +9,7 @@ from typing import Any
 from .errors import ArtifactValidationError
 from .evaluation import canonicalize_quote
 from .quality import Issue, _taste_contract_issues
+from .project import load_role_text
 
 
 AUDIT_FIELDS = {
@@ -41,6 +42,42 @@ SHOCK_PATTERN = re.compile(
 DIALOGUE_PATTERN = re.compile(r"“[^”\n]{1,240}”")
 
 
+def _terms_pattern(terms: Any) -> re.Pattern[str] | None:
+    if not isinstance(terms, list):
+        return None
+    values = [item for item in terms if isinstance(item, str) and item]
+    if not values:
+        return None
+    return re.compile("|".join(re.escape(item) for item in sorted(values, key=len, reverse=True)))
+
+
+def _profile_patterns(
+    audit_profile: dict[str, Any] | None,
+) -> tuple[re.Pattern[str], re.Pattern[str] | None, re.Pattern[str], re.Pattern[str], re.Pattern[str]]:
+    if audit_profile is None:
+        return (
+            POV_PATTERN,
+            NARRATOR_IDENTITY_PATTERN,
+            BOUNDARY_NOUN_PATTERN,
+            BOUNDARY_ACTION_PATTERN,
+            SHOCK_PATTERN,
+        )
+    pov = _terms_pattern(audit_profile.get("pov_terms")) or re.compile(r"(?!)")
+    nouns = _terms_pattern(audit_profile.get("boundary_nouns")) or re.compile(r"(?!)")
+    actions = _terms_pattern(audit_profile.get("boundary_actions")) or re.compile(r"(?!)")
+    shocks = _terms_pattern(audit_profile.get("shock_terms")) or re.compile(r"(?!)")
+    identity_terms = _terms_pattern(audit_profile.get("identity_subjects"))
+    identity = (
+        re.compile(
+            rf"(?:{identity_terms.pattern})[^。！？!?\n]{{0,20}}"
+            rf"(?:就是|正是|原来是|是)[^。！？!?\n]{{1,20}}"
+        )
+        if identity_terms is not None
+        else None
+    )
+    return pov, identity, nouns, actions, shocks
+
+
 def _sentence_spans(text: str) -> list[dict[str, Any]]:
     spans: list[dict[str, Any]] = []
     for match in re.finditer(r"[^。！？!?\n]+[。！？!?]?", text):
@@ -71,25 +108,31 @@ def _even_dialogue_sample(rows: list[dict[str, Any]], limit: int = 24) -> list[d
     return [row for index, row in enumerate(rows) if index in indexes]
 
 
-def extract_scene_audit_anchors(draft: str) -> dict[str, list[dict[str, Any]]]:
+def extract_scene_audit_anchors(
+    draft: str,
+    audit_profile: dict[str, Any] | None = None,
+) -> dict[str, list[dict[str, Any]]]:
+    pov_pattern, identity_pattern, boundary_noun_pattern, boundary_action_pattern, shock_pattern = (
+        _profile_patterns(audit_profile)
+    )
     sentences = _sentence_spans(draft)
     pov = [
         {**item, "kind": "perception_or_knowledge"}
         for item in sentences
-        if POV_PATTERN.search(item["quote"])
+        if pov_pattern.search(item["quote"])
     ]
     for item in sentences:
-        if NARRATOR_IDENTITY_PATTERN.search(item["quote"]) and item not in pov:
+        if identity_pattern is not None and identity_pattern.search(item["quote"]) and item not in pov:
             pov.append({**item, "kind": "narrator_identity_claim"})
     pov.sort(key=lambda item: item["start"])
 
     boundaries = [
         item
         for item in sentences
-        if BOUNDARY_NOUN_PATTERN.search(item["quote"])
-        and BOUNDARY_ACTION_PATTERN.search(item["quote"])
+        if boundary_noun_pattern.search(item["quote"])
+        and boundary_action_pattern.search(item["quote"])
     ]
-    shocks = [item for item in sentences if SHOCK_PATTERN.search(item["quote"])]
+    shocks = [item for item in sentences if shock_pattern.search(item["quote"])]
     dialogues = [
         {"quote": match.group(0), "start": match.start(), "end": match.end()}
         for match in DIALOGUE_PATTERN.finditer(draft)
@@ -110,13 +153,14 @@ def build_scene_audit_packet(
     *,
     artifact_label: str = "demo",
     prior_reader_facts: list[dict[str, Any]] | None = None,
+    audit_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     return {
         "artifact_label": artifact_label,
         "artifact_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "prior_reader_facts": prior_reader_facts or [],
         "user_taste_contract": taste_contract,
-        "audit_anchors": extract_scene_audit_anchors(draft),
+        "audit_anchors": extract_scene_audit_anchors(draft, audit_profile),
         "draft": draft,
         "coverage_rule": "四本账必须逐项覆盖输入中的每个anchor_id；不得合并、遗漏或自造anchor。",
     }
@@ -124,9 +168,7 @@ def build_scene_audit_packet(
 
 def build_scene_audit_prompt(project_root: Path, packet: dict[str, Any]) -> str:
     try:
-        role = (project_root / "agents/demo_scene_reviewer.md").read_text(
-            encoding="utf-8"
-        )
+        role = load_role_text(project_root, "demo_scene_reviewer")
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取片段场景审查指令: {exc}") from exc
     return role.rstrip() + "\n\n# 唯一输入工件\n" + json.dumps(
@@ -135,12 +177,14 @@ def build_scene_audit_prompt(project_root: Path, packet: dict[str, Any]) -> str:
 
 
 def canonicalize_scene_audit_anchor_quotes(
-    audit: Any, draft: str
+    audit: Any,
+    draft: str,
+    audit_profile: dict[str, Any] | None = None,
 ) -> None:
     """Restore model-copied anchor quotes from their deterministic IDs."""
     if not isinstance(audit, dict):
         return
-    anchors = extract_scene_audit_anchors(draft)
+    anchors = extract_scene_audit_anchors(draft, audit_profile)
     specs = (
         ("pov_source_ledger", "pov_claims", "claim_quote"),
         ("boundary_action_ledger", "boundary_actions", "action_quote"),
@@ -245,6 +289,7 @@ def validate_scene_mechanism_audit(
     draft: str,
     *,
     taste_contract: dict[str, Any] | None = None,
+    audit_profile: dict[str, Any] | None = None,
 ) -> list[Issue]:
     if not isinstance(audit, dict):
         return [Issue("SCENE_AUDIT_NOT_OBJECT", "P1", "场景审计不是object", repr(audit))]
@@ -265,7 +310,7 @@ def validate_scene_mechanism_audit(
     if verdict not in {"PASS", "REVISE"}:
         issues.append(Issue("SCENE_AUDIT_BAD_VERDICT", "P1", "场景审计结论无效", repr(verdict)))
 
-    anchors = extract_scene_audit_anchors(draft)
+    anchors = extract_scene_audit_anchors(draft, audit_profile)
     ledger_specs = (
         ("pov_source_ledger", "pov_claims", "claim_quote"),
         ("boundary_action_ledger", "boundary_actions", "action_quote"),

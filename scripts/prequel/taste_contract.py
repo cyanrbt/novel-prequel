@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .project import project_path
 
 
 CONTRACT_SCHEMA = "novel-user-taste-contract"
@@ -77,7 +78,7 @@ def validate_taste_contract(contract: Any) -> list[str]:
 
 
 def load_taste_contract(project_root: Path) -> dict[str, Any]:
-    path = project_root / "novel/style/user_taste_contract.json"
+    path = project_path(project_root, "user_taste_contract")
     try:
         contract = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:

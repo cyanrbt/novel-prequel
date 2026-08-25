@@ -1,0 +1,7 @@
+{
+  "schema": "novel-arc-registry",
+  "authority": "series_architecture.md",
+  "milestones": {
+    "M1-STATION-REOPENED": {"volume": 1, "meaning": "远岫与当地维护员共同恢复山顶气象站"}
+  }
+}

@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .project import project_path
 from .prompt_native import validate_schema_instance
 from .run_manifest import fingerprint
 from .state_store import atomic_save_json, atomic_save_text
@@ -454,9 +455,9 @@ def prepare_blind_bundle(
     validate_scene_packet(project_root, packet)
     normalized = validate_candidate_texts(packet, candidates)
     output_dir = output_dir.resolve()
-    work_boundary = (project_root / "novel/work").resolve()
+    work_boundary = project_path(project_root, "work_dir").resolve()
     if not output_dir.is_relative_to(work_boundary):
-        raise ArtifactValidationError("盲评输出必须位于 novel/work/ 内")
+        raise ArtifactValidationError("盲评输出必须位于当前项目的 work_dir 内")
     blind_dir = output_dir / "blind"
     mapping_path = output_dir / "blind_mapping.json"
     packet_path = blind_dir / "blind_packet.json"

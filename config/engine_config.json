@@ -1,0 +1,43 @@
+{
+  "schema": "creative-engine-config/1",
+  "quality_evolution": {
+    "call_limit": 12,
+    "candidate_count": 2,
+    "max_workers": 2,
+    "selector_score_gap": 4,
+    "revision_rounds": 1,
+    "weights": {"continuity": 0.3, "character": 0.25, "craft": 0.3, "anti_slop": 0.15},
+    "candidate_floors": {"continuity": 85, "character": 75, "craft": 75, "anti_slop": 80},
+    "auto_promote": {"weighted_score": 85, "continuity": 90, "character": 82, "craft": 82, "anti_slop": 82, "ballot_votes": 2},
+    "manual_floor": 78,
+    "max_dimension_regression": 3
+  },
+  "context_limits": {
+    "recent_chars": 10000
+  },
+  "quality_gates": {
+    "blind_reader_gate": {"enabled": true, "required_competitive_readiness": "MATCH"},
+    "state_evidence_gate": {"enabled": true},
+    "recent_chapters_for_repetition": 5,
+    "exact_paragraph_min_chars": 30,
+    "repeated_long_sentence_limit": 3,
+    "dash_per_thousand_warn": 8,
+    "negation_template_warn": 3
+  },
+  "memory_management": {
+    "chapter_summary_max_chars": 50,
+    "summary_compress_interval": 20,
+    "compress_target_chars": 10,
+    "foreshadow_check_interval": 5,
+    "style_drift_check_interval": 10,
+    "max_context_size_kb": 80,
+    "max_revealed_rules": 50,
+    "max_retries": 3,
+    "max_active_lessons": 8,
+    "lesson_window_chapters": 10,
+    "lesson_activation_count": 3,
+    "lesson_retire_after_clean_chapters": 10
+  },
+  "audits": {"health_interval": 10, "arc_interval": 20},
+  "git": {"auto_commit": false}
+}

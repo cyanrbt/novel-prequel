@@ -1,5 +1,5 @@
 {
-  "protocol": "prequel-task/1",
+  "protocol": "creative-task/1",
   "task_id": "protocol-smoke-reviewer",
   "stage": "protocol_smoke_test",
   "role_file": "agents/reviewer.md",

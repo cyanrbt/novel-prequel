@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "state.schema.json",
-  "title": "Novel prequel state",
+  "title": "Creative novel state",
   "type": "object",
   "required": [
     "schema",
@@ -17,7 +17,7 @@
     "chapter_summaries"
   ],
   "properties": {
-    "schema": {"const": "novel-prequel-state"},
+    "schema": {"enum": ["creative-novel-state/1", "novel-prequel-state"]},
     "machine_state": {
       "enum": ["IDLE", "INIT", "OUTLINE", "WRITE", "REVIEW", "RECOVERY", "ERROR", "WAITING_USER"]
     },

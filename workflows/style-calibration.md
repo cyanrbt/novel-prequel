@@ -2,7 +2,7 @@
 
 ## 目的
 
-用同一事实场景的三份独立改写和用户盲选，校准 `novel/style/reference_voice_profile.md`。本流程只在 `novel/work/style-calibration/` 写入可恢复工件，不直接修改正式章节、正式状态或审核绑定。
+用同一事实场景的三份独立改写和用户盲选，校准当前项目清单的 `reference_voice_profile`。本流程只在该项目 `work_dir/style-calibration/` 写入可恢复工件，不直接修改正式章节、正式状态或审核绑定。
 
 ## 前置条件
 
@@ -77,7 +77,7 @@
 
 ## 阶段六：整章验证
 
-画像为 `READY` 后，使用 Prose Director 重写完整第1章候选，但仍停在 `novel/work/`。整章必须重新通过现有确定性检查、语义审查、盲读和状态证据结算；通过 `accept-candidate.md` 前不得覆盖正式第1章。
+画像为 `READY` 后，使用 Prose Director 重写完整第1章候选，但仍停在当前项目 `work_dir`。整章必须重新通过现有确定性检查、语义审查、盲读和状态证据结算；通过 `accept-candidate.md` 前不得覆盖正式第1章。
 
 ## 停止条件
 

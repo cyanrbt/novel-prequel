@@ -7,10 +7,10 @@
 ## 步骤
 
 1. 阅读根目录 `WORKFLOW.md` 和 `init.md`。
-2. 读取 `novel/state/current.json`，确认机器状态、上一章和下一章编号。
-3. 确认 `novel/chapters/` 中的正式章节从第1章连续到 `last_chapter`。
+2. 解析默认或用户指定的 `creative-project/1` 清单，读取其 `state`，确认机器状态、上一章和下一章编号。
+3. 确认清单 `chapters_dir` 中的正式章节从第1章连续到 `last_chapter`。
 4. 确认当前事件大纲、正典登记、伏笔登记、里程碑登记和用户偏好合同存在。
-5. 读取 `novel/style/reference_voice_profile.md`；若状态仍为 `CALIBRATING`，报告需要先完成文风盲选，不得开始下一章。
+5. 读取清单 `reference_voice_profile`；若状态仍为 `CALIBRATING`，报告需要先完成文风盲选，不得开始下一章。
 6. 核对最新正式章节哈希、盲读结论和用户偏好合同哈希是否仍与 `formal_review_bindings` 一致。
 7. 检查是否存在未完成运行；只允许复用输入指纹仍一致的工件。
 

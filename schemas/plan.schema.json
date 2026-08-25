@@ -185,7 +185,7 @@
             "properties": {"name": {"type": "string"}, "status": {"type": "string"}}
           }
         },
-        "timeline_year": {"type": "integer", "minimum": 1890, "maximum": 1950},
+        "timeline_year": {"type": "integer"},
         "timeline_elapsed_days": {"type": "integer", "minimum": 0},
         "character_updates": {
           "type": "array",

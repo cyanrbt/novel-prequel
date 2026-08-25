@@ -12,6 +12,12 @@
 
 任意 Agent 从 [通用 Agent 工作流](WORKFLOW.md) 进入；状态机、质量门禁、恢复方式和完整命令见 [创作引擎手册](init.md)。
 
+## 引擎与故事已解耦
+
+根目录 [`project.json`](project.json) 只负责选择默认故事。通用管线使用 [`config/engine_config.json`](config/engine_config.json)；张洞的主角、年代、卷结构、剧情路径和角色叠加由 [`stories/zhangdong/project.json`](stories/zhangdong/project.json) 与 [`stories/zhangdong/story_config.json`](stories/zhangdong/story_config.json) 声明；灵异悬疑专用审计位于 [`profiles/horror-mystery/`](profiles/horror-mystery/)。
+
+引擎不再把 `novel/`、张洞、1911 或灵异词表当作固定运行前提。一个当代气象站现实题材项目作为自动化验收样例，能在不修改 Python 的情况下通过完整预检。项目清单、配置合并、角色覆盖和新建故事包方法见 [创作引擎与故事包](docs/project-packages.md)。
+
 ## 故事
 
 故事从1911年前后的双桥镇开始。约十七岁的张洞尚未拥有后来压制一代驭鬼者的力量；他先要从一套会指定活人守位的家族制度中保住家人，再亲手寻找不靠牺牲守位者的限制办法。
@@ -90,6 +96,8 @@ cd novel-prequel
 python3 scripts/orchestrator.py workflow-check
 python3 scripts/orchestrator.py status
 python3 scripts/orchestrator.py preflight
+# 显式选择另一个故事；--project 放在子命令前
+python3 scripts/orchestrator.py --project <story/project.json> status
 ```
 
 | 目的 | 命令 |
@@ -110,11 +118,13 @@ novel-prequel/
 ├── init.md                         # 状态机、门禁与命令
 ├── agents/                         # Planner、Writer、Reviewer 指令
 ├── workflows/                      # 可执行工作流
-├── config/                         # 质量门禁与卷结构
+├── config/engine_config.json       # 故事无关的管线与质量门禁
+├── profiles/                       # 可选题材策略与审计
+├── stories/                        # 故事清单、剧情配置与角色叠加
 ├── schemas/                        # 状态、规划和审查契约
 ├── scripts/orchestrator.py         # 确定性校验与事务工具
-├── tests/
-└── novel/
+├── tests/fixtures/decoupled_story/ # 第二题材解耦验收项目
+└── novel/                          # 张洞故事当前数据资产
     ├── chapters/                   # 正式正文
     ├── state/current.json          # 当前创作状态
     ├── rules/                      # 权威规则

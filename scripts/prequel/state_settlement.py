@@ -11,11 +11,18 @@ from .evidence_hierarchy import (
     settlement_factual_claims,
 )
 from .quality import Issue
+from .project import load_role_text
 
 
 def _state_factual_escalations(
-    settlement: dict[str, Any], draft: str
+    settlement: dict[str, Any],
+    draft: str,
+    audit_profile: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    if audit_profile is not None and not audit_profile.get(
+        "evidence_hierarchy", {}
+    ).get("enabled", False):
+        return []
     findings = detect_evidence_hierarchy_escalations(
         draft, settlement_factual_claims(settlement)
     )
@@ -237,7 +244,7 @@ def canonicalize_missing_change_paths(
 
 def build_state_settlement_prompt(project_root: Path, packet: dict[str, Any]) -> str:
     try:
-        role = (project_root / "agents/state_settler.md").read_text(encoding="utf-8")
+        role = load_role_text(project_root, "state_settler")
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取状态结算指令: {exc}") from exc
     return role.rstrip() + "\n\n# 唯一输入工件\n" + json.dumps(packet, ensure_ascii=False, indent=2)
@@ -322,9 +329,7 @@ def build_state_settlement_missing_feedback_prompt(
 ) -> str:
     """Request one complete re-settlement for precisely identified omissions."""
     try:
-        role = (project_root / "agents/state_settler.md").read_text(
-            encoding="utf-8"
-        )
+        role = load_role_text(project_root, "state_settler")
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取状态结算指令: {exc}") from exc
     feedback = {
@@ -406,6 +411,7 @@ def validate_state_settlement(
     draft: str,
     foreshadow_registry: dict[str, Any] | None = None,
     arc_registry: dict[str, Any] | None = None,
+    audit_profile: dict[str, Any] | None = None,
 ) -> list[Issue]:
     if not isinstance(settlement, dict):
         return [Issue("SETTLEMENT_NOT_OBJECT", "P1", "状态结算报告不是object", repr(settlement))]
@@ -502,7 +508,9 @@ def validate_state_settlement(
         )
     if verdict == "INSUFFICIENT_EVIDENCE" and not promotion_gaps:
         issues.append(Issue("SETTLEMENT_FAIL_WITHOUT_GAPS", "P1", "关键证据充足时不得判定证据不足", repr(settlement)))
-    for finding in _state_factual_escalations(settlement, draft):
+    for finding in _state_factual_escalations(
+        settlement, draft, audit_profile
+    ):
         messages = {
             "SETTLEMENT_FACT_LEVEL_OVERSTATEMENT": (
                 "状态结算不得把声称、请求或待核验动作升级成已持有、"

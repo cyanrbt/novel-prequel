@@ -7,16 +7,16 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .project import project_path
 from .state_store import atomic_save_json
 
 
 class MemoryStore:
     def __init__(self, project_root: Path):
         self.project_root = Path(project_root)
-        knowledge = self.project_root / "novel/knowledge"
-        self.index_path = knowledge / "memory_index.json"
-        self.lessons_path = knowledge / "quality_lessons.json"
-        self.debts_path = knowledge / "creative_debts.json"
+        self.index_path = project_path(self.project_root, "memory_index")
+        self.lessons_path = project_path(self.project_root, "quality_lessons")
+        self.debts_path = project_path(self.project_root, "creative_debts")
         self._ensure_stores()
 
     def _ensure_stores(self) -> None:
@@ -166,14 +166,15 @@ class MemoryStore:
         }
 
     def context_for_state(self, state: dict[str, Any]) -> dict[str, Any]:
+        characters = list(state.get("characters", {}).get("active", {}).keys())
+        protagonist_name = state.get("protagonist", {}).get("name")
+        if isinstance(protagonist_name, str) and protagonist_name:
+            characters.append(protagonist_name)
         pseudo_plan = {
             "event_id": state["chapter"]["current_event"],
             "scenes": [
                 {
-                    "characters": [
-                        *state.get("characters", {}).get("active", {}).keys(),
-                        state.get("protagonist", {}).get("name", "张洞"),
-                    ],
+                    "characters": characters,
                     "location": state.get("protagonist", {}).get("location"),
                 }
             ],
@@ -209,13 +210,13 @@ class MemoryStore:
 
     def rebuild_index(self) -> int:
         entries: list[dict[str, Any]] = []
-        for meta in sorted((self.project_root / "novel/chapters/meta").glob("chapter_*.md")):
+        for meta in sorted(project_path(self.project_root, "chapter_meta_dir").glob("chapter_*.md")):
             match = re.search(r"## Memory Record\s*```json\s*(\{.*?\})\s*```", meta.read_text(encoding="utf-8"), re.S)
             if not match:
                 continue
             record = json.loads(match.group(1))
             chapter = int(re.search(r"chapter_(\d+)", meta.name).group(1))
-            sources = list((self.project_root / "novel/chapters").glob(f"vol_*/chapter_{chapter:03d}.txt"))
+            sources = list(project_path(self.project_root, "chapters_dir").glob(f"vol_*/chapter_{chapter:03d}.txt"))
             if len(sources) != 1:
                 continue
             source = sources[0]

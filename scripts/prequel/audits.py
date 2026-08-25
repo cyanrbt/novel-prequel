@@ -9,6 +9,7 @@ from .audit_manifest import AuditRunManifest
 from .errors import ArtifactValidationError, ProviderError
 from .model_router import StageModelRouter
 from .model_calls import ModelCallExecutor
+from .project import load_role_text, project_path
 from .state_store import atomic_save_json
 
 
@@ -34,7 +35,7 @@ class AuditRunner:
 
     def _run(self, audit_type: str, through_chapter: int, window: int) -> Path:
         chapter_paths = sorted(
-            (self.project_root / "novel/chapters").glob("vol_*/chapter_*.txt"),
+            project_path(self.project_root, "chapters_dir").glob("vol_*/chapter_*.txt"),
             key=lambda path: int(re.search(r"chapter_(\d+)", path.name).group(1)),
         )
         selected = [
@@ -51,10 +52,9 @@ class AuditRunner:
         }
         if not chapters or max(chapters) != through_chapter:
             raise ArtifactValidationError("审计截止章节不存在于正式章节集")
-        knowledge = self.project_root / "novel/knowledge"
-        memory = self._read_store(knowledge / "memory_index.json", "entries")
-        lessons = self._read_store(knowledge / "quality_lessons.json", "lessons")
-        debts_path = knowledge / "creative_debts.json"
+        memory = self._read_store(project_path(self.project_root, "memory_index"), "entries")
+        lessons = self._read_store(project_path(self.project_root, "quality_lessons"), "lessons")
+        debts_path = project_path(self.project_root, "creative_debts")
         debts_data = self._read_store(debts_path, "debts")
         packet = {
             "audit_type": audit_type,
@@ -69,9 +69,7 @@ class AuditRunner:
             "existing_debts": debts_data,
         }
         try:
-            role = (self.project_root / "agents/arc_reviewer.md").read_text(
-                encoding="utf-8"
-            )
+            role = load_role_text(self.project_root, "arc_reviewer")
         except OSError as exc:
             raise ArtifactValidationError(f"无法读取阶段审计指令: {exc}") from exc
         prompt = (
@@ -80,8 +78,7 @@ class AuditRunner:
             + json.dumps(packet, ensure_ascii=False, indent=2)
         )
         report_path = (
-            self.project_root
-            / "novel/reviews"
+            project_path(self.project_root, "reviews_dir")
             / audit_type
             / f"chapter_{through_chapter:03d}.json"
         )

@@ -11,6 +11,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+from .audit_profiles import load_audit_profile
 from .artifacts import ChapterWorkspace, canonical_text
 from .audits import due_audits
 from .context_builder import (
@@ -32,6 +33,7 @@ from .evolution import EvolutionResult, QualityEvolutionEngine
 from .memory import MemoryStore, memory_record
 from .model_calls import ModelCallExecutor
 from .progress import ProgressSink
+from .project import load_project_spec, load_role_text, project_path
 from .model_router import StageModelRouter
 from .provider import ModelProvider
 from .quality import Issue, scan_draft, validate_plan, validate_review
@@ -70,14 +72,7 @@ class PipelineResult:
 
 
 def load_config(project_root: Path) -> dict[str, Any]:
-    path = project_root / "config/prequel_config.json"
-    try:
-        value = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        raise ArtifactValidationError(f"配置文件无效: {exc}") from exc
-    if not isinstance(value, dict):
-        raise ArtifactValidationError("配置根节点必须是object")
-    return value
+    return load_project_spec(project_root).load_config()
 
 
 def load_voice_profile_status(
@@ -149,7 +144,7 @@ def require_no_p1(issues: list[Issue], label: str) -> None:
 
 def formal_chapter_paths(project_root: Path) -> list[Path]:
     return sorted(
-        (project_root / "novel/chapters").glob("vol_*/chapter_*.txt"),
+        project_path(project_root, "chapters_dir").glob("vol_*/chapter_*.txt"),
         key=lambda path: int(re.search(r"chapter_(\d+)", path.name).group(1)),
     )
 
@@ -300,7 +295,7 @@ def run_preflight(
     require_voice_ready: bool = True,
 ) -> list[str]:
     checks: list[str] = []
-    state = state or load_state(project_root / "novel/state/current.json")
+    state = state or load_state(project_path(project_root, "state"))
     errors = validate_state(state)
     if errors:
         raise QualityGateError("状态预检失败: " + "；".join(errors))
@@ -311,31 +306,31 @@ def run_preflight(
     load_taste_contract(project_root)
     checks.append("cumulative user taste contract validated")
     if "quality_evolution" in config:
-        for filename, field in (
-            ("memory_index.json", "entries"),
-            ("quality_lessons.json", "lessons"),
-            ("creative_debts.json", "debts"),
+        for path_key, field in (
+            ("memory_index", "entries"),
+            ("quality_lessons", "lessons"),
+            ("creative_debts", "debts"),
         ):
-            path = project_root / "novel/knowledge" / filename
+            path = project_path(project_root, path_key)
             try:
                 store = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
-                raise QualityGateError(f"长期记忆文件无效 {filename}: {exc}") from exc
+                raise QualityGateError(f"长期记忆文件无效 {path.name}: {exc}") from exc
             if not isinstance(store, dict) or not isinstance(store.get(field), list):
-                raise QualityGateError(f"长期记忆文件缺少数组 {field}: {filename}")
+                raise QualityGateError(f"长期记忆文件缺少数组 {field}: {path.name}")
         checks.append("long-book memory stores validated")
 
-    registry_path = project_root / "novel/knowledge/canon_registry.json"
+    registry_path = project_path(project_root, "canon_registry")
     registry = json.loads(registry_path.read_text(encoding="utf-8"))
     if set(registry.get("confidence_levels", {})) != {"A", "B", "C"}:
         raise QualityGateError("canon registry缺少A/B/C三级")
     checks.append("canon registry and era bans loaded")
 
-    architecture_path = project_root / "novel/plots/series_architecture.md"
-    arc_registry_path = project_root / "novel/knowledge/arc_registry.json"
-    foreshadow_registry_path = project_root / "novel/knowledge/foreshadow_registry.json"
+    architecture_path = project_path(project_root, "series_architecture")
+    arc_registry_path = project_path(project_root, "arc_registry")
+    foreshadow_registry_path = project_path(project_root, "foreshadow_registry")
     if not architecture_path.exists():
-        raise QualityGateError("总架构文件不存在: novel/plots/series_architecture.md")
+        raise QualityGateError(f"总架构文件不存在: {architecture_path}")
     try:
         arc_registry = json.loads(arc_registry_path.read_text(encoding="utf-8"))
         foreshadow_registry = json.loads(foreshadow_registry_path.read_text(encoding="utf-8"))
@@ -359,7 +354,7 @@ def run_preflight(
         raise QualityGateError(f"状态包含未登记伏笔: {sorted(unknown_active)}")
     checks.append("milestone and foreshadow registries validated")
 
-    event_path = project_root / "novel/plots" / f"{state['chapter']['current_event']}.md"
+    event_path = project_path(project_root, "plots_dir") / f"{state['chapter']['current_event']}.md"
     if not event_path.exists():
         raise QualityGateError(f"当前事件大纲不存在: {event_path}")
     checks.append("event outline exists")
@@ -397,9 +392,8 @@ def recent_chapters(project_root: Path, state: dict[str, Any], limit: int = 5) -
 
 
 def _agent_prompt(project_root: Path, agent: str, packet: dict[str, Any], instruction: str) -> str:
-    agent_file = project_root / "agents" / f"{agent}.md"
     try:
-        role = agent_file.read_text(encoding="utf-8")
+        role = load_role_text(project_root, agent)
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取{agent}指令: {exc}") from exc
     return (
@@ -449,7 +443,7 @@ def _audit_source_path(project_root: Path, path: Path) -> str:
 def _create_manual_attempt(
     project_root: Path, chapter: int
 ) -> tuple[int, ChapterWorkspace]:
-    chapter_work = project_root / "novel/work" / f"chapter_{chapter:03d}"
+    chapter_work = project_path(project_root, "work_dir") / f"chapter_{chapter:03d}"
     chapter_work.mkdir(parents=True, exist_ok=True)
     while True:
         attempts = [
@@ -1091,11 +1085,14 @@ def _canonical_reader_model_output(
     raw: str,
     draft: str,
     artifact_name: str,
+    audit_profile: dict[str, Any] | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """Rebuild the persisted reader report from the exact model output."""
     report = parse_json_artifact(raw, artifact_name)
     canonicalize_artifact_quotes(report, draft)
-    canonicalize_scene_audit_anchor_quotes(report.get("mechanism_audit"), draft)
+    canonicalize_scene_audit_anchor_quotes(
+        report.get("mechanism_audit"), draft, audit_profile
+    )
     pacing_normalization = canonicalize_pacing_diagnostics(report, draft)
     return report, pacing_normalization
 
@@ -1192,15 +1189,14 @@ def import_manual_candidate(
     project_root = project_root.resolve()
     if plan_attempt < 1:
         raise ArtifactValidationError("规划来源尝试序号必须大于0")
-    state = load_state(project_root / "novel/state/current.json")
+    state = load_state(project_path(project_root, "state"))
     run_preflight(project_root, state)
     config = load_config(project_root)
     _, _, call_limit = _manual_review_budget_contract(config)
     chapter = state["chapter"]["next_chapter"]
     source_path = source.expanduser().resolve()
     plan_source = (
-        project_root
-        / "novel/work"
+        project_path(project_root, "work_dir")
         / f"chapter_{chapter:03d}"
         / f"attempt_{plan_attempt:02d}"
         / "plan.json"
@@ -1292,12 +1288,11 @@ def review_manual_candidate(
     project_root = project_root.resolve()
     if attempt < 1:
         raise ArtifactValidationError("手工导入尝试序号必须大于0")
-    state = load_state(project_root / "novel/state/current.json")
+    state = load_state(project_path(project_root, "state"))
     run_preflight(project_root, state)
     chapter = state["chapter"]["next_chapter"]
     workspace = ChapterWorkspace(
-        project_root
-        / "novel/work"
+        project_path(project_root, "work_dir")
         / f"chapter_{chapter:03d}"
         / f"attempt_{attempt:02d}",
         chapter,
@@ -1307,6 +1302,7 @@ def review_manual_candidate(
     draft = workspace.read_text("draft.txt")
     planner_context = _validated_manual_plan_context(project_root, state, plan)
     config = load_config(project_root)
+    audit_profile = load_audit_profile(project_root)
     reader_enabled, state_enabled, expected_call_limit = (
         _manual_review_budget_contract(config)
     )
@@ -1474,7 +1470,9 @@ def review_manual_candidate(
         ):
             reader_review = workspace.read_json("reader_review.json")
             require_no_p1(
-                validate_blind_reader_review(reader_review, draft, chapter),
+                validate_blind_reader_review(
+                    reader_review, draft, chapter, audit_profile
+                ),
                 "手工稿盲读审查",
             )
         else:
@@ -1510,7 +1508,9 @@ def review_manual_candidate(
                 )
                 canonicalize_artifact_quotes(first_reader_review, draft)
                 canonicalize_scene_audit_anchor_quotes(
-                    first_reader_review.get("mechanism_audit"), draft
+                    first_reader_review.get("mechanism_audit"),
+                    draft,
+                    audit_profile,
                 )
                 first_pacing_normalization = canonicalize_pacing_diagnostics(
                     first_reader_review, draft
@@ -1520,13 +1520,14 @@ def review_manual_candidate(
                 )
                 reader_outputs.append("reader_review.first.canonical.json")
                 first_reader_issues = validate_blind_reader_review(
-                    first_reader_review, draft, chapter
+                    first_reader_review, draft, chapter, audit_profile
                 )
                 reader_diagnostic = build_reader_validation_diagnostic(
                     first_reader_review,
                     draft,
                     first_reader_issues,
                     first_pacing_normalization,
+                    audit_profile,
                 )
                 reader_review = first_reader_review
                 final_pacing_normalization = first_pacing_normalization
@@ -1573,7 +1574,9 @@ def review_manual_candidate(
                     )
                     canonicalize_artifact_quotes(reader_review, draft)
                     canonicalize_scene_audit_anchor_quotes(
-                        reader_review.get("mechanism_audit"), draft
+                        reader_review.get("mechanism_audit"),
+                        draft,
+                        audit_profile,
                     )
                     final_pacing_normalization = (
                         canonicalize_pacing_diagnostics(reader_review, draft)
@@ -1584,7 +1587,7 @@ def review_manual_candidate(
                 )
                 reader_outputs.append("reader_review.final.canonical.json")
                 final_reader_issues = validate_blind_reader_review(
-                    reader_review, draft, chapter
+                    reader_review, draft, chapter, audit_profile
                 )
                 if reader_call_count == 2:
                     final_reader_issues.extend(
@@ -1605,6 +1608,7 @@ def review_manual_candidate(
                         draft,
                         final_reader_issues,
                         final_pacing_normalization,
+                        audit_profile,
                     )
                     final_diagnostic["retry_performed"] = (
                         reader_call_count == 2
@@ -1680,6 +1684,7 @@ def review_manual_candidate(
                     draft,
                     planner_context.get("foreshadow_registry"),
                     planner_context.get("arc_registry"),
+                    audit_profile,
                 ),
                 "手工稿状态结算",
             )
@@ -1737,6 +1742,7 @@ def review_manual_candidate(
                     draft,
                     planner_context.get("foreshadow_registry"),
                     planner_context.get("arc_registry"),
+                    audit_profile,
                 )
                 settlement_diagnostic = (
                     build_state_settlement_validation_diagnostic(
@@ -1805,6 +1811,7 @@ def review_manual_candidate(
                     draft,
                     planner_context.get("foreshadow_registry"),
                     planner_context.get("arc_registry"),
+                    audit_profile,
                 )
                 if settlement_call_count == 2:
                     final_settlement_issues.extend(
@@ -1979,6 +1986,7 @@ def _validate_manual_attempt_for_accept(
         raise QualityGateError("手工稿语义审查不是PASS")
 
     config = load_config(project_root)
+    audit_profile = load_audit_profile(project_root)
     reader_enabled, state_enabled, expected_limit = (
         _manual_review_budget_contract(config)
     )
@@ -2025,19 +2033,21 @@ def _validate_manual_attempt_for_accept(
             workspace.read_text("reader_review.first.raw.txt"),
             draft,
             "manual-blind-reader-first-raw",
+            audit_profile,
         )
         if rebuilt_first != first_canonical:
             raise ArtifactValidationError(
                 "手工稿盲读首报原始输出与规范化报告不一致"
             )
         recomputed_issues = validate_blind_reader_review(
-            first_canonical, draft, plan["chapter_number"]
+            first_canonical, draft, plan["chapter_number"], audit_profile
         )
         recomputed_diagnostic = build_reader_validation_diagnostic(
             first_canonical,
             draft,
             recomputed_issues,
             recomputed_normalization,
+            audit_profile,
         )
         expected_reader_call_count = (
             2 if recomputed_diagnostic.get("retry_eligible") else 1
@@ -2068,6 +2078,7 @@ def _validate_manual_attempt_for_accept(
                 workspace.read_text("reader_review.retry.raw.txt"),
                 draft,
                 "manual-blind-reader-feedback-raw",
+                audit_profile,
             )
             if rebuilt_final != final_canonical:
                 raise ArtifactValidationError(
@@ -2101,7 +2112,7 @@ def _validate_manual_attempt_for_accept(
             raise ArtifactValidationError("手工稿盲读调用原因与反馈流程不一致")
         require_no_p1(
             validate_blind_reader_review(
-                reader_review, draft, plan["chapter_number"]
+                reader_review, draft, plan["chapter_number"], audit_profile
             ),
             "手工稿接受前盲读绑定",
         )
@@ -2177,6 +2188,7 @@ def _validate_manual_attempt_for_accept(
             draft,
             planner_context.get("foreshadow_registry"),
             planner_context.get("arc_registry"),
+            audit_profile,
         )
         recomputed_settlement_diagnostic = (
             build_state_settlement_validation_diagnostic(
@@ -2268,6 +2280,7 @@ def _validate_manual_attempt_for_accept(
                 draft,
                 planner_context.get("foreshadow_registry"),
                 planner_context.get("arc_registry"),
+                audit_profile,
             ),
             "手工稿接受前状态结算绑定",
         )
@@ -2536,7 +2549,7 @@ def merge_formal_chapters(project_root: Path) -> tuple[Path, int]:
     """Build a continuous reading copy from the exact contiguous formal chapter set."""
     run_preflight(project_root, require_voice_ready=False)
     paths = formal_chapter_paths(project_root)
-    target = project_root / "novel/full_novel.txt"
+    target = project_path(project_root, "full_novel")
     # Formal chapter sources retain blank lines for convenient editing. The public
     # TXT is a continuous reading copy, so it intentionally contains no empty
     # paragraph lines, including at chapter boundaries.
@@ -2562,10 +2575,11 @@ def accept_dry_run(
     candidate: int | None = None,
 ) -> PipelineResult:
     """Revalidate and promote a previously reviewed dry-run attempt."""
-    state = load_state(project_root / "novel/state/current.json")
+    state = load_state(project_path(project_root, "state"))
     run_preflight(project_root, state)
+    audit_profile = load_audit_profile(project_root)
     number = state["chapter"]["next_chapter"]
-    chapter_work = project_root / "novel/work" / f"chapter_{number:03d}"
+    chapter_work = project_path(project_root, "work_dir") / f"chapter_{number:03d}"
     if attempt is None:
         candidates = sorted(chapter_work.glob("attempt_*"), reverse=True)
     else:
@@ -2746,10 +2760,14 @@ def accept_dry_run(
                 existing_reader = json.loads(existing_reader_path.read_text(encoding="utf-8"))
                 canonicalize_artifact_quotes(existing_reader, draft)
                 canonicalize_scene_audit_anchor_quotes(
-                    existing_reader.get("mechanism_audit"), draft
+                    existing_reader.get("mechanism_audit"),
+                    draft,
+                    audit_profile,
                 )
                 canonicalize_pacing_diagnostics(existing_reader, draft)
-                existing_issues = validate_blind_reader_review(existing_reader, draft, number)
+                existing_issues = validate_blind_reader_review(
+                    existing_reader, draft, number, audit_profile
+                )
                 if (
                     not any(issue.severity == "P1" for issue in existing_issues)
                     and existing_reader.get("verdict") == "PASS"
@@ -2766,7 +2784,9 @@ def accept_dry_run(
         else:
             workspace.write_json("reader_review.json", reader_review)
         require_no_p1(
-            validate_blind_reader_review(reader_review, draft, number),
+            validate_blind_reader_review(
+                reader_review, draft, number, audit_profile
+            ),
             "接受前盲读者审查",
         )
         if reader_review.get("verdict") != "PASS":
@@ -2801,6 +2821,7 @@ def accept_dry_run(
                     draft,
                     planner_context.get("foreshadow_registry"),
                     planner_context.get("arc_registry"),
+                    audit_profile,
                 )
                 if (
                     not any(issue.severity == "P1" for issue in settlement_issues)
@@ -2825,6 +2846,7 @@ def accept_dry_run(
                 draft,
                 planner_context.get("foreshadow_registry"),
                 planner_context.get("arc_registry"),
+                audit_profile,
             ),
             "接受前正文状态结算",
         )
@@ -2860,9 +2882,9 @@ def promote_atomically(
 ) -> None:
     number = plan["chapter_number"]
     volume = state["chapter"]["current_volume"]
-    chapter_target = project_root / f"novel/chapters/vol_{volume:02d}/chapter_{number:03d}.txt"
-    meta_target = project_root / f"novel/chapters/meta/chapter_{number:03d}.md"
-    state_target = project_root / "novel/state/current.json"
+    chapter_target = project_path(project_root, "chapters_dir") / f"vol_{volume:02d}" / f"chapter_{number:03d}.txt"
+    meta_target = project_path(project_root, "chapter_meta_dir") / f"chapter_{number:03d}.md"
+    state_target = project_path(project_root, "state")
     if chapter_target.exists() or meta_target.exists():
         raise AtomicWriteError(f"拒绝覆盖已存在的正式第{number}章；请先归档或使用专用重整流程")
     new_state = _new_state_after_chapter(
@@ -3020,6 +3042,7 @@ class WritingPipeline:
     ):
         self.project_root = project_root.resolve()
         self.config = load_config(self.project_root)
+        self.audit_profile = load_audit_profile(self.project_root)
         self._provider_injected = providers is not None or provider is not None
         if providers is not None:
             self.router = providers
@@ -3120,7 +3143,7 @@ class WritingPipeline:
         }
 
     def _attempt_number(self, number: int, resume: bool, state_hash: str) -> int:
-        chapter_work = self.project_root / "novel/work" / f"chapter_{number:03d}"
+        chapter_work = project_path(self.project_root, "work_dir") / f"chapter_{number:03d}"
         attempts = sorted(chapter_work.glob("attempt_*"))
         if resume:
             for path in reversed(attempts):
@@ -3156,7 +3179,7 @@ class WritingPipeline:
         shadow_review: str | None,
         progress: ProgressSink | None,
     ) -> PipelineResult:
-        state = load_state(self.project_root / "novel/state/current.json")
+        state = load_state(project_path(self.project_root, "state"))
         run_preflight(self.project_root, state)
         number = state["chapter"]["next_chapter"]
         state_hash = fingerprint(state)
@@ -3173,7 +3196,7 @@ class WritingPipeline:
         allowed_foreshadow_ids = set(base_context.get("foreshadow_registry", {}).get("entries", {}))
         allowed_milestone_ids = set(base_context.get("arc_registry", {}).get("milestones", {}))
         workspace = ChapterWorkspace.create(
-            self.project_root / "novel/work", number, attempt
+            project_path(self.project_root, "work_dir"), number, attempt
         )
         resuming_workspace = resume and workspace.exists("run_manifest.json")
         reader_gate_enabled = bool(
@@ -3442,11 +3465,18 @@ class WritingPipeline:
             )
             canonicalize_artifact_quotes(reader_review, engine_result.draft)
             canonicalize_scene_audit_anchor_quotes(
-                reader_review.get("mechanism_audit"), engine_result.draft
+                reader_review.get("mechanism_audit"),
+                engine_result.draft,
+                self.audit_profile,
             )
             canonicalize_pacing_diagnostics(reader_review, engine_result.draft)
             require_no_p1(
-                validate_blind_reader_review(reader_review, engine_result.draft, number),
+                validate_blind_reader_review(
+                    reader_review,
+                    engine_result.draft,
+                    number,
+                    self.audit_profile,
+                ),
                 "盲读者审查结构",
             )
             workspace.write_json("reader_review.json", reader_review)
@@ -3575,6 +3605,7 @@ class WritingPipeline:
                         engine_result.draft,
                         planner_context.get("foreshadow_registry"),
                         planner_context.get("arc_registry"),
+                        self.audit_profile,
                     ),
                     "正文状态结算",
                 )
@@ -3662,7 +3693,7 @@ class WritingPipeline:
         )
 
     def _run_legacy(self, *, dry_run: bool = False) -> PipelineResult:
-        state = load_state(self.project_root / "novel/state/current.json")
+        state = load_state(project_path(self.project_root, "state"))
         run_preflight(self.project_root, state)
         number = state["chapter"]["next_chapter"]
         quality_config = self.config.get("quality_gates", {})
@@ -3681,7 +3712,7 @@ class WritingPipeline:
 
         for attempt in range(1, max_attempts + 1):
             workspace = ChapterWorkspace.create(
-                self.project_root / "novel/work", number, attempt
+                project_path(self.project_root, "work_dir"), number, attempt
             )
             planner_context = copy.deepcopy(base_context)
             if failures:

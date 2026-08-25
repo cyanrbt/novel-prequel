@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from .errors import ArtifactValidationError
+from .project import load_project_spec, project_path
 from .taste_contract import load_taste_contract
 
 
@@ -43,10 +44,19 @@ def _recent_signatures(texts: list[str]) -> dict[str, Any]:
 def _load_chapter_blueprint(
     project_root: Path, event_id: str, chapter_number: int
 ) -> str:
-    """Load only the active card from the first-volume opening outline."""
-    if event_id != "event_1" or not 1 <= chapter_number <= 16:
+    """Load the active card from the story-configured opening outline."""
+    config = load_project_spec(project_root).load_config()
+    policy = config.get("context_policy", {}).get("opening_blueprint", {})
+    if not isinstance(policy, dict) or not policy:
         return ""
-    path = project_root / "novel/plots/volume_1_opening_16_chapters.md"
+    if (
+        event_id != policy.get("event_id")
+        or not int(policy.get("first_chapter", 1))
+        <= chapter_number
+        <= int(policy.get("last_chapter", 0))
+    ):
+        return ""
+    path = project_path(project_root, "opening_blueprint")
     if not path.is_file():
         return ""
     text = path.read_text(encoding="utf-8")
@@ -70,9 +80,11 @@ def build_planner_context(
     state: dict[str, Any],
     memory_context: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    registry = _read_json(project_root / "novel/knowledge/canon_registry.json")
+    spec = load_project_spec(project_root)
+    config = spec.load_config()
+    registry = _read_json(spec.path("canon_registry"))
     event_id = state["chapter"]["current_event"]
-    event_path = project_root / "novel/plots" / f"{event_id}.md"
+    event_path = spec.path("plots_dir") / f"{event_id}.md"
     if not event_path.exists():
         raise ArtifactValidationError(f"当前事件大纲不存在: {event_path}")
     chapter_blueprint = _load_chapter_blueprint(
@@ -84,6 +96,9 @@ def build_planner_context(
         None,
     )
     era_bans = registry.get("era_bans", {}).get(era_key, {"characters": [], "terms": []})
+    selected_fact_ids = set(
+        config.get("context_policy", {}).get("planner_canon_fact_ids", [])
+    )
     facts = [
         {
             "id": fact["id"],
@@ -93,11 +108,11 @@ def build_planner_context(
             "forbidden_overclaim": fact["forbidden_overclaim"],
         }
         for fact in registry.get("facts", [])
-        if fact.get("id") in {"CANON-RULE-001", "CANON-RULE-002", "PREQUEL-EVENT-001"}
+        if fact.get("id") in selected_fact_ids
     ]
-    architecture_path = project_root / "novel/plots/series_architecture.md"
-    registry_path = project_root / "novel/knowledge/arc_registry.json"
-    foreshadow_registry_path = project_root / "novel/knowledge/foreshadow_registry.json"
+    architecture_path = spec.path("series_architecture")
+    registry_path = spec.path("arc_registry")
+    foreshadow_registry_path = spec.path("foreshadow_registry")
     architecture = architecture_path.read_text(encoding="utf-8") if architecture_path.exists() else ""
     arc_registry = _read_json(registry_path) if registry_path.exists() else {"milestones": {}}
     foreshadow_registry = (
@@ -134,12 +149,18 @@ def build_planner_context(
     return result
 
 
-DEFAULT_CHARACTER_VOICES = {
-    "张洞": "约十七岁的张洞想凭木工和账目本事离开双桥，又羞于承认自己也想摆脱家族安排；他把查清异常当成推迟痛苦选择的办法，会过度核对、赌气越界并犯错。说话可以窘迫、顶嘴、说半句，不预演晚年的绝对理性与威势",
-    "张家叔公": "知道部分旧规却不是全知导师；真心相信那些旧规曾经救过人。其责任、隐瞒与可能付出的代价，必须由正文证据和当场选择逐步建立",
-    "张洞父亲": "识字，会记零账和辨木料；重证据、愿意追问家族旧账，也会因急于证明长辈错误而忽略眼前撤离",
-    "张洞母亲": "靠针线与家庭协作维持生计；关注粮食、工钱、名声与活人的去处，拒绝只作为儿子保护欲里的门栓，不承担神秘导师功能",
-}
+def _character_voice_fallbacks(project_root: Path) -> dict[str, str]:
+    path = project_path(project_root, "character_voice_fallbacks")
+    if not path.is_file():
+        return {}
+    payload = _read_json(path)
+    voices = payload.get("voices", {})
+    if not isinstance(voices, dict) or not all(
+        isinstance(name, str) and isinstance(value, str)
+        for name, value in voices.items()
+    ):
+        raise ArtifactValidationError(f"人物运行声纹格式无效: {path}")
+    return dict(voices)
 
 
 CANDIDATE_FOCUSES = (
@@ -382,11 +403,13 @@ def build_constraint_ledger(plan: dict[str, Any]) -> dict[str, Any]:
 def _source_entry(
     project_root: Path,
     label: str,
-    relative_path: str,
+    relative_path: str | Path,
     *,
     limit: int,
 ) -> tuple[str, dict[str, Any]] | None:
-    path = project_root / relative_path
+    path = Path(relative_path)
+    if not path.is_absolute():
+        path = project_root / path
     if not path.is_file():
         return None
     try:
@@ -396,7 +419,7 @@ def _source_entry(
     content = raw[:limit]
     return content, {
         "label": label,
-        "path": relative_path,
+        "path": str(relative_path),
         "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
         "source_chars": len(raw),
         "included_chars": len(content),
@@ -412,8 +435,9 @@ def _plan_characters(state: dict[str, Any], plan: dict[str, Any]) -> list[str]:
         for name in scene.get("characters", [])
         if isinstance(name, str) and name.strip()
     }
-    protagonist = state.get("protagonist", {}).get("name", "张洞")
-    names.add(protagonist)
+    protagonist = state.get("protagonist", {}).get("name")
+    if isinstance(protagonist, str) and protagonist.strip():
+        names.add(protagonist)
     return sorted(names)
 
 
@@ -456,10 +480,11 @@ def build_authoritative_writer_context(
     """Compile only sources that the Writer actually receives, with provenance."""
     sources: dict[str, Any] = {}
     trace: list[dict[str, Any]] = []
+    spec = load_project_spec(project_root)
     configured = {
-        "voice_profile": ("novel/style/reference_voice_profile.md", 7000),
-        "setting_whitelist": ("novel/rules/setting_whitelist.md", 7000),
-        "setting_blacklist": ("novel/rules/setting_blacklist.md", 7000),
+        "voice_profile": (spec.path("reference_voice_profile"), 7000),
+        "setting_whitelist": (spec.path("setting_whitelist"), 7000),
+        "setting_blacklist": (spec.path("setting_blacklist"), 7000),
     }
     for label, (relative_path, limit) in configured.items():
         entry = _source_entry(
@@ -472,27 +497,27 @@ def build_authoritative_writer_context(
 
     excluded_sources = {
         "compact_style": (
-            "novel/style/compact_style.yaml",
+            spec.path("compact_style"),
             "由精简的正向文风画像替代；完整风格规则保留给审查",
         ),
         "user_taste_contract_duplicate": (
-            "novel/style/user_taste_contract.json",
+            spec.path("user_taste_contract"),
             "偏好合同已作为结构化顶层工件注入，不重复附带原文",
         ),
         "rulebook": (
-            "novel/rules/rulebook.md",
+            spec.path("rulebook"),
             "当前任务只注入相关正典、事件约束和禁入项；全量规则书保留给审查",
         ),
     }
     for label, (relative_path, reason) in excluded_sources.items():
-        path = project_root / relative_path
+        path = Path(relative_path)
         if not path.is_file():
             continue
         raw = path.read_text(encoding="utf-8")
         trace.append(
             {
                 "label": label,
-                "path": relative_path,
+                "path": str(relative_path),
                 "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
                 "source_chars": len(raw),
                 "included_chars": 0,
@@ -503,22 +528,23 @@ def build_authoritative_writer_context(
 
     character_cards: dict[str, str] = {}
     voice_fallbacks: dict[str, str] = {}
-    protagonist = state.get("protagonist", {}).get("name", "张洞")
+    configured_voices = _character_voice_fallbacks(project_root)
+    protagonist = state.get("protagonist", {}).get("name")
     for name in _plan_characters(state, plan):
-        if name in {protagonist, "张洞"}:
+        if name == protagonist:
             # protagonist.md spans the whole series and contains late-stage
             # powers/voice anchors.  The live state is the authoritative,
             # milestone-safe profile for the current chapter.
-            voice_fallbacks[name] = DEFAULT_CHARACTER_VOICES.get(
+            voice_fallbacks[name] = configured_voices.get(
                 name, "只依据当前状态行动，不预演未来能力或人格"
             )
-            protagonist_path = project_root / "novel/characters/protagonist.md"
+            protagonist_path = spec.path("protagonist_card")
             if protagonist_path.is_file():
                 raw = protagonist_path.read_text(encoding="utf-8")
                 trace.append(
                     {
                         "label": f"character:{name}",
-                        "path": "novel/characters/protagonist.md",
+                        "path": spec.relative_path("protagonist_card"),
                         "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
                         "source_chars": len(raw),
                         "included_chars": 0,
@@ -527,17 +553,15 @@ def build_authoritative_writer_context(
                     }
                 )
             continue
-        relative_path = (
-            f"novel/characters/{name}.md"
-        )
+        relative_path = spec.path("characters_dir") / f"{name}.md"
         entry = _source_entry(
             project_root, f"character:{name}", relative_path, limit=8000
         )
         if entry is not None:
             character_cards[name], source_trace = entry
             trace.append(source_trace)
-        elif name in DEFAULT_CHARACTER_VOICES:
-            voice_fallbacks[name] = DEFAULT_CHARACTER_VOICES[name]
+        elif name in configured_voices:
+            voice_fallbacks[name] = configured_voices[name]
     sources["character_cards"] = character_cards
     sources["character_voice_fallbacks"] = voice_fallbacks
     sources["protagonist_runtime_profile"] = state.get("protagonist", {})
@@ -547,7 +571,7 @@ def build_authoritative_writer_context(
     trace.append(
         {
             "label": "protagonist_runtime_profile",
-            "path": "runtime:novel/state/current.json#protagonist",
+            "path": f"runtime:{spec.relative_path('state')}#protagonist",
             "sha256": hashlib.sha256(runtime_profile.encode("utf-8")).hexdigest(),
             "source_chars": len(runtime_profile),
             "included_chars": len(runtime_profile),
@@ -588,13 +612,13 @@ def build_authoritative_writer_context(
         else []
     )
 
-    anchors = project_root / "novel/style/style_anchors.txt"
+    anchors = spec.path("style_anchors")
     if anchors.is_file():
         raw = anchors.read_text(encoding="utf-8")
         trace.append(
             {
                 "label": "style_anchors",
-                "path": "novel/style/style_anchors.txt",
+                "path": spec.relative_path("style_anchors"),
                 "sha256": hashlib.sha256(raw.encode("utf-8")).hexdigest(),
                 "source_chars": len(raw),
                 "included_chars": 0,
@@ -689,12 +713,7 @@ def build_writer_packet(
         packet["authoritative_context"] = authoritative
         packet["context_trace"] = trace
     else:
-        relevant = _plan_characters(state, plan)
-        packet["character_voice_fallbacks"] = {
-            name: DEFAULT_CHARACTER_VOICES[name]
-            for name in relevant
-            if name in DEFAULT_CHARACTER_VOICES
-        }
+        packet["character_voice_fallbacks"] = {}
     if revision_context:
         packet["revision_context"] = revision_context
     return packet

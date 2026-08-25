@@ -316,7 +316,7 @@ def validate_plan(
                 issues.append(Issue("EMPTY_READER_INVESTMENT", "P1", f"reader_investment.{field}不得为空", repr(investment.get(field))))
         threat_in_motion = investment.get("threat_in_motion", "")
         if isinstance(threat_in_motion, str) and re.search(
-            r"(?:异常|危险|对手|门外(?:客|之物)?).{0,10}(?:尚未|并未|没有|未曾|暂未).{0,6}(?:再现|出现|行动|逼近|到来)",
+            r"(?:异常|危险|对手|威胁).{0,10}(?:尚未|并未|没有|未曾|暂未).{0,6}(?:再现|出现|行动|逼近|到来)",
             threat_in_motion,
         ):
             issues.append(

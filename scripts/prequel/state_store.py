@@ -36,7 +36,8 @@ REQUIRED_ROOT = {
     "chapter_summaries",
 }
 
-STATE_SCHEMA = "novel-prequel-state"
+STATE_SCHEMA = "creative-novel-state/1"
+SUPPORTED_STATE_SCHEMAS = {STATE_SCHEMA, "novel-prequel-state"}
 
 REQUIRED_CHAPTER = {
     "last_chapter",
@@ -64,8 +65,10 @@ def validate_state(state: dict[str, Any]) -> list[str]:
     for key in sorted(REQUIRED_ROOT - state.keys()):
         errors.append(f"缺失根字段: {key}")
 
-    if state.get("schema") != STATE_SCHEMA:
-        errors.append(f"schema 必须为 {STATE_SCHEMA}")
+    if state.get("schema") not in SUPPORTED_STATE_SCHEMAS:
+        errors.append(
+            "schema 必须为 novel-prequel-state 或 creative-novel-state/1"
+        )
     if state.get("machine_state") not in VALID_MACHINE_STATES:
         errors.append("machine_state 无效")
 

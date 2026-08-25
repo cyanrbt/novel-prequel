@@ -1,11 +1,11 @@
 # 《神秘复苏前传：张洞传》创作引擎
 
-本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。执行平台无关的统一入口是根目录 [`WORKFLOW.md`](WORKFLOW.md)；本手册描述任何 Agent 都必须遵守的领域状态机。项目采用质量优先的里程碑结构，目标约500章、自然完结区间440—580章，同时保持设定、时间、人物能力与叙事声音连续。
+本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。执行平台无关的统一入口是根目录 [`WORKFLOW.md`](WORKFLOW.md)；项目清单与解耦结构见 [`docs/project-packages.md`](docs/project-packages.md)。本手册的剧情示例和篇幅数字描述当前默认的张洞故事；状态机与门禁本身可由其他 `creative-project/1` 故事包复用。
 
 ## 核心原则
 
-1. **状态唯一**：当前章号、时间、人物、伏笔和已揭示规则只写入 `novel/state/current.json`。
-2. **规则唯一**：正文约束只认 `novel/rules/rulebook.md`。
+1. **状态唯一**：当前章号、时间、人物、伏笔和已揭示规则只写入项目清单的 `state`（张洞项目当前为 `novel/state/current.json`）。
+2. **规则唯一**：正文约束只认项目清单的 `rulebook`。
 3. **风格分层**：Writer 使用经用户盲选校准的 `novel/style/reference_voice_profile.md`；`compact_style.yaml` 与未核准的 `style_anchors.txt` 只供审查和追溯，不直接注入正文生成。
 4. **偏好累计**：用户明确确认或否定的视角、空间、反应、对白与命名要求写入 `novel/style/user_taste_contract.json`，同时进入 Planner、Writer 和 Reviewer；新意见不得覆盖旧意见。
 5. **职责分离**：Planner 维护完整 Constraint Ledger；Writer 只读取精简 Story Brief；Reviewer 使用完整账本审计，Selector 只做匿名比较。
@@ -14,6 +14,8 @@
 8. **机制实验隔离**：角色行动、世界结算、POV 过滤与滚动规划只在专用实验工作区运行；用户盲选前不改变默认章节管线、正式正文或正典状态。
 
 ## 权威文件
+
+下表是张洞故事当前的默认路径。引擎实际按 `stories/zhangdong/project.json` 中同名路径键解析，不对 `novel/` 目录名产生运行时依赖。
 
 | 文件 | 职责 | 更新时机 |
 |---|---|---|
@@ -84,7 +86,7 @@
 
 ## 状态机
 
-状态保存在 `novel/state/current.json` 的 `machine_state` 字段中。
+状态保存在项目清单 `state` 指定文件的 `machine_state` 字段中。
 
 | 状态 | 含义 |
 |---|---|
@@ -97,7 +99,7 @@
 | `WAITING_USER` | 等待人工判断 |
 | `ERROR` | 流程停止，正式内容不变 |
 
-运行前必须通过状态结构、模型提供方、设定注册表、事件大纲和正式章号连续性检查。
+运行前必须通过项目清单、状态结构、设定注册表、事件大纲和正式章号连续性检查。
 
 正式章节还要逐章绑定正文 SHA-256、盲读结果和偏好合同 SHA-256。审核后手工修改任一正式章、删除审核绑定或更新偏好合同，`status` 会显示 `STALE`，`preflight` 与下一章生成会停止，避免旧报告继续为新正文背书。
 
@@ -211,6 +213,9 @@ novel/state/current.json
 ```bash
 # 查看当前进度
 python3 scripts/orchestrator.py status
+
+# 显式选择另一个故事包（--project 必须位于子命令之前）
+python3 scripts/orchestrator.py --project <story/project.json> status
 
 # 执行完整写作前检查
 python3 scripts/orchestrator.py preflight

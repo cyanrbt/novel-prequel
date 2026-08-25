@@ -1,0 +1,18 @@
+{
+  "schema": "novel-user-taste-contract",
+  "version": 1,
+  "updated_at": "2026-08-24",
+  "target_experience": "克制、具体的当代现实叙事",
+  "hard_constraints": [
+    {"id": "REAL-001", "category": "causality", "rule": "技术结论必须来自已写出的观测或操作"}
+  ],
+  "rejected_patterns": ["无代价的巧合解决"],
+  "deterministic_checks": {
+    "forbidden_tokens": [],
+    "forbidden_address_tokens": [],
+    "forbidden_pov_phrases": [],
+    "warn_staccato_run": 4,
+    "check_obstructed_identification": false
+  },
+  "review_policy": {"require_exact_quotes": true}
+}

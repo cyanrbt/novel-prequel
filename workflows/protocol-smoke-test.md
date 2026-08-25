@@ -2,7 +2,7 @@
 
 ## 目的
 
-证明任务协议不依赖任何外部 Agent CLI、模型名称或 sub-agent 功能。本测试不修改 `novel/` 下的正式内容。
+证明任务协议不依赖任何外部 Agent CLI、模型名称或 sub-agent 功能。本测试不修改当前项目清单声明的正式内容。
 
 ## 输入
 
@@ -15,7 +15,7 @@
 ## 检查
 
 1. 两个示例工件均为合法 JSON object。
-2. 协议版本分别为 `prequel-task/1` 和 `prequel-result/1`。
+2. 新工件协议版本分别为 `creative-task/1` 和 `creative-result/1`；兼容验证可以读取旧的 `prequel-task/1` 与 `prequel-result/1`。
 3. `task_id` 完全一致。
 4. 结果声明的 `input_fingerprint` 与任务一致。
 5. 任务指定的角色文件和输出 Schema 均存在。

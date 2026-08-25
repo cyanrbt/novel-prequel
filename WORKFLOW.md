@@ -12,18 +12,18 @@
 
 ## 权威边界
 
-1. `novel/state/current.json`、正式章节、知识登记、规则和用户偏好合同是权威事实。
-2. `agents/*.md` 只定义角色行为，不定义运行平台。
+1. 先解析根目录 `project.json` 指向的项目清单；清单 `paths` 指定的状态、正式章节、知识登记、规则和用户偏好合同是当前项目的权威事实。
+2. 项目 `agents` 选择的基础角色和 `role_overlays` 只定义行为与故事约束，不定义运行平台。
 3. `schemas/*.schema.json` 定义结构化工件契约。
 4. `workflows/*.md` 定义任务顺序、输入、输出和停止条件。
-5. `novel/work/` 只存放可恢复运行工件，不是正式正文来源。
-6. 未通过全部门禁的结果不得写入 `novel/chapters/` 或正式状态。
+5. 项目清单的 `work_dir` 只存放可恢复运行工件，不是正式正文来源。
+6. 未通过全部门禁的结果不得写入项目的 `chapters_dir` 或正式状态。
 
 完整权威文件说明仍以 [`init.md`](init.md) 为准；本文件只定义与执行平台无关的调度协议。
 
 ## 通用执行协议
 
-每项可委派任务都使用 `prequel-task/1` 信封，结构见 [`schemas/task_envelope.schema.json`](schemas/task_envelope.schema.json)。执行者返回 `prequel-result/1`，结构见 [`schemas/agent_result.schema.json`](schemas/agent_result.schema.json)。
+每项可委派任务都使用 `creative-task/1` 信封，结构见 [`schemas/task_envelope.schema.json`](schemas/task_envelope.schema.json)。执行者返回 `creative-result/1`，结构见 [`schemas/agent_result.schema.json`](schemas/agent_result.schema.json)。旧的 `prequel-task/1` / `prequel-result/1` 工件仅作为兼容输入保留。
 
 执行者必须遵守以下规则：
 
@@ -73,6 +73,6 @@ python3 scripts/orchestrator.py preflight
 
 ## 执行边界
 
-核心创作配置位于 `config/prequel_config.json`，其中不包含 Agent、CLI 或模型名称。仓库不提供、发现或启动 Codex、AGY、OpenCode、Grok 等 Agent 命令行后端；Python 工具也不得通过子进程生成、审查或改写文本。
+创作引擎配置位于 `config/engine_config.json`，故事配置和资产由当前 `creative-project/1` 清单选择，具体组合规则见 [`docs/project-packages.md`](docs/project-packages.md)。这些配置都不包含 Agent CLI 或模型名称。仓库不提供、发现或启动 Codex、AGY、OpenCode、Grok 等 Agent 命令行后端；Python 工具也不得通过子进程生成、审查或改写文本。
 
 语义任务由正在阅读本仓库的当前 Agent 执行：支持 sub-agent 时按任务图委派，不支持时由主 Agent 顺序完成。若未来接入新的宿主平台，只能由宿主消费任务信封并回传结果工件，不得在仓库内恢复 Agent 命令启动器，也不得修改角色提示词、故事状态或质量门禁语义。

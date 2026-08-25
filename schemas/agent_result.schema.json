@@ -5,7 +5,7 @@
   "additionalProperties": false,
   "required": ["protocol", "task_id", "status", "input_fingerprint", "artifact", "error"],
   "properties": {
-    "protocol": {"const": "prequel-result/1"},
+    "protocol": {"enum": ["creative-result/1", "prequel-result/1"]},
     "task_id": {"type": "string", "minLength": 1},
     "status": {"enum": ["COMPLETED", "BLOCKED", "FAILED"]},
     "input_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},

@@ -6,7 +6,9 @@ import re
 from pathlib import Path
 from typing import Any
 
+from .audit_profiles import load_audit_profile
 from .errors import ArtifactValidationError
+from .project import load_role_text, project_path
 from .evidence_hierarchy import (
     detect_evidence_hierarchy_escalations,
     reader_factual_claims,
@@ -128,8 +130,14 @@ RETRYABLE_READER_QUOTE_ISSUE_CODES = frozenset(
 )
 
 def _reader_factual_escalations(
-    review: dict[str, Any], draft: str
+    review: dict[str, Any],
+    draft: str,
+    audit_profile: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
+    if audit_profile is not None and not audit_profile.get(
+        "evidence_hierarchy", {}
+    ).get("enabled", False):
+        return []
     findings = detect_evidence_hierarchy_escalations(
         draft, reader_factual_claims(review)
     )
@@ -166,7 +174,7 @@ def build_blind_reader_packet(
     if project_root is not None and chapter_number > 1:
         previous_number = chapter_number - 1
         previous_paths = sorted(
-            (project_root / "novel/chapters").glob(
+            project_path(project_root, "chapters_dir").glob(
                 f"vol_*/chapter_{previous_number:03d}.txt"
             )
         )
@@ -179,17 +187,20 @@ def build_blind_reader_packet(
             except OSError as exc:
                 raise ArtifactValidationError(f"无法读取上一章正式正文: {exc}") from exc
 
+    audit_profile = (
+        load_audit_profile(project_root) if project_root is not None else None
+    )
     packet = {
         "chapter_number": chapter_number,
         "draft_sha256": hashlib.sha256(draft.encode("utf-8")).hexdigest(),
         "prior_reader_facts": prior[-3:],
         "immediate_prior_chapter": immediate_prior_chapter,
         "draft": draft,
-        "audit_anchors": extract_scene_audit_anchors(draft),
+        "audit_anchors": extract_scene_audit_anchors(draft, audit_profile),
         "instruction_boundary": "只可使用当前正文、已发布前文正文与读者摘要；没有提供的信息不得推断为作者既定设定。",
     }
     if project_root is not None:
-        benchmark_path = project_root / "novel/benchmarks/opening_compulsion.md"
+        benchmark_path = project_path(project_root, "opening_benchmarks")
         try:
             packet["benchmark_calibration"] = benchmark_path.read_text(encoding="utf-8")
         except OSError as exc:
@@ -200,7 +211,7 @@ def build_blind_reader_packet(
 
 def build_blind_reader_prompt(project_root: Path, packet: dict[str, Any]) -> str:
     try:
-        role = (project_root / "agents/reader_reviewer.md").read_text(encoding="utf-8")
+        role = load_role_text(project_root, "reader_reviewer")
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取盲读者指令: {exc}") from exc
     return (
@@ -333,7 +344,9 @@ def canonicalize_pacing_diagnostics(
 
 
 def _repairable_reader_quote_issues(
-    review: dict[str, Any], draft: str
+    review: dict[str, Any],
+    draft: str,
+    audit_profile: dict[str, Any] | None = None,
 ) -> list[dict[str, Any]]:
     """Locate the exact allowlisted quote fields eligible for one retry."""
     audit = review.get("mechanism_audit")
@@ -391,7 +404,7 @@ def _repairable_reader_quote_issues(
         pov_rows = audit.get("pov_source_ledger")
         pov_anchors = {
             item.get("anchor_id"): item
-            for item in extract_scene_audit_anchors(draft).get(
+            for item in extract_scene_audit_anchors(draft, audit_profile).get(
                 "pov_claims", []
             )
             if isinstance(item, dict)
@@ -533,6 +546,7 @@ def build_reader_validation_diagnostic(
     draft: str,
     issues: list[Issue],
     pacing_normalization: dict[str, Any] | None,
+    audit_profile: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Describe a reader report failure without changing its semantic claims.
 
@@ -597,8 +611,12 @@ def build_reader_validation_diagnostic(
         )
     )
     p1_codes = [item.code for item in p1_issues]
-    repairable_quote_issues = _repairable_reader_quote_issues(review, draft)
-    factual_escalations = _reader_factual_escalations(review, draft)
+    repairable_quote_issues = _repairable_reader_quote_issues(
+        review, draft, audit_profile
+    )
+    factual_escalations = _reader_factual_escalations(
+        review, draft, audit_profile
+    )
     repairable_quote_codes = [
         item["code"] for item in repairable_quote_issues
     ]
@@ -671,9 +689,7 @@ def build_blind_reader_gap_feedback_prompt(
 ) -> str:
     """Request one bounded correction of an otherwise valid blind report."""
     try:
-        role = (project_root / "agents/reader_reviewer.md").read_text(
-            encoding="utf-8"
-        )
+        role = load_role_text(project_root, "reader_reviewer")
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取盲读者指令: {exc}") from exc
     repairable_quotes = diagnostic.get("repairable_quote_issues", [])
@@ -1059,7 +1075,10 @@ def _validate_pacing_diagnostics(
 
 
 def validate_blind_reader_review(
-    review: dict[str, Any], draft: str, expected_chapter: int
+    review: dict[str, Any],
+    draft: str,
+    expected_chapter: int,
+    audit_profile: dict[str, Any] | None = None,
 ) -> list[Issue]:
     issues: list[Issue] = []
     required = {
@@ -1105,7 +1124,11 @@ def validate_blind_reader_review(
         issues.append(Issue("READER_BAD_ADVERSARIAL_CHECKS", "P1", "反证检查必须是非空字符串数组的集合", repr(adversarial_checks)))
 
     mechanism_audit = review.get("mechanism_audit")
-    issues.extend(validate_scene_mechanism_audit(mechanism_audit, draft))
+    issues.extend(
+        validate_scene_mechanism_audit(
+            mechanism_audit, draft, audit_profile=audit_profile
+        )
+    )
     if (
         review.get("verdict") == "PASS"
         and isinstance(mechanism_audit, dict)
@@ -1327,7 +1350,7 @@ def validate_blind_reader_review(
                 "未通过必须给出阻断问题，或由标杆低分/重大差距提供诊断，并同时给出修订指令",
                 repr(review),
             ))
-    for finding in _reader_factual_escalations(review, draft):
+    for finding in _reader_factual_escalations(review, draft, audit_profile):
         messages = {
             "READER_FACT_LEVEL_OVERSTATEMENT": (
                 "盲读报告不得把声称、请求或待核验动作升级成已持有、"

@@ -5,10 +5,15 @@
   "additionalProperties": false,
   "required": ["protocol", "task_id", "stage", "role_file", "instruction", "inputs", "input_fingerprint", "output_contract", "capabilities"],
   "properties": {
-    "protocol": {"const": "prequel-task/1"},
+    "protocol": {"enum": ["creative-task/1", "prequel-task/1"]},
     "task_id": {"type": "string", "minLength": 1},
     "stage": {"type": "string", "minLength": 1},
-    "role_file": {"type": "string", "pattern": "^agents/.+\\.md$"},
+    "role_file": {"type": "string", "pattern": "^.+\\.md$"},
+    "role_overlays": {
+      "type": "array",
+      "items": {"type": "string", "pattern": "^.+\\.md$"},
+      "uniqueItems": true
+    },
     "instruction": {"type": "string", "minLength": 1},
     "inputs": {"type": "object"},
     "input_fingerprint": {"type": "string", "pattern": "^[0-9a-f]{64}$"},

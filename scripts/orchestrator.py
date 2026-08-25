@@ -32,10 +32,12 @@ from scripts.prequel.scene_experiment import (
 from scripts.prequel.state_store import load_state
 from scripts.prequel.taste_contract import load_taste_contract
 from scripts.prequel.prompt_native import validate_prompt_native_project
-
-
-STATE_FILE = PROJECT_ROOT / "novel/state/current.json"
-REGISTRY_FILE = PROJECT_ROOT / "novel/knowledge/canon_registry.json"
+from scripts.prequel.project import (
+    activate_project,
+    load_project_spec,
+    project_path,
+    reset_active_project,
+)
 
 
 def format_progress_event(event: dict) -> str:
@@ -74,7 +76,7 @@ def _cli_progress(event: dict) -> None:
 
 
 def _era_bans(year: int) -> dict:
-    registry = json.loads(REGISTRY_FILE.read_text(encoding="utf-8"))
+    registry = json.loads(project_path(PROJECT_ROOT, "canon_registry").read_text(encoding="utf-8"))
     for interval, bans in registry.get("era_bans", {}).items():
         start, end = (int(value) for value in interval.split("-", 1))
         if start <= year <= end:
@@ -83,12 +85,13 @@ def _era_bans(year: int) -> dict:
 
 
 def command_status(args) -> int:
-    state = load_state(STATE_FILE)
+    spec = load_project_spec(PROJECT_ROOT)
+    state = load_state(spec.path("state"))
     chapter = state["chapter"]
     config = load_config(PROJECT_ROOT)
     binding = formal_review_binding_status(PROJECT_ROOT, state, config)
     voice_status = load_voice_profile_status(PROJECT_ROOT, config)
-    print("《神秘复苏前传》创作状态")
+    print(f"{spec.title} 创作状态")
     print(f"状态: {state['machine_state']}")
     if binding["status"] == "VALID":
         print(f"进度: 第{chapter['last_chapter']}章完成 → 第{chapter['next_chapter']}章待写")
@@ -105,7 +108,7 @@ def command_status(args) -> int:
         print(f"正向文风画像: {voice_status}")
         if voice_status == "CALIBRATING":
             print("安全下一步: 执行 style-calibration，完成第1章场景盲选")
-    chapter_work = PROJECT_ROOT / "novel/work" / f"chapter_{chapter['next_chapter']:03d}"
+    chapter_work = spec.path("work_dir") / f"chapter_{chapter['next_chapter']:03d}"
     for attempt in sorted(chapter_work.glob("attempt_*"), reverse=True):
         manifest = attempt / "run_manifest.json"
         if not manifest.exists():
@@ -173,7 +176,7 @@ def command_scene_experiment(args) -> int:
         for name, path in required.items()
     }
     output = args.output or (
-        PROJECT_ROOT / "novel/work/scene-experiments" / packet["experiment_id"]
+        project_path(PROJECT_ROOT, "work_dir") / "scene-experiments" / packet["experiment_id"]
     )
     bundle = prepare_blind_bundle(
         PROJECT_ROOT,
@@ -210,7 +213,7 @@ def command_lint(args) -> int:
 
 
 def command_review(args) -> int:
-    state = load_state(STATE_FILE)
+    state = load_state(project_path(PROJECT_ROOT, "state"))
     length_policy = load_config(PROJECT_ROOT).get("chapter_length")
     paths = formal_chapter_paths(PROJECT_ROOT)
     selected = paths[-args.last :] if args.last else paths
@@ -268,11 +271,12 @@ def command_manual_import(args) -> int:
 
 
 def command_recover(args) -> int:
-    backup = STATE_FILE.with_suffix(".json.bak")
+    state_file = project_path(PROJECT_ROOT, "state")
+    backup = state_file.with_suffix(".json.bak")
     if not backup.exists():
         raise StateValidationError("没有可用的current.json.bak")
     load_state(backup)
-    shutil.copy2(backup, STATE_FILE)
+    shutil.copy2(backup, state_file)
     print("[OK] 已从current.json.bak恢复状态")
     return 0
 
@@ -285,7 +289,12 @@ def _positive_int(value: str) -> int:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="《神秘复苏》前传事务型创作管道")
+    parser = argparse.ArgumentParser(description="可配置的事务型创作管道")
+    parser.add_argument(
+        "--project",
+        type=Path,
+        help="项目清单或包含 project.json 的故事目录；默认读取根目录 project.json",
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     status = sub.add_parser("status", help="查看当前进度")
@@ -349,7 +358,10 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    token = None
     try:
+        spec = load_project_spec(PROJECT_ROOT, args.project)
+        token = activate_project(spec)
         return args.handler(args)
     except PrequelError as exc:
         print(f"[STOP] {exc}", file=sys.stderr)
@@ -357,6 +369,9 @@ def main(argv=None) -> int:
     except (OSError, json.JSONDecodeError) as exc:
         print(f"[STOP] 项目文件无法读取: {exc}", file=sys.stderr)
         return 2
+    finally:
+        if token is not None:
+            reset_active_project(token)
 
 
 if __name__ == "__main__":

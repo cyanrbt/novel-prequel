@@ -8,7 +8,7 @@
 2. `simulation_fixed`：角色按有限认知行动，世界结算后按冻结的短期压力继续；
 3. `simulation_rolling`：与第二组共享第一 tick，结算后依据实际结果修订短期压力，再继续行动与结算。
 
-本流程只写入 `novel/work/scene-experiments/` 或显式指定的基准目录，不修改正式章节、正式状态、审核绑定和文风画像。
+本流程只写入当前项目 `work_dir/scene-experiments/` 或显式指定的基准目录，不修改正式章节、正式状态、审核绑定和文风画像。
 
 ## 公平性约束
 

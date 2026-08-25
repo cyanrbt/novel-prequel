@@ -37,6 +37,7 @@ from .evaluation import (
 )
 from .model_calls import ModelCallExecutor
 from .model_router import StageModelRouter
+from .project import load_role_text
 from .quality import scan_draft
 from .run_manifest import RunManifest, fingerprint
 
@@ -125,7 +126,7 @@ def _prompt(
     instruction: str,
 ) -> str:
     try:
-        role = (project_root / "agents" / f"{agent}.md").read_text(encoding="utf-8")
+        role = load_role_text(project_root, agent)
     except OSError as exc:
         raise ArtifactValidationError(f"无法读取{agent}指令: {exc}") from exc
     return (
