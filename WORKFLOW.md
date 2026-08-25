@@ -73,6 +73,6 @@ python3 scripts/orchestrator.py preflight
 
 ## 执行边界
 
-创作引擎配置位于 `config/engine_config.json`，故事配置和资产由当前 `creative-project/1` 清单选择，具体组合规则见 [`docs/project-packages.md`](docs/project-packages.md)。这些配置都不包含 Agent CLI 或模型名称。仓库不提供、发现或启动 Codex、AGY、OpenCode、Grok 等 Agent 命令行后端；Python 工具也不得通过子进程生成、审查或改写文本。
+创作引擎配置位于 `config/engine_config.json`，故事配置和资产由当前 `creative-project/1` 清单选择，具体组合规则见 [`docs/project-packages.md`](docs/project-packages.md)。这些配置都不包含 Agent CLI 或模型名称。仓库没有模型 Provider、模型路由、模型调用器或 Agent 命令启动器；Python 只读取和验证工件，不生成、审查或改写文本。
 
 语义任务由正在阅读本仓库的当前 Agent 执行：支持 sub-agent 时按任务图委派，不支持时由主 Agent 顺序完成。若未来接入新的宿主平台，只能由宿主消费任务信封并回传结果工件，不得在仓库内恢复 Agent 命令启动器，也不得修改角色提示词、故事状态或质量门禁语义。

@@ -21,13 +21,17 @@ FIXTURE = ROOT / "tests/fixtures/decoupled_story/project.json"
 
 
 class ProjectDecouplingTests(unittest.TestCase):
+    def test_project_loader_contains_no_default_story_directory(self):
+        source = (ROOT / "scripts/prequel/project.py").read_text(encoding="utf-8")
+        self.assertNotIn("novel/", source)
+
     def test_default_project_merges_engine_and_story_configuration(self):
         spec = load_project_spec(ROOT)
         config = spec.load_config()
 
         self.assertEqual(spec.project_id, "zhangdong-prequel")
         self.assertEqual(config["schema"], "creative-story-config/1")
-        self.assertIn("quality_evolution", config)
+        self.assertIn("workflow_policy", config)
         self.assertEqual(config["protagonist"], "张洞")
         self.assertEqual(
             spec.path("state"), (ROOT / "novel/state/current.json").resolve()

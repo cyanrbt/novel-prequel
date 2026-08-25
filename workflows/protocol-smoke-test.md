@@ -21,6 +21,6 @@
 5. 任务指定的角色文件和输出 Schema 均存在。
 6. 完成态结果的 `artifact` 符合任务声明的输出 Schema。
 7. 核心配置中不包含 `provider`、`model_profiles` 或 `stage_routes`。
-8. 可选执行后端示例不影响上述检查。
+8. `scripts/` 中不存在模型 Provider、模型路由、模型调用器或 Agent 命令启动器。
 
 通过后只报告协议可用；不得据此声称小说正文质量门禁已经通过。

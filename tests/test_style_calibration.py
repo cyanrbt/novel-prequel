@@ -129,7 +129,9 @@ class StyleCalibrationTests(unittest.TestCase):
 
     def test_core_config_registers_platform_neutral_style_roles(self):
         config = json.loads(
-            (ROOT / "config/prequel_config.json").read_text(encoding="utf-8")
+            (ROOT / "stories/zhangdong/story_config.json").read_text(
+                encoding="utf-8"
+            )
         )
         self.assertEqual(
             config["agents"]["prose_director"], "agents/prose_director.md"

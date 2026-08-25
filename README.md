@@ -63,7 +63,7 @@ flowchart LR
     G --> S[当前状态]
 ```
 
-未达门禁的尝试只留在工作区，不改正式内容。默认平衡模式把全部模型调用限制在 12 次以内，不做无条件补写或外层重新规划。
+未达门禁的尝试只留在工作区，不改正式内容。默认平衡模式最多创建 12 个 Agent 任务，不做无条件补写或外层重新规划。
 
 另有一条与正式管线隔离的[场景生成机制实验](workflows/scene-generation-experiment.md)：同一事实锁下比较“先规划完整结果”“角色行动后结算”“结算后滚动修订”三种路线。模拟路线先生成有限认知的角色意图，再由世界结算器确定后果，Writer 只读取经过 POV 过滤的可见事件；三份正文最终匿名交给用户，不自动修改正典。
 
@@ -108,7 +108,7 @@ python3 scripts/orchestrator.py --project <story/project.json> status
 | 验证场景机制实验输入 | `python3 scripts/orchestrator.py scene-experiment validate --packet <scene_packet.json>` |
 | 匿名化三条实验路线 | `python3 scripts/orchestrator.py scene-experiment blind --packet <scene_packet.json> --contract-first <a.txt> --simulation-fixed <b.txt> --simulation-rolling <c.txt>` |
 
-规划、写作、语义审查和阶段复审都由当前 Agent 按 `WORKFLOW.md` 执行；仓库不提供 Agent CLI 后端或自动模型路由。恢复和质量门禁的完整说明见 [创作引擎手册](init.md)。
+规划、写作、语义审查和阶段复审都由当前 Agent 按 `WORKFLOW.md` 执行；Python 仅验证工件和管理正式状态，仓库内没有模型调用器、模型路由或 Agent CLI 后端。恢复和质量门禁的完整说明见 [创作引擎手册](init.md)。
 
 ## 目录
 

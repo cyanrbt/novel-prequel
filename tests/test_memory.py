@@ -5,6 +5,7 @@ import unittest
 from pathlib import Path
 
 from scripts.prequel.memory import MemoryStore
+from tests.project_fixture import write_project_manifest
 
 
 class MemoryTests(unittest.TestCase):
@@ -22,6 +23,7 @@ class MemoryTests(unittest.TestCase):
         (self.root / "novel/knowledge/creative_debts.json").write_text(
             '{"schema":"novel-creative-debts","debts":[]}', encoding="utf-8"
         )
+        write_project_manifest(self.root)
         self.store = MemoryStore(self.root)
 
     def tearDown(self):

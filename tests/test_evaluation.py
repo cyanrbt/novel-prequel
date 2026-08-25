@@ -244,7 +244,7 @@ class EvaluationTests(unittest.TestCase):
         self.assertEqual(action.kind, "DIRECT_SELECT_LOW_CONFIDENCE")
         self.assertEqual(action.selected_id, "a")
 
-    def test_single_eligible_cannot_auto_promote_without_guard(self):
+    def test_single_eligible_cannot_be_ready_without_guard(self):
         card = scorecard_from_integrated(
             integrated({"continuity": 92, "character": 84, "craft": 85, "anti_slop": 83})
         )
@@ -291,11 +291,11 @@ class EvaluationTests(unittest.TestCase):
         current = {"weighted_score": 87, "scores": {"continuity": 88, "character": 90, "craft": 86, "anti_slop": 86}}
         self.assertFalse(revision_improved(previous, current, 2))
 
-    def test_high_confidence_result_auto_promotes(self):
+    def test_high_confidence_result_becomes_ready(self):
         card = {"weighted_score": 86, "scores": {"continuity": 92, "character": 84, "craft": 85, "anti_slop": 83}, "hard_failures": [], "required_revisions": []}
         self.assertEqual(
             promotion_decision(card, "candidate_01", "candidate_01", 2)["status"],
-            "AUTO_PROMOTE",
+            "READY",
         )
 
 

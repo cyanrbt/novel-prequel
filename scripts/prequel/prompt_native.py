@@ -43,9 +43,19 @@ REQUIRED_PROTOCOL_FILES = (
     "tests/fixtures/prompt_native_task.json",
     "tests/fixtures/prompt_native_result.json",
 )
-RETIRED_AGENT_CLI_FILES = (
+RETIRED_EXECUTION_FILES = (
     "config/execution.example.json",
+    "config/prequel_config.json",
+    "scripts/benchmark_pipeline.py",
     "scripts/prequel/cli_capabilities.py",
+    "scripts/prequel/audit_manifest.py",
+    "scripts/prequel/call_budget.py",
+    "scripts/prequel/evolution.py",
+    "scripts/prequel/metrics.py",
+    "scripts/prequel/model_calls.py",
+    "scripts/prequel/model_router.py",
+    "scripts/prequel/progress.py",
+    "scripts/prequel/provider.py",
     "scripts/scene_generation_experiment.py",
     "scripts/provider_style_benchmark.py",
     "scripts/provider_style_benchmark_supplement.py",
@@ -498,26 +508,37 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
             "核心创作配置仍包含执行后端字段: " + ", ".join(coupled)
         )
 
-    retained_cli = [path for path in RETIRED_AGENT_CLI_FILES if (root / path).exists()]
-    if retained_cli:
+    retained_execution = [
+        path for path in RETIRED_EXECUTION_FILES if (root / path).exists()
+    ]
+    if retained_execution:
         raise ArtifactValidationError(
-            "仓库仍保留已淘汰的 Agent CLI 入口: " + ", ".join(retained_cli)
+            "仓库仍保留已淘汰的模型执行层: "
+            + ", ".join(retained_execution)
         )
-    cli_markers = (
+    execution_markers = (
         "co" + "dex exec",
         "Codex" + "CliProvider",
         "Agy" + "CliProvider",
         "OpenCode" + "CliProvider",
         "Grok" + "CliProvider",
+        "Model" + "Provider",
+        "Stage" + "ModelRouter",
+        "Model" + "CallExecutor",
+        "Quality" + "EvolutionEngine",
+        "Writing" + "Pipeline",
+        ".gen" + "erate(",
+        "import sub" + "process",
     )
     leaked: list[str] = []
     for path in (root / "scripts").rglob("*.py"):
         source = path.read_text(encoding="utf-8")
-        if any(marker in source for marker in cli_markers):
+        if any(marker in source for marker in execution_markers):
             leaked.append(str(path.relative_to(root)))
     if leaked:
         raise ArtifactValidationError(
-            "活动脚本重新引入了 Agent CLI 调用: " + ", ".join(sorted(leaked))
+            "活动脚本重新引入了仓库内模型执行: "
+            + ", ".join(sorted(leaked))
         )
 
     for schema_path in (
@@ -579,7 +600,7 @@ def validate_prompt_native_project(project_root: Path) -> list[str]:
     checks = [
         "prompt-native workflow files exist",
         "core story config is execution-backend agnostic",
-        "Agent CLI backends and launchers are absent",
+        "repository model execution layer is absent",
         "protocol schemas loaded",
         "style calibration workflow and positive voice profile loaded",
     ]

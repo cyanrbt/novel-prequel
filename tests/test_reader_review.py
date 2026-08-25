@@ -11,6 +11,7 @@ from scripts.prequel.reader_review import (
     validate_blind_reader_review,
 )
 from scripts.prequel.scene_audit import extract_scene_audit_anchors
+from tests.project_fixture import write_project_manifest
 
 
 def passing_mechanism_audit(draft: str) -> dict:
@@ -187,6 +188,7 @@ class BlindReaderReviewTests(unittest.TestCase):
             chapter_dir.mkdir(parents=True)
             benchmark_dir.mkdir(parents=True)
             style_dir.mkdir(parents=True)
+            write_project_manifest(root)
             (chapter_dir / "chapter_001.txt").write_text(
                 "第1章：旧章\n\n已发布正文。\n", encoding="utf-8"
             )

@@ -1,14 +1,14 @@
 {
   "schema": "creative-engine-config/1",
-  "quality_evolution": {
-    "call_limit": 12,
+  "workflow_policy": {
+    "max_agent_tasks": 12,
     "candidate_count": 2,
-    "max_workers": 2,
+    "max_parallel_tasks": 2,
     "selector_score_gap": 4,
     "revision_rounds": 1,
     "weights": {"continuity": 0.3, "character": 0.25, "craft": 0.3, "anti_slop": 0.15},
     "candidate_floors": {"continuity": 85, "character": 75, "craft": 75, "anti_slop": 80},
-    "auto_promote": {"weighted_score": 85, "continuity": 90, "character": 82, "craft": 82, "anti_slop": 82, "ballot_votes": 2},
+    "ready_thresholds": {"weighted_score": 85, "continuity": 90, "character": 82, "craft": 82, "anti_slop": 82, "ballot_votes": 2},
     "manual_floor": 78,
     "max_dimension_regression": 3
   },

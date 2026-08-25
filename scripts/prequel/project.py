@@ -14,35 +14,37 @@ PROJECT_SCHEMA = "creative-project/1"
 PROJECT_POINTER_SCHEMA = "creative-project-pointer/1"
 
 
-LEGACY_PATHS: dict[str, str] = {
-    "state": "novel/state/current.json",
-    "canon_registry": "novel/knowledge/canon_registry.json",
-    "arc_registry": "novel/knowledge/arc_registry.json",
-    "foreshadow_registry": "novel/knowledge/foreshadow_registry.json",
-    "creative_debts": "novel/knowledge/creative_debts.json",
-    "quality_lessons": "novel/knowledge/quality_lessons.json",
-    "memory_index": "novel/knowledge/memory_index.json",
-    "knowledge_dir": "novel/knowledge",
-    "plots_dir": "novel/plots",
-    "series_architecture": "novel/plots/series_architecture.md",
-    "opening_blueprint": "novel/plots/volume_1_opening_16_chapters.md",
-    "characters_dir": "novel/characters",
-    "protagonist_card": "novel/characters/protagonist.md",
-    "character_voice_fallbacks": "novel/characters/runtime_voice_fallbacks.json",
-    "chapters_dir": "novel/chapters",
-    "chapter_meta_dir": "novel/chapters/meta",
-    "work_dir": "novel/work",
-    "full_novel": "novel/full_novel.txt",
-    "reviews_dir": "novel/reviews",
-    "rulebook": "novel/rules/rulebook.md",
-    "setting_whitelist": "novel/rules/setting_whitelist.md",
-    "setting_blacklist": "novel/rules/setting_blacklist.md",
-    "compact_style": "novel/style/compact_style.yaml",
-    "reference_voice_profile": "novel/style/reference_voice_profile.md",
-    "user_taste_contract": "novel/style/user_taste_contract.json",
-    "style_anchors": "novel/style/style_anchors.txt",
-    "opening_benchmarks": "novel/benchmarks/opening_compulsion.md",
-}
+REQUIRED_PROJECT_PATHS = frozenset(
+    {
+        "state",
+        "canon_registry",
+        "arc_registry",
+        "foreshadow_registry",
+        "creative_debts",
+        "quality_lessons",
+        "memory_index",
+        "knowledge_dir",
+        "plots_dir",
+        "series_architecture",
+        "opening_blueprint",
+        "characters_dir",
+        "protagonist_card",
+        "character_voice_fallbacks",
+        "chapters_dir",
+        "chapter_meta_dir",
+        "work_dir",
+        "full_novel",
+        "reviews_dir",
+        "rulebook",
+        "setting_whitelist",
+        "setting_blacklist",
+        "compact_style",
+        "reference_voice_profile",
+        "user_taste_contract",
+        "style_anchors",
+        "opening_benchmarks",
+    }
+)
 
 
 KEY_FILE_ALIASES: dict[str, str] = {
@@ -120,7 +122,6 @@ class ProjectSpec:
     engine_config_path: Path
     story_config_path: Path
     profiles: tuple[str, ...] = ()
-    legacy: bool = False
 
     def path(self, key: str) -> Path:
         try:
@@ -147,28 +148,11 @@ class ProjectSpec:
         merged["project_id"] = self.project_id
         merged["project_title"] = self.title
         merged["project_profiles"] = list(self.profiles)
-        if self.legacy:
-            merged.setdefault(
-                "context_policy",
-                {
-                    "opening_blueprint": {
-                        "event_id": "event_1",
-                        "first_chapter": 1,
-                        "last_chapter": 16,
-                    },
-                    "planner_canon_fact_ids": [
-                        "CANON-RULE-001",
-                        "CANON-RULE-002",
-                        "PREQUEL-EVENT-001",
-                    ],
-                },
-            )
-        else:
-            merged["key_files"] = {
-                alias: self.relative_path(path_key)
-                for alias, path_key in KEY_FILE_ALIASES.items()
-                if path_key in self.declared_paths
-            }
+        merged["key_files"] = {
+            alias: self.relative_path(path_key)
+            for alias, path_key in KEY_FILE_ALIASES.items()
+            if path_key in self.declared_paths
+        }
         return merged
 
 
@@ -185,20 +169,8 @@ def load_project_spec(
             return active
     manifest_path = _manifest_path(root, project)
     if manifest_path is None:
-        legacy_config = root / "config/prequel_config.json"
-        return ProjectSpec(
-            repository_root=root,
-            project_id="legacy-prequel",
-            title="《神秘复苏前传》",
-            manifest_path=None,
-            declared_paths={
-                key: (root / relative).resolve()
-                for key, relative in LEGACY_PATHS.items()
-            },
-            engine_config_path=legacy_config,
-            story_config_path=legacy_config,
-            profiles=("horror-mystery",),
-            legacy=True,
+        raise ArtifactValidationError(
+            "仓库缺少 project.json；所有故事必须通过 creative-project/1 清单选择"
         )
 
     if not manifest_path.is_relative_to(root):
@@ -235,7 +207,7 @@ def load_project_spec(
         if not resolved.is_relative_to(root):
             raise ArtifactValidationError(f"创作项目路径必须位于仓库内: {key}")
         declared_paths[key] = resolved
-    missing = sorted(set(LEGACY_PATHS) - set(declared_paths))
+    missing = sorted(REQUIRED_PROJECT_PATHS - set(declared_paths))
     if missing:
         raise ArtifactValidationError("创作项目清单缺少路径: " + ", ".join(missing))
 
@@ -274,11 +246,7 @@ def project_path(repository_root: Path, key: str) -> Path:
 
 def role_paths(repository_root: Path, role: str) -> list[Path]:
     spec = load_project_spec(repository_root)
-    config = (
-        {}
-        if spec.legacy and not spec.engine_config_path.is_file()
-        else spec.load_config()
-    )
+    config = spec.load_config()
     roles = config.get("agents", {})
     relative = roles.get(role) if isinstance(roles, dict) else None
     if not isinstance(relative, str) or not relative.strip():

@@ -41,12 +41,10 @@ class RunManifest:
         chapter: int,
         state_hash: str,
         *,
-        call_limit: int = 10,
-        mode: str = "balanced",
+        mode: str = "prompt_native",
     ) -> "RunManifest":
-        if not isinstance(call_limit, int) or isinstance(call_limit, bool) or call_limit < 1:
-            raise ArtifactValidationError("调用预算必须是正整数")
         value = {
+            "schema": "creative-run-manifest/1",
             "chapter": chapter,
             "state_hash": state_hash,
             "status": "RUNNING",
@@ -59,14 +57,6 @@ class RunManifest:
             "context_metrics": {},
             "started_at": utc_now(),
             "finished_at": None,
-            "budget": {
-                "limit": call_limit,
-                "next_call_id": 1,
-                "active": [],
-                "calls": {},
-                "spent": 0,
-                "remaining": call_limit,
-            },
         }
         workspace.write_json("run_manifest.json", value)
         return cls(workspace, value)
@@ -97,25 +87,10 @@ class RunManifest:
     def begin(self, stage: str) -> None:
         self.mutate(lambda data: data.__setitem__("current_stage", stage))
 
-    def reopen(self, stage: str) -> None:
-        """Mark a previously waiting run active again without changing budget."""
-        def update(data: dict[str, Any]) -> None:
-            data["status"] = "RUNNING"
-            data["current_stage"] = stage
-            data["waiting_reason"] = None
-            data["finished_at"] = None
-
-        self.mutate(update)
-
-    def stage_failed(self, stage: str) -> bool:
-        with self._lock:
-            return self.data.get("stages", {}).get(stage, {}).get("status") == "FAILED"
-
     def can_reuse(
         self,
         stage: str,
         input_hash: str,
-        route_fingerprint: str | None = None,
     ) -> bool:
         with self._lock:
             record = self.data["stages"].get(stage)
@@ -123,10 +98,6 @@ class RunManifest:
             not record
             or record.get("status") != "COMPLETED"
             or record.get("input_hash") != input_hash
-            or (
-                route_fingerprint is not None
-                and record.get("route_fingerprint") != route_fingerprint
-            )
         ):
             return False
         return all(
@@ -170,22 +141,12 @@ class RunManifest:
         outputs: list[str],
         metadata: dict[str, Any] | None = None,
     ) -> None:
-        metadata = metadata or {
-            "model_profile": "deterministic",
-            "prompt_version": "none",
-            "call_count": 0,
-        }
-        required = {"model_profile", "prompt_version", "call_count"}
-        allowed = {*required, "route_fingerprint"}
-        if (
-            not required.issubset(metadata)
-            or not set(metadata).issubset(allowed)
-            or not isinstance(metadata["call_count"], int)
-            or metadata["call_count"] < 0
-        ):
-            raise ArtifactValidationError(
-                "阶段 metadata 必须包含模型档案、提示词版本和非负调用数"
-            )
+        metadata = metadata or {}
+        if not isinstance(metadata, dict):
+            raise ArtifactValidationError("阶段 metadata 必须是 object")
+        retired_keys = {"model_profile", "route_fingerprint", "call_count"}
+        if retired_keys.intersection(metadata):
+            raise ArtifactValidationError("运行清单不得记录仓库内模型执行字段")
         output_hashes = {path: self.workspace.digest(path) for path in outputs}
 
         def update(data: dict[str, Any]) -> None:
@@ -215,10 +176,9 @@ class RunManifest:
         valid = {
             "RUNNING",
             "WAITING_USER",
-            "AUTO_PROMOTE",
-            "REPLAN",
+            "READY",
             "COMPLETED",
-            "BUDGET_EXHAUSTED",
+            "FAILED",
         }
         if status not in valid:
             raise ArtifactValidationError(f"无效运行状态: {status}")
@@ -230,12 +190,10 @@ class RunManifest:
                     "waiting_reason": waiting_reason,
                 }
             )
-            if status in {"WAITING_USER", "AUTO_PROMOTE", "COMPLETED", "BUDGET_EXHAUSTED"}:
+            if status in {"WAITING_USER", "READY", "COMPLETED", "FAILED"}:
                 data["finished_at"] = utc_now()
 
         self.mutate(update)
 
     def display_status(self) -> str:
-        return "LEGACY_REPLAN" if self.data.get("status") == "REPLAN" else str(
-            self.data.get("status")
-        )
+        return str(self.data.get("status"))

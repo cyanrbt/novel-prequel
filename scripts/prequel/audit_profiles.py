@@ -43,16 +43,6 @@ def load_audit_profile(repository_root: Path) -> dict[str, Any]:
     loaded: list[str] = []
     for profile_id in spec.profiles:
         path = spec.repository_root / "profiles" / profile_id / "audit_profile.json"
-        if spec.legacy and not path.is_file():
-            # Old single-story workspaces predate project manifests and did not
-            # carry a profiles directory. Keep them reproducible while all new
-            # projects resolve profiles exclusively from their repository.
-            path = (
-                Path(__file__).resolve().parents[2]
-                / "profiles"
-                / profile_id
-                / "audit_profile.json"
-            )
         try:
             value = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:

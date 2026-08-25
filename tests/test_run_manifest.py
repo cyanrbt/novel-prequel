@@ -64,25 +64,20 @@ class RunManifestTests(unittest.TestCase):
             fingerprint({"a": 1, "b": 2}),
         )
 
-    def test_route_fingerprint_change_prevents_reuse(self):
+    def test_manifest_has_no_embedded_model_execution_budget(self):
         with tempfile.TemporaryDirectory() as tmp:
             workspace = ChapterWorkspace.create(Path(tmp), 3, 1)
             manifest = RunManifest.create(workspace, 3, "state-hash")
-            path = "candidates/candidate_01/draft.txt"
-            workspace.write_text(path, "正文")
-            manifest.complete(
-                "generate",
-                "input",
-                [path],
-                {
-                    "model_profile": "sol_medium",
-                    "prompt_version": "v1",
-                    "call_count": 1,
-                    "route_fingerprint": "route-a",
-                },
-            )
-            self.assertTrue(manifest.can_reuse("generate", "input", "route-a"))
-            self.assertFalse(manifest.can_reuse("generate", "input", "route-b"))
+            self.assertEqual(manifest.data["schema"], "creative-run-manifest/1")
+            self.assertNotIn("budget", manifest.data)
+            workspace.write_text("draft.txt", "正文")
+            with self.assertRaises(ArtifactValidationError):
+                manifest.complete(
+                    "review",
+                    "input",
+                    ["draft.txt"],
+                    {"model_profile": "retired"},
+                )
 
 
 if __name__ == "__main__":

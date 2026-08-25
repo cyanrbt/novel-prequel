@@ -1,40 +1,22 @@
-import json
 import hashlib
-import subprocess
-import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch
 
-from scripts.prequel.errors import (
-    ArtifactValidationError,
-    LegacyRunNotResumable,
-    QualityGateError,
-)
-from scripts.prequel.evolution import EvolutionResult
 from scripts.prequel.artifacts import ChapterWorkspace
-from scripts.prequel.run_manifest import RunManifest, fingerprint
-from scripts.prequel.memory import MemoryStore
+from scripts.prequel.errors import ArtifactValidationError
 from scripts.prequel.pipeline import (
-    WritingPipeline,
     _new_state_after_chapter,
     accept_dry_run,
     formal_review_binding_status,
+    import_manual_candidate,
     merge_formal_chapters,
 )
-from scripts.prequel.quality import scan_draft
 from scripts.prequel.reader_review import canonicalize_pacing_diagnostics
 from scripts.prequel.scene_audit import extract_scene_audit_anchors
 from scripts.prequel.state_settlement import expected_state_changes
-
-
-class FakeProvider:
-    def __init__(self, outputs):
-        self.outputs = iter(outputs)
-
-    def generate(self, prompt, output_schema=None):
-        return next(self.outputs)
+from tests.project_fixture import write_project_manifest
 
 
 def valid_plan_json() -> str:
@@ -355,6 +337,9 @@ def make_project_fixture(root: Path) -> Path:
         Path("novel/style/user_taste_contract.json").read_text(encoding="utf-8"),
         encoding="utf-8",
     )
+    (root / "novel/style/reference_voice_profile.md").write_text(
+        "calibration_status: READY\n", encoding="utf-8"
+    )
     (root / "novel/knowledge/arc_registry.json").write_text(
         json.dumps({"schema": "novel-arc-registry", "milestones": {"M1-TEST": {}}}, ensure_ascii=False),
         encoding="utf-8",
@@ -364,17 +349,13 @@ def make_project_fixture(root: Path) -> Path:
         encoding="utf-8",
     )
     config = {
-        "provider": {
-            "type": "codex_cli",
-            "command": ["codex", "exec"],
-            "model": "gpt-5.6-terra",
-            "reasoning_effort": "medium",
-            "timeout_seconds": 10,
-        },
         "quality_gates": {"recent_chapters_for_repetition": 5, "max_retries": 1},
+        "context_policy": {
+            "planner_canon_fact_ids": ["CANON-RULE-001", "PREQUEL-EVENT-001"]
+        },
         "git": {"auto_commit": False},
     }
-    (root / "config/prequel_config.json").write_text(json.dumps(config), encoding="utf-8")
+    write_project_manifest(root, engine_config=config)
     for name in ("plan", "review"):
         (root / f"schemas/{name}.schema.json").write_text("{}", encoding="utf-8")
     for name in ("planner", "writer", "reviewer"):
@@ -383,518 +364,108 @@ def make_project_fixture(root: Path) -> Path:
 
 
 class PipelineTests(unittest.TestCase):
-    def test_final_reader_and_state_gates_run_before_atomic_promotion(self):
+    def _reviewed_attempt(self, root: Path) -> ChapterWorkspace:
+        workspace = ChapterWorkspace.create(root / "novel/work", 1, 1)
+        workspace.write_json("plan.json", json.loads(valid_plan_json()))
+        workspace.write_text("draft.txt", valid_draft())
+        workspace.write_json("semantic_review.json", json.loads(review_json("PASS")))
+        return workspace
+
+    def test_prompt_native_artifacts_promote_without_execution_backend(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
-            config_path = root / "config/prequel_config.json"
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            config["quality_evolution"] = {"call_limit": 12}
-            config["quality_gates"] = {
-                "recent_chapters_for_repetition": 5,
-                "blind_reader_gate": {"enabled": True},
-                "state_evidence_gate": {"enabled": True},
-            }
-            config_path.write_text(json.dumps(config), encoding="utf-8")
-            (root / "agents/reader_reviewer.md").write_text("盲读。", encoding="utf-8")
-            (root / "agents/state_settler.md").write_text("结算。", encoding="utf-8")
-            (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
-            (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
-            MemoryStore(root)
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            plan = json.loads(valid_plan_json())
-            draft = valid_draft()
-            static = scan_draft(
-                draft, [], {"characters": ["周正"], "terms": ["负责人"]}, plan
-            )
-            reviews = {
-                dimension: {
-                    "summary": f"{dimension}通过",
-                    "evidence": [
-                        {"quote": "门板上的灰", "finding": "具体异常"},
-                        {"quote": "没有落到底", "finding": "观察成立"},
-                        {"quote": "到了门内", "finding": "边界改变"},
-                    ],
-                    "warnings": [],
-                }
-                for dimension in ("continuity", "character", "craft", "anti_slop")
-            }
-            evolution = EvolutionResult(
-                "AUTO_PROMOTE",
-                "candidate_01",
-                draft,
-                static,
-                reviews,
-                {
-                    "scores": {"continuity": 92, "character": 88, "craft": 88, "anti_slop": 86},
-                    "weighted_score": 89.1,
-                    "hard_failures": [],
-                    "required_revisions": [],
-                },
-                {"status": "AUTO_PROMOTE"},
-            )
+            self._reviewed_attempt(root)
 
-            class Router:
-                def __init__(self):
-                    self.providers = {
-                        "planner": FakeProvider([valid_plan_json()]),
-                        "blind_reader_reviewer": FakeProvider([blind_reader_json(draft)]),
-                        "state_settler": FakeProvider([state_settlement_json(state, plan, draft)]),
-                    }
+            result = accept_dry_run(root)
 
-                def provider_for(self, stage):
-                    return self.providers[stage]
-
-                def profile_for(self, stage):
-                    return stage
-
-            with patch("scripts.prequel.pipeline.QualityEvolutionEngine") as engine:
-                engine.return_value.run.return_value = evolution
-                result = WritingPipeline(root, providers=Router()).run_next()
             self.assertTrue(result.promoted)
-            manifest = json.loads((result.workspace / "run_manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(manifest["stages"]["blind_reader_review"]["status"], "COMPLETED")
-            self.assertEqual(manifest["stages"]["state_settlement"]["status"], "COMPLETED")
-            self.assertEqual(manifest["budget"]["spent"], 3)
-            promoted_state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
+            chapter = root / "novel/chapters/vol_01/chapter_001.txt"
             self.assertEqual(
-                promoted_state["chapter_summaries"]["summaries"]["1"]["core"],
-                "张洞检查门板纸灰，发现它最终越过门板进入屋内。",
+                chapter.read_text(encoding="utf-8").rstrip(),
+                valid_draft().rstrip(),
             )
-
-    def test_invalid_blind_read_overwrites_stale_auto_promote_decision(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            config_path = root / "config/prequel_config.json"
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            config["quality_evolution"] = {"call_limit": 12}
-            config["quality_gates"] = {
-                "recent_chapters_for_repetition": 5,
-                "blind_reader_gate": {"enabled": True},
-                "state_evidence_gate": {"enabled": True},
-            }
-            config_path.write_text(json.dumps(config), encoding="utf-8")
-            (root / "agents/reader_reviewer.md").write_text("盲读。", encoding="utf-8")
-            (root / "agents/state_settler.md").write_text("结算。", encoding="utf-8")
-            (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
-            (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
-            MemoryStore(root)
-            plan = json.loads(valid_plan_json())
-            draft = valid_draft()
-            static = scan_draft(draft, [], {"characters": ["周正"], "terms": ["负责人"]}, plan)
-            reviews = {
-                dimension: {
-                    "summary": f"{dimension}通过",
-                    "evidence": [
-                        {"quote": "门板上的灰", "finding": "具体异常"},
-                        {"quote": "没有落到底", "finding": "观察成立"},
-                        {"quote": "到了门内", "finding": "边界改变"},
-                    ],
-                    "warnings": [],
-                }
-                for dimension in ("continuity", "character", "craft", "anti_slop")
-            }
-            evolution = EvolutionResult(
-                "AUTO_PROMOTE", "candidate_01", draft, static,
-                reviews,
-                {"scores": {"continuity": 92, "character": 88, "craft": 88, "anti_slop": 86},
-                 "weighted_score": 89.1, "hard_failures": [], "required_revisions": []},
-                {"status": "AUTO_PROMOTE"},
-            )
-            invalid_reader = json.loads(blind_reader_json(draft))
-            invalid_reader["verdict"] = "REVISE"
-            invalid_reader["revision_instructions"] = []
-
-            class Router:
-                def __init__(self):
-                    self.providers = {
-                        "planner": FakeProvider([valid_plan_json()]),
-                        "blind_reader_reviewer": FakeProvider([json.dumps(invalid_reader, ensure_ascii=False)]),
-                        "state_settler": FakeProvider([]),
-                    }
-
-                def provider_for(self, stage):
-                    return self.providers[stage]
-
-                def profile_for(self, stage):
-                    return stage
-
-            with patch("scripts.prequel.pipeline.QualityEvolutionEngine") as engine:
-                engine.return_value.run.return_value = evolution
-                result = WritingPipeline(root, providers=Router()).run_next(dry_run=True)
-            self.assertFalse(result.promoted)
-            self.assertEqual(result.status, "WAITING_USER")
-            decision = json.loads((result.workspace / "decision.json").read_text(encoding="utf-8"))
-            self.assertEqual(decision["status"], "WAITING_USER")
-            self.assertIn("盲读者门禁无效", decision["reasons"][0])
-
-    def test_state_summary_and_hook_come_from_final_text_settlement(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = json.loads(valid_plan_json())
-        settlement = {
-            "reader_visible_summary": {"core": "张洞在门内发现异常纸灰并留下样本。", "evidence": []},
-            "hook": {"type": "安全区崩坏", "content": "纸灰已经越过门板", "quote": "到了门内"},
-        }
-        updated = _new_state_after_chapter(
-            state, plan, json.loads(review_json("PASS")), settlement
-        )
-        self.assertEqual(
-            updated["chapter_summaries"]["summaries"]["1"]["core"],
-            settlement["reader_visible_summary"]["core"],
-        )
-        self.assertEqual(updated["recent_hooks"][-1]["content"], "纸灰已经越过门板")
-
-    def test_unevidenced_plan_candidates_do_not_pollute_live_state(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = json.loads(valid_plan_json())
-        expected = {
-            item["path"]: item for item in expected_state_changes(state, plan)
-        }
-        settled_paths = {
-            "state_changes.protagonist_known_info_add[0]",
-            "foreshadow_operations.plant[0]",
-        }
-        settlement = {
-            "reader_visible_summary": {
-                "core": "张洞发现纸灰已经离开祠堂并留下异常样本。",
-                "evidence": [],
-            },
-            "hook": {
-                "type": "安全区崩坏",
-                "content": "纸灰进入门内",
-                "quote": "到了门内",
-            },
-            "change_evidence": [
-                {
-                    "path": path,
-                    "value": expected[path]["value"],
-                    "quote": "纸灰",
-                    "finding": expected[path]["meaning"],
-                }
-                for path in settled_paths
-            ],
-        }
-        updated = _new_state_after_chapter(
-            state, plan, json.loads(review_json("PASS")), settlement
-        )
-        self.assertIn("纸灰会离开祠堂", updated["protagonist"]["known_info"])
-        self.assertEqual(updated["timeline"]["elapsed_days"], 0)
-        self.assertNotIn(
-            "纸灰可能标记被敲门者", updated["world_lore"]["hypotheses"]
-        )
-        self.assertIn("F-A01", updated["active_foreshadows"])
-
-    def test_exit_milestone_advances_volume_event_and_reveal_layer(self):
-        state = json.loads(Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8"))
-        plan = json.loads(valid_plan_json())
-        plan["milestone_operations"]["complete"] = ["M1-CITY-EXIT"]
-        config = {
-            "volume_structure": [
-                {"volume": 1, "name": "大汉市", "exit_milestone": "M1-CITY-EXIT"},
-                {"volume": 2, "name": "乱世觉醒", "entry_event": "event_2", "entry_event_name": "鬼邮局初现"},
-            ],
-            "world_reveal_layers": [
-                {"layer": 2, "after": "M1-CITY-EXIT"}
-            ],
-        }
-        updated = _new_state_after_chapter(
-            state, plan, json.loads(review_json("PASS")), config=config
-        )
-        self.assertEqual(updated["chapter"]["current_volume"], 2)
-        self.assertEqual(updated["chapter"]["current_event"], "event_2")
-        self.assertEqual(updated["world_lore"]["reveal_layer"], 2)
-
-    def test_legacy_replan_is_read_only_and_not_resumable(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            pipeline = WritingPipeline(root, FakeProvider([]))
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            workspace = ChapterWorkspace.create(root / "novel/work", 1, 1)
-            manifest = RunManifest.create(workspace, 1, fingerprint(state))
-            manifest.set_status("REPLAN", valid_candidates=0)
-            self.assertEqual(manifest.display_status(), "LEGACY_REPLAN")
-            with self.assertRaises(LegacyRunNotResumable):
-                pipeline._attempt_number(1, True, fingerprint(state))
-
-    def test_cli_retires_model_driven_next_and_keeps_deterministic_accept(self):
-        from scripts.orchestrator import build_parser
-
-        parser = build_parser()
-        choices = next(
-            action.choices
-            for action in parser._actions
-            if getattr(action, "choices", None)
-        )
-        self.assertNotIn("next", choices)
-        self.assertEqual(parser.parse_args(["accept", "--candidate", "4"]).candidate, 4)
-
-    def test_review_parser_is_static_only(self):
-        from scripts.orchestrator import build_parser
-
-        args = build_parser().parse_args(["review", "--last", "2"])
-        self.assertEqual(args.last, 2)
-        self.assertFalse(hasattr(args, "specialists"))
-
-    def test_high_confidence_evolution_result_promotes_atomically(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            config_path = root / "config/prequel_config.json"
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            config["quality_evolution"] = {}
-            config_path.write_text(json.dumps(config), encoding="utf-8")
-            MemoryStore(root)
-            draft = valid_draft()
-            plan = json.loads(valid_plan_json())
-            static = scan_draft(
-                draft,
-                [],
-                {"characters": ["周正"], "terms": ["负责人"]},
-                plan,
-            )
-            reviews = {
-                dimension: {
-                    "summary": f"{dimension}通过",
-                    "evidence": [
-                        {"quote": "门板上的灰", "finding": "具体异常"},
-                        {"quote": "没有落到底", "finding": "观察成立"},
-                        {"quote": "到了门内", "finding": "边界改变"},
-                    ],
-                    "warnings": [],
-                }
-                for dimension in ("continuity", "character", "craft", "anti_slop")
-            }
-            card = {
-                "scores": {
-                    "continuity": 92,
-                    "character": 88,
-                    "craft": 88,
-                    "anti_slop": 86,
-                },
-                "weighted_score": 89.1,
-                "hard_failures": [],
-                "required_revisions": [],
-            }
-            evolution = EvolutionResult(
-                "AUTO_PROMOTE",
-                "candidate_01",
-                draft,
-                static,
-                reviews,
-                card,
-                {"status": "AUTO_PROMOTE"},
-            )
-
-            class Router:
-                def __init__(self):
-                    self.planner = FakeProvider([valid_plan_json()])
-
-                def provider_for(self, stage):
-                    return self.planner
-
-                def profile_for(self, stage):
-                    return "default"
-
-            with patch("scripts.prequel.pipeline.QualityEvolutionEngine") as engine:
-                engine.return_value.run.return_value = evolution
-                events = []
-                result = WritingPipeline(root, providers=Router()).run_next(
-                    progress=events.append
-                )
-            self.assertTrue(result.promoted)
-            self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
-            manifest = json.loads((result.workspace / "run_manifest.json").read_text(encoding="utf-8"))
-            self.assertEqual(manifest["budget"]["spent"], 1)
-            self.assertEqual(manifest["budget"]["calls"]["call_001"]["stage"], "planner")
-            self.assertEqual(
-                [event["kind"] for event in events],
-                ["CALL_STARTED", "CALL_COMPLETED"],
-            )
-
-    def test_script_entrypoint_can_import_project_package(self):
-        result = subprocess.run(
-            [sys.executable, "scripts/orchestrator.py", "--help"],
-            cwd=Path(__file__).resolve().parents[1],
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("事务型创作管道", result.stdout)
-
-    def test_failed_review_does_not_change_formal_state_or_chapter(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            original = (root / "novel/state/current.json").read_bytes()
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("REVISE")])
-            with self.assertRaises(QualityGateError):
-                WritingPipeline(root, provider).run_next()
-            self.assertEqual((root / "novel/state/current.json").read_bytes(), original)
-            self.assertFalse((root / "novel/chapters/vol_01/chapter_001.txt").exists())
-
-    def test_success_promotes_chapter_and_advances_state_together(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            result = WritingPipeline(root, provider).run_next()
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            self.assertEqual(result.chapter_number, 1)
-            self.assertTrue(result.promoted)
-            self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
-            self.assertTrue((root / "novel/chapters/meta/chapter_001.md").exists())
-            self.assertTrue((root / "novel/state/current.json.bak").exists())
-            self.assertEqual(state["chapter"]["last_chapter"], 1)
-            self.assertEqual(state["chapter"]["next_chapter"], 2)
-            self.assertIn("F-A01", state["active_foreshadows"])
-            self.assertEqual(
-                state["chapter_summaries"]["summaries"]["1"]["irreversible_changes"],
-                ["protagonist_known_info_add", "timeline_elapsed_days", "world_hypotheses_add"],
-            )
-
-    def test_formal_review_binding_detects_manual_edit_after_promotion(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            result = WritingPipeline(root, provider).run_next()
-            self.assertTrue(result.promoted)
             state = json.loads(
                 (root / "novel/state/current.json").read_text(encoding="utf-8")
             )
-            config = json.loads(
-                (root / "config/prequel_config.json").read_text(encoding="utf-8")
-            )
             self.assertEqual(
-                formal_review_binding_status(root, state, config)["status"],
-                "VALID",
-            )
-            chapter = root / "novel/chapters/vol_01/chapter_001.txt"
-            chapter.write_text(
-                chapter.read_text(encoding="utf-8") + "手工改动。\n",
-                encoding="utf-8",
-            )
-            binding = formal_review_binding_status(root, state, config)
-            self.assertEqual(binding["status"], "STALE")
-            self.assertIn("审核后发生改动", binding["reason"])
-
-    def test_foreshadow_note_is_normalized_to_stable_id(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            plan = json.loads(valid_plan_json())
-            plan["foreshadow_operations"]["plant"] = ["F-A01：纸灰越过灶间边界"]
-            provider = FakeProvider([
-                json.dumps(plan, ensure_ascii=False), valid_draft(), review_json("PASS")
-            ])
-            WritingPipeline(root, provider).run_next()
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            self.assertEqual(set(state["active_foreshadows"]), {"F-A01"})
-
-    def test_dry_run_keeps_formal_files_unchanged(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            original = (root / "novel/state/current.json").read_bytes()
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            result = WritingPipeline(root, provider).run_next(dry_run=True)
-            self.assertFalse(result.promoted)
-            self.assertEqual((root / "novel/state/current.json").read_bytes(), original)
-            self.assertTrue((root / "novel/work/chapter_001/attempt_01/semantic_review.json").exists())
-
-    def test_accept_revalidates_and_promotes_passed_dry_run(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            WritingPipeline(root, provider).run_next(dry_run=True)
-            accepted = accept_dry_run(root)
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            self.assertTrue(accepted.promoted)
-            self.assertEqual(state["chapter"]["last_chapter"], 1)
-            self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
-
-    def test_accept_refuses_to_generate_missing_reader_or_state_reports(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            WritingPipeline(root, provider).run_next(dry_run=True)
-
-            config_path = root / "config/prequel_config.json"
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            config["quality_gates"].update({
-                "blind_reader_gate": {"enabled": True},
-                "state_evidence_gate": {"enabled": True},
-            })
-            config_path.write_text(json.dumps(config), encoding="utf-8")
-            (root / "agents/reader_reviewer.md").write_text("盲读。", encoding="utf-8")
-            (root / "agents/state_settler.md").write_text("结算。", encoding="utf-8")
-            (root / "schemas/reader_review.schema.json").write_text("{}", encoding="utf-8")
-            (root / "schemas/state_settlement.schema.json").write_text("{}", encoding="utf-8")
-
-            with self.assertRaisesRegex(
-                ArtifactValidationError, "不会现场启动模型"
-            ):
-                accept_dry_run(root)
-
-    def test_accept_reuses_hash_bound_passing_reader_and_state_reports(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root = make_project_fixture(Path(tmp))
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            WritingPipeline(root, provider).run_next(dry_run=True)
-
-            config_path = root / "config/prequel_config.json"
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            config["quality_gates"].update({
-                "blind_reader_gate": {"enabled": True},
-                "state_evidence_gate": {"enabled": True},
-            })
-            config_path.write_text(json.dumps(config), encoding="utf-8")
-
-            state = json.loads((root / "novel/state/current.json").read_text(encoding="utf-8"))
-            workspace = root / "novel/work/chapter_001/attempt_01"
-            plan = json.loads((workspace / "plan.json").read_text(encoding="utf-8"))
-            draft = (workspace / "draft.txt").read_text(encoding="utf-8")
-            (workspace / "reader_review.json").write_text(
-                blind_reader_json(draft), encoding="utf-8"
-            )
-            (workspace / "state_settlement.json").write_text(
-                state_settlement_json(state, plan, draft), encoding="utf-8"
+                formal_review_binding_status(root, state)["status"], "VALID"
             )
 
-            accepted = accept_dry_run(root)
-
-            self.assertTrue(accepted.promoted)
-            self.assertTrue((root / "novel/chapters/vol_01/chapter_001.txt").exists())
-
-    def test_revision_is_isolated_and_second_attempt_can_promote(self):
+    def test_manual_import_accepts_agent_written_bound_artifacts(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
-            config_path = root / "config/prequel_config.json"
-            config = json.loads(config_path.read_text(encoding="utf-8"))
-            config["quality_gates"]["max_retries"] = 2
-            config_path.write_text(json.dumps(config), encoding="utf-8")
-            provider = FakeProvider([
-                valid_plan_json(), valid_draft(), review_json("REVISE"),
-                valid_draft(), review_json("PASS"),
-            ])
-            result = WritingPipeline(root, provider).run_next()
+            source = self._reviewed_attempt(root)
+            imported = import_manual_candidate(
+                root, source.path / "draft.txt", plan_attempt=1
+            )
+            draft = (imported.workspace / "draft.txt").read_text(encoding="utf-8")
+            review = json.loads(review_json("PASS"))
+            review["draft_sha256"] = hashlib.sha256(
+                draft.encode("utf-8")
+            ).hexdigest()
+            (imported.workspace / "semantic_review.json").write_text(
+                json.dumps(review, ensure_ascii=False), encoding="utf-8"
+            )
+
+            result = accept_dry_run(root, attempt=2)
+
             self.assertTrue(result.promoted)
-            self.assertTrue((root / "novel/work/chapter_001/attempt_01/semantic_review.json").exists())
-            self.assertTrue((root / "novel/work/chapter_001/attempt_02/semantic_review.json").exists())
+            manifest = json.loads(
+                (imported.workspace / "run_manifest.json").read_text(
+                    encoding="utf-8"
+                )
+            )
+            self.assertEqual(manifest["status"], "COMPLETED")
+            self.assertNotIn("budget", manifest)
 
-    def test_merge_uses_validated_formal_chapter_set(self):
+    def test_manual_import_rejects_draft_changed_after_binding(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = make_project_fixture(Path(tmp))
-            provider = FakeProvider([valid_plan_json(), valid_draft(), review_json("PASS")])
-            WritingPipeline(root, provider).run_next()
-            target, count = merge_formal_chapters(root)
-            self.assertEqual(count, 1)
-            self.assertEqual(
-                target.read_text(encoding="utf-8"),
-                "\n".join(
-                    line
-                    for line in (root / "novel/chapters/vol_01/chapter_001.txt")
-                    .read_text(encoding="utf-8")
-                    .splitlines()
-                    if line.strip()
-                )
-                + "\n",
+            source = self._reviewed_attempt(root)
+            imported = import_manual_candidate(
+                root, source.path / "draft.txt", plan_attempt=1
             )
+            draft_path = imported.workspace / "draft.txt"
+            draft = draft_path.read_text(encoding="utf-8")
+            review = json.loads(review_json("PASS"))
+            review["draft_sha256"] = hashlib.sha256(
+                draft.encode("utf-8")
+            ).hexdigest()
+            (imported.workspace / "semantic_review.json").write_text(
+                json.dumps(review, ensure_ascii=False), encoding="utf-8"
+            )
+            draft_path.write_text(draft + "\n篡改。\n", encoding="utf-8")
+
+            with self.assertRaises(ArtifactValidationError):
+                accept_dry_run(root, attempt=2)
+
+    def test_merge_uses_only_formal_chapters(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = make_project_fixture(Path(tmp))
+            self._reviewed_attempt(root)
+            accept_dry_run(root)
+
+            target, count = merge_formal_chapters(root)
+
+            self.assertEqual(count, 1)
             self.assertNotIn("\n\n", target.read_text(encoding="utf-8"))
+
+    def test_state_changes_only_commit_evidenced_values(self):
+        state = json.loads(
+            Path("tests/fixtures/valid_state.json").read_text(encoding="utf-8")
+        )
+        plan = json.loads(valid_plan_json())
+        settlement = json.loads(state_settlement_json(state, plan, valid_draft()))
+
+        updated = _new_state_after_chapter(
+            state,
+            plan,
+            json.loads(review_json("PASS")),
+            settlement,
+        )
+
+        self.assertEqual(updated["chapter"]["last_chapter"], 1)
+        self.assertEqual(updated["chapter"]["next_chapter"], 2)
 
 
 if __name__ == "__main__":

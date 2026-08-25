@@ -621,7 +621,7 @@ def promotion_decision(
             and ballot_votes >= policy["ballot_votes"]
         )
     guard_ok = selection_mode != "SINGLE_ELIGIBLE" or continuity_guard_passed
-    auto = (
+    ready = (
         card["weighted_score"] >= policy["weighted_score"]
         and card["scores"]["continuity"] >= policy["continuity"]
         and all(
@@ -634,12 +634,12 @@ def promotion_decision(
         and guard_ok
         and verification_passed
     )
-    if auto:
-        return {"status": "AUTO_PROMOTE", "reasons": []}
+    if ready:
+        return {"status": "READY", "reasons": []}
     if card["weighted_score"] >= policy["manual_floor"] and not card["hard_failures"]:
         return {
             "status": "WAITING_USER",
-            "reasons": ["未同时满足全部自动提升条件"],
+            "reasons": ["未同时满足全部 READY 条件"],
         }
     return {
         "status": "REPLAN",

@@ -17,7 +17,7 @@
 - `profiles`：需要叠加的题材配置；
 - `paths`：状态、剧情、人物、知识、风格、工作区和正式章节的实际位置。
 
-运行时先读引擎配置，再用故事配置深度覆盖。Python 不再从固定的 `novel/` 或 `config/prequel_config.json` 推断当前故事。
+运行时先读引擎配置，再用故事配置深度覆盖。状态、正文和故事资产的位置全部来自项目清单。
 
 ## 角色与题材叠加
 
@@ -44,7 +44,3 @@ python3 scripts/orchestrator.py --project tests/fixtures/decoupled_story/project
 5. 运行 `--project <manifest> preflight`，不通过前不开始创作。
 
 `tests/fixtures/decoupled_story/` 是一个完整的当代现实题材最小样例，用于防止引擎重新与张洞剧情耦合。
-
-## 兼容性
-
-根目录没有 `project.json` 时，引擎仍能以只读兼容方式解析旧的 `config/prequel_config.json` 和 `novel/` 路径。该通道用于恢复旧工作区，新故事不应依赖它。

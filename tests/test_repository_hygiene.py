@@ -37,6 +37,15 @@ class RepositoryHygieneTests(unittest.TestCase):
             "scripts/scene_generation_experiment.py",
             "scripts/provider_style_benchmark.py",
             "scripts/provider_style_benchmark_supplement.py",
+            "scripts/benchmark_pipeline.py",
+            "scripts/prequel/audit_manifest.py",
+            "scripts/prequel/call_budget.py",
+            "scripts/prequel/evolution.py",
+            "scripts/prequel/metrics.py",
+            "scripts/prequel/model_calls.py",
+            "scripts/prequel/model_router.py",
+            "scripts/prequel/progress.py",
+            "scripts/prequel/provider.py",
         )
         for relative in retired:
             self.assertFalse((ROOT / relative).exists(), relative)
@@ -47,6 +56,14 @@ class RepositoryHygieneTests(unittest.TestCase):
             "Agy" + "CliProvider",
             "OpenCode" + "CliProvider",
             "Grok" + "CliProvider",
+            "Model" + "Provider",
+            "Stage" + "ModelRouter",
+            "Model" + "CallExecutor",
+            "Quality" + "EvolutionEngine",
+            "Writing" + "Pipeline",
+            "Audit" + "Runner",
+            ".gen" + "erate(",
+            "import sub" + "process",
         )
         for path in (ROOT / "scripts").rglob("*.py"):
             source = path.read_text(encoding="utf-8")
@@ -54,18 +71,20 @@ class RepositoryHygieneTests(unittest.TestCase):
                 self.assertNotIn(marker, source, str(path.relative_to(ROOT)))
 
     def test_core_config_does_not_select_an_agent_or_model(self):
-        config = json.loads(
-            (ROOT / "config/prequel_config.json").read_text(encoding="utf-8")
-        )
-        for key in ("provider", "model_profiles", "stage_routes"):
-            self.assertNotIn(key, config)
+        for relative in (
+            "config/engine_config.json",
+            "stories/zhangdong/story_config.json",
+        ):
+            config = json.loads((ROOT / relative).read_text(encoding="utf-8"))
+            for key in ("provider", "model_profiles", "stage_routes"):
+                self.assertNotIn(key, config)
 
     def test_operational_files_use_stable_identifiers(self):
         paths = (
             "README.md",
             "WORKFLOW.md",
             "init.md",
-            "config/prequel_config.json",
+            "config/engine_config.json",
             "schemas/task_envelope.schema.json",
             "schemas/agent_result.schema.json",
             "schemas/protocol_smoke_artifact.schema.json",
@@ -114,12 +133,10 @@ class RepositoryHygieneTests(unittest.TestCase):
         self.assertIn("当前 Agent", text)
         self.assertNotIn("orchestrator.py next", text)
 
-    def test_engine_manual_links_to_quality_design(self):
+    def test_engine_manual_states_deterministic_boundary(self):
         text = (ROOT / "init.md").read_text(encoding="utf-8")
-        self.assertIn(
-            "docs/superpowers/specs/2026-08-01-quality-evolution-pipeline-design.md",
-            text,
-        )
+        self.assertIn("不启动模型", text)
+        self.assertNotIn("WritingPipeline", text)
 
 
 if __name__ == "__main__":

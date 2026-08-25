@@ -25,7 +25,7 @@ class PromptNativeWorkflowTests(unittest.TestCase):
     def test_repository_protocol_smoke_test_passes_without_agent_cli(self):
         checks = validate_prompt_native_project(ROOT)
         self.assertIn("core story config is execution-backend agnostic", checks)
-        self.assertIn("Agent CLI backends and launchers are absent", checks)
+        self.assertIn("repository model execution layer is absent", checks)
         self.assertTrue(any(item.startswith("task/result binding") for item in checks))
 
     def test_task_envelope_is_bound_to_canonical_inputs(self):

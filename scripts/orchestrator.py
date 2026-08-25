@@ -40,41 +40,6 @@ from scripts.prequel.project import (
 )
 
 
-def format_progress_event(event: dict) -> str:
-    """Render only the safe event fields defined by the progress contract."""
-    kind = str(event.get("kind") or "UNKNOWN")
-    stage = str(event.get("stage") or "unknown")
-    call_id = str(event.get("call_id") or "call_???")
-    model = str(event.get("model") or "unknown")
-    effort = str(event.get("reasoning_effort") or "unknown")
-    duration = (event.get("duration_ms") or 0) / 1000
-    if kind == "CALL_STARTED":
-        return f"[{call_id}] 开始 {stage} · {model}/{effort}"
-    if kind == "CALL_COMPLETED":
-        return (
-            f"[{call_id}] 模型调用完成 {stage} · {duration:.1f}秒；"
-            "正在校验工件"
-        )
-    if kind == "CALL_FAILED":
-        return (
-            f"[{call_id}] 模型调用失败 {stage} · "
-            f"{event.get('error_code') or 'UNKNOWN'} · {duration:.1f}秒"
-        )
-    if kind == "ARTIFACT_INVALID":
-        diagnostic = event.get("diagnostic_artifact") or "无原始输出"
-        return (
-            f"[审查无效] {stage} · {event.get('failure_kind') or 'UNKNOWN'} · "
-            f"诊断: {diagnostic}"
-        )
-    if kind == "STAGE_REUSED":
-        return f"[复用] {stage} · 已验证现有工件"
-    return f"[{kind}] {stage}"
-
-
-def _cli_progress(event: dict) -> None:
-    print(format_progress_event(event), flush=True)
-
-
 def _era_bans(year: int) -> dict:
     registry = json.loads(project_path(PROJECT_ROOT, "canon_registry").read_text(encoding="utf-8"))
     for interval, bans in registry.get("era_bans", {}).items():
@@ -114,27 +79,8 @@ def command_status(args) -> int:
         if not manifest.exists():
             continue
         runtime = json.loads(manifest.read_text(encoding="utf-8"))
-        if runtime.get("status") == "REPLAN":
-            print("运行: [旧流程] REPLAN / 只读")
-            print("恢复: 不支持按新版 --resume 继续；请显式创建新运行")
-        else:
-            print(f"运行: {runtime.get('status')} / {runtime.get('current_stage')}")
+        print(f"运行: {runtime.get('status')} / {runtime.get('current_stage')}")
         print(f"有效候选: {runtime.get('valid_candidates', 0)}")
-        budget = runtime.get("budget")
-        if isinstance(budget, dict):
-            print(f"调用: {budget.get('spent', 0)}/{budget.get('limit', '?')}")
-            routes = sorted(
-                {
-                    (item.get("model"), item.get("reasoning_effort"))
-                    for item in budget.get("calls", {}).values()
-                    if item.get("model")
-                }
-            )
-            if routes:
-                print(
-                    "实际路由: "
-                    + ", ".join(f"{model}/{effort}" for model, effort in routes)
-                )
         if runtime.get("waiting_reason"):
             print(f"等待原因: {runtime['waiting_reason']}")
         break
