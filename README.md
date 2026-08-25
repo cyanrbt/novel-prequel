@@ -12,11 +12,11 @@
 
 任意 Agent 从 [通用 Agent 工作流](WORKFLOW.md) 进入；状态机、质量门禁、恢复方式和完整命令见 [创作引擎手册](init.md)。
 
-## 引擎与故事已解耦
+## 项目架构
 
-根目录 [`project.json`](project.json) 只负责选择默认故事。通用管线使用 [`config/engine_config.json`](config/engine_config.json)；张洞的主角、年代、卷结构、剧情路径和角色叠加由 [`stories/zhangdong/project.json`](stories/zhangdong/project.json) 与 [`stories/zhangdong/story_config.json`](stories/zhangdong/story_config.json) 声明；灵异悬疑专用审计位于 [`profiles/horror-mystery/`](profiles/horror-mystery/)。
+项目由创作引擎、题材配置和故事包三层组成。根目录 [`project.json`](project.json) 选择默认故事；通用管线由 [`config/engine_config.json`](config/engine_config.json) 定义；张洞的主角、年代、卷结构、剧情路径和角色叠加由 [`stories/zhangdong/project.json`](stories/zhangdong/project.json) 与 [`stories/zhangdong/story_config.json`](stories/zhangdong/story_config.json) 声明；灵异悬疑专用审计位于 [`profiles/horror-mystery/`](profiles/horror-mystery/)。
 
-引擎不再把 `novel/`、张洞、1911 或灵异词表当作固定运行前提。一个当代气象站现实题材项目作为自动化验收样例，能在不修改 Python 的情况下通过完整预检。项目清单、配置合并、角色覆盖和新建故事包方法见 [创作引擎与故事包](docs/project-packages.md)。
+故事的数据目录、主角、年代和题材审计均由项目配置提供。项目清单、配置合并、角色覆盖和新建故事包方法见 [创作引擎与故事包](docs/project-packages.md)。
 
 ## 故事
 
@@ -37,7 +37,7 @@
 
 ## 当前进度
 
-正式连载已按1911年、十七岁张洞重启。章号、事件、年代和已提升正文以 [`novel/state/current.json`](novel/state/current.json) 与 [`novel/chapters/`](novel/chapters/) 为准，不在本文件维护副本。撤出的旧稿见 [`novel/archive/`](novel/archive/)。
+正式连载采用1911年、十七岁张洞这一连续性。章号、事件、年代和正式正文以 [`novel/state/current.json`](novel/state/current.json) 与 [`novel/chapters/`](novel/chapters/) 为准，不在本文件维护副本。旧版连续性稿件归档于 [`novel/archive/`](novel/archive/)。
 
 - [第一卷正式章节](novel/chapters/vol_01/)
 - [连续阅读合订本](novel/full_novel.txt)
@@ -82,7 +82,7 @@ cd novel-prequel
 阅读 WORKFLOW.md，执行 status-check。
 ```
 
-当前正向文风画像仍是 `CALIBRATING`。写下一章前先校准，且不修改正式正文：
+开始写下一章前检查 `novel/style/reference_voice_profile.md`。若状态为 `CALIBRATING`，先执行文风校准，且不修改正式正文：
 
 ```text
 阅读 WORKFLOW.md，执行 style-calibration；冻结第1章关键场景，生成三份匿名候选并停在用户盲选。
@@ -123,7 +123,7 @@ novel-prequel/
 ├── stories/                        # 故事清单、剧情配置与角色叠加
 ├── schemas/                        # 状态、规划和审查契约
 ├── scripts/orchestrator.py         # 确定性校验与事务工具
-├── tests/fixtures/decoupled_story/ # 第二题材解耦验收项目
+├── tests/fixtures/decoupled_story/ # 独立故事包测试夹具
 └── novel/                          # 张洞故事当前数据资产
     ├── chapters/                   # 正式正文
     ├── state/current.json          # 当前创作状态
