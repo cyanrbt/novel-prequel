@@ -1,6 +1,6 @@
 # 创作规则全书（权威规则源）
 
-本文件负责正文行为与发布门禁；全书卷结构、里程碑和可伸缩长度以 `novel/plots/series_architecture.md` 为最高设计约束。事实依据以 `novel/knowledge/canon_registry.json` 为准，运行状态以 `novel/state/current.json` 为准，里程碑以 `novel/knowledge/arc_registry.json` 为准，伏笔 ID 与回收边界以 `novel/knowledge/foreshadow_registry.json` 为准；风格参数以 `novel/style/compact_style.yaml` 为准。`novel/style/style_anchors.txt` 在完成人工逐段核准前不得进入创作上下文；`novel/foreshadow_tracker.md` 是归档草案，不得作为创作指令。
+本文件负责正文里不能打破的事实和能力边界。剧情权威是 `novel/plots/spine.md`。`series_architecture.md` 与剧情圣经只作参考。盲读分数和状态证据结算不再决定能否写下一章。事实依据以 `novel/knowledge/canon_registry.json` 为准，运行状态以 `novel/state/current.json` 为准，里程碑以 `novel/knowledge/arc_registry.json` 为准，伏笔 ID 与回收边界以 `novel/knowledge/foreshadow_registry.json` 为准；风格参数以 `novel/style/compact_style.yaml` 为准。`novel/style/style_anchors.txt` 在完成人工逐段核准前不得进入创作上下文；`novel/foreshadow_tracker.md` 是归档草案，不得作为创作指令。
 
 ## 1. 原著一致性（P1）
 

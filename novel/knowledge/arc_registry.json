@@ -1,6 +1,6 @@
 {
   "schema": "novel-arc-registry",
-  "authority": "series_architecture.md",
+  "authority": "spine.md",
   "milestones": {
     "M1-DUAL-EXPOSURE": {"volume": 1, "meaning": "门外身份重演与棺下影在张洞右臂留下互扰的初始残余，使他形成稳定但粗糙的被动差异；二者是首次沉寂样本与成长接口，不是成熟能力材料清单；家庭完整性被打破但不要求父母同时死亡"},
     "M1B-PATH-RECORD": {"volume": 1, "after": ["M1-DUAL-EXPOSURE"], "meaning": "张洞通过多个活人行动样本，把记录重点从痕迹改为被迫选择与触发顺序"},

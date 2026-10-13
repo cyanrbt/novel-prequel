@@ -90,6 +90,13 @@ def build_planner_context(
     chapter_blueprint = _load_chapter_blueprint(
         project_root, event_id, state["chapter"]["next_chapter"]
     )
+    if config.get("workflow_policy", {}).get("production_mode") == "human_close_read":
+        event_outline = (
+            "事件卡已降为参考，不得执行其中的场面顺序、道具清单或章末钩子。"
+            "本章只使用创作脊柱、当前状态和上一章正文。"
+        )
+    else:
+        event_outline = event_path.read_text(encoding="utf-8")
     year = state["timeline"]["current_year"]
     era_key = next(
         (key for key in registry.get("era_bans", {}) if int(key.split("-")[0]) <= year <= int(key.split("-")[1])),
@@ -130,7 +137,7 @@ def build_planner_context(
         "active_foreshadows": state["active_foreshadows"],
         "recent_hooks": state["recent_hooks"][-5:],
         "recent_summaries": dict(list(state["chapter_summaries"]["summaries"].items())[-5:]),
-        "event_outline": event_path.read_text(encoding="utf-8"),
+        "event_outline": event_outline,
         "chapter_blueprint": chapter_blueprint,
         "series_architecture": architecture,
         "arc_registry": arc_registry,

@@ -1,8 +1,9 @@
 {
   "schema": "creative-engine-config/1",
   "workflow_policy": {
-    "max_agent_tasks": 12,
-    "candidate_count": 2,
+    "production_mode": "human_close_read",
+    "max_agent_tasks": 4,
+    "candidate_count": 1,
     "max_parallel_tasks": 2,
     "selector_score_gap": 4,
     "revision_rounds": 1,
@@ -16,8 +17,8 @@
     "recent_chars": 10000
   },
   "quality_gates": {
-    "blind_reader_gate": {"enabled": true, "required_competitive_readiness": "MATCH"},
-    "state_evidence_gate": {"enabled": true},
+    "blind_reader_gate": {"enabled": false, "required_competitive_readiness": "MATCH"},
+    "state_evidence_gate": {"enabled": false},
     "recent_chapters_for_repetition": 5,
     "exact_paragraph_min_chars": 30,
     "repeated_long_sentence_limit": 3,
@@ -25,9 +26,9 @@
     "negation_template_warn": 3
   },
   "memory_management": {
-    "chapter_summary_max_chars": 50,
+    "chapter_summary_max_chars": 800,
     "summary_compress_interval": 20,
-    "compress_target_chars": 10,
+    "compress_target_chars": 400,
     "foreshadow_check_interval": 5,
     "style_drift_check_interval": 10,
     "max_context_size_kb": 80,

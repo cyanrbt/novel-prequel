@@ -15,7 +15,7 @@
     "memory_index": "../../novel/knowledge/memory_index.json",
     "knowledge_dir": "../../novel/knowledge",
     "plots_dir": "../../novel/plots",
-    "series_architecture": "../../novel/plots/series_architecture.md",
+    "series_architecture": "../../novel/plots/spine.md",
     "opening_blueprint": "../../novel/plots/volume_1_opening_16_chapters.md",
     "characters_dir": "../../novel/characters",
     "protagonist_card": "../../novel/characters/protagonist.md",

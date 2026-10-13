@@ -49,7 +49,7 @@
     "state_settler": ["profiles/horror-mystery/role_overlays/story.md"]
   },
   "context_policy": {
-    "opening_blueprint": {"event_id": "event_1", "first_chapter": 1, "last_chapter": 16},
+    "opening_blueprint": {},
     "planner_canon_fact_ids": ["CANON-RULE-001", "CANON-RULE-002", "PREQUEL-EVENT-001"]
   },
   "volume_structure": [

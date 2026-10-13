@@ -1,6 +1,6 @@
 {
   "schema": "novel-foreshadow-registry",
-  "authority": "series_architecture.md",
+  "authority": "spine.md",
   "rules": {
     "identity": "ID 的含义不得复用；状态、事件卡和本表必须一致。",
     "scheduling": "登记阶段与前置条件，不以章节号或固定密度排期。",

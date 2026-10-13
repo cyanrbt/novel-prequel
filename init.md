@@ -1,5 +1,7 @@
 # 《神秘复苏前传：张洞传》创作引擎
 
+2026-10-13 起，剧情权威是 `novel/plots/spine.md`，发布方式是 `workflows/next-chapter.md`：一稿、人读、一改。盲读 `MATCH`、双候选和状态证据晋升已经关闭。下文若仍写着这些门禁，以脊柱和下一章工作流为准。
+
 本手册说明创作管线的权威文件、Agent 分工、状态控制、质量门禁和命令入口。执行平台无关的统一入口是根目录 [`WORKFLOW.md`](WORKFLOW.md)；项目清单与解耦结构见 [`docs/project-packages.md`](docs/project-packages.md)。本手册的剧情示例和篇幅数字描述当前默认的张洞故事；状态机与门禁本身可由其他 `creative-project/1` 故事包复用。
 
 ## 核心原则

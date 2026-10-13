@@ -50,7 +50,7 @@
 - [`workflows/status-check.md`](workflows/status-check.md)：只读检查项目是否可以继续。
 - [`workflows/style-calibration.md`](workflows/style-calibration.md)：用三候选盲选校准正向文风画像，不修改正式正文。
 - [`workflows/scene-generation-experiment.md`](workflows/scene-generation-experiment.md)：在同一事实锁下比较预先规划、角色模拟和滚动规划，只停在匿名人工盲选。
-- [`workflows/next-chapter.md`](workflows/next-chapter.md)：规划、生成、审查下一章并停在安全边界。
+- [`workflows/next-chapter.md`](workflows/next-chapter.md)：按脊柱写一章草稿，交给用户阅读，再按读感改一稿。
 - [`workflows/accept-candidate.md`](workflows/accept-candidate.md)：重新验证并提升已通过的候选。
 - [`workflows/protocol-smoke-test.md`](workflows/protocol-smoke-test.md)：不调用外部 Agent、不修改正式内容的协议冒烟测试。
 
